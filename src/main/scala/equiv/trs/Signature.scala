@@ -9,7 +9,9 @@ object Sort {
 
 case class Typing(input: List[Sort], output: Sort, isTheory: Boolean = false)
 
-case class FunctionSymbol(name: String, typing: Typing)
+case class Infix(isLeft: Boolean, bindingStrength: Int)
+
+case class FunctionSymbol(name: String, typing: Typing, infix: Option[Infix] = None)
 
 object FunctionSymbol {
   def `Int`(nr: Int): FunctionSymbol = FunctionSymbol(nr.toString, Typing(List.empty, Sort.Int, isTheory = true))

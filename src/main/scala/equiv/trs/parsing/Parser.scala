@@ -1,6 +1,6 @@
 package equiv.trs.parsing
 
-import equiv.trs.{Constraint, FunctionSymbol, Rule, Signature, Sort, Term, Typing}
+import equiv.trs.{FunctionSymbol, Infix, Signature, Sort, Typing}
 
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
@@ -12,20 +12,30 @@ case class QuasiRule(left: QuasiTerm, right: QuasiTerm, constraint: QuasiTerm)
 case class QuasiSystem(theory: String, logic: String, solver: String, signature: Signature, rules: Set[QuasiRule])
 
 class TRSParser() extends RegexParsers {
-  val name: Parser[String] = """[\w\d]+""".r
+  val name: Parser[String] = """\w[\w\d]+""".r
+  val number: Parser[String] = """\d+""".r
 
   def system: Parser[QuasiSystem] =
-        ("THEORY" ~> name) ~
-        ("LOGIC" ~> name) ~
-        ("SOLVER" ~> name) ~
-        ("SIGNATURE" ~> signature) ~
-        ("RULES" ~> rules)
-        ^^ { case theory ~ logic ~ solver ~ sig ~ rul => QuasiSystem(theory, logic, solver, sig, rul) }
+    ("THEORY" ~> name) ~
+    ("LOGIC" ~> name) ~
+    ("SOLVER" ~> name) ~
+    ("SIGNATURE" ~> signature) ~
+    ("RULES" ~> rules)
+    ^^ { case theory ~ logic ~ solver ~ signature ~ rules => QuasiSystem(theory, logic, solver, signature, rules) }
 
   def signature: Parser[Signature] = rep(symbolDeclaration) ^^ { typings => Signature(typings.toSet) }
 
   def symbolDeclaration: Parser[FunctionSymbol] =
-    name ~ (":" ~> opt{ rep1(name) <~ "=>" } ~ (name <~ ";")) ^^ { case fun ~ (input ~ output) => FunctionSymbol(fun, Typing(input.getOrElse(List.empty).map(Sort), Sort(output))) }
+    name ~ (":" ~> opt{ repsep(name, "*") <~ "=>" } ~ (name ~ infix <~ ";")) ^^ {
+      case fun ~ (input ~ (output ~ infixType)) =>
+        FunctionSymbol(fun, Typing(input.getOrElse(List.empty).map(Sort(_)), Sort(output)), infix = infixType)
+    }
+
+  def infix: Parser[Option[Infix]] =
+    opt("(" ~> infixType ~ (number <~ ")") ) ^^ { _.map { case left ~ strength => Infix(left, strength.toInt) } }
+
+  def infixType: Parser[Boolean] =
+    ("l-infix" | "infix" | "r-infix") ^^ { _ != "r-infix" }
 
   def rules: Parser[Set[QuasiRule]] = ???
 
