@@ -4,7 +4,7 @@ case class Constraint(term: Term) {
   assert(term.sort == Sort.Bool)
 }
 
-case class Rule(left: Term, right: Term, constraint: Constraint) {
+case class Rule(left: Term, right: Term, constraint: Option[Constraint]) {
   assert(left.sort == right.sort)
 
   left match {

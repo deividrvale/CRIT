@@ -1,19 +1,24 @@
 package equiv.trs.parsing
 
-import equiv.trs.{FunctionSymbol, Infix, Signature, Sort, Typing}
+import equiv.trs.{FunctionSymbol, Infix, Signature, Sort, Term, Typing}
 
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 
 case class ParseError(message: String)
 
-case class QuasiTerm()
-case class QuasiRule(left: QuasiTerm, right: QuasiTerm, constraint: QuasiTerm)
+trait QuasiTerm
+case class QuasiInfix(head: QuasiTerm, tail: List[(String, QuasiTerm)]) extends QuasiTerm
+case class QuasiApp(fun: String, args: List[QuasiTerm]) extends QuasiTerm
+
+case class QuasiRule(left: QuasiTerm, right: QuasiTerm, constraint: Option[QuasiTerm])
 case class QuasiSystem(theory: String, logic: String, solver: String, signature: Signature, rules: Set[QuasiRule])
 
 class TRSParser() extends RegexParsers {
-  val name: Parser[String] = """\w[\w\d]+""".r
-  val number: Parser[String] = """\d+""".r
+  // a name can consist of anything except some reserved characters '(', ')', ':', ','
+  val name: Parser[String] = """[^():,]+""".r
+
+  val unsignedInt: Parser[Int] = """\d+""".r ^^ { _.toInt }
 
   def system: Parser[QuasiSystem] =
     ("THEORY" ~> name) ~
@@ -23,6 +28,7 @@ class TRSParser() extends RegexParsers {
     ("RULES" ~> rules)
     ^^ { case theory ~ logic ~ solver ~ signature ~ rules => QuasiSystem(theory, logic, solver, signature, rules) }
 
+  // Signature definition
   def signature: Parser[Signature] = rep(symbolDeclaration) ^^ { typings => Signature(typings.toSet) }
 
   def symbolDeclaration: Parser[FunctionSymbol] =
@@ -31,13 +37,28 @@ class TRSParser() extends RegexParsers {
         FunctionSymbol(fun, Typing(input.getOrElse(List.empty).map(Sort(_)), Sort(output)), infix = infixType)
     }
 
+  // Infix definition
   def infix: Parser[Option[Infix]] =
-    opt("(" ~> infixType ~ (number <~ ")") ) ^^ { _.map { case left ~ strength => Infix(left, strength.toInt) } }
+    opt("(" ~> infixType ~ (unsignedInt <~ ")") ) ^^ { _.map { case left ~ strength => Infix(left, strength) } }
 
-  def infixType: Parser[Boolean] =
-    ("l-infix" | "infix" | "r-infix") ^^ { _ != "r-infix" }
+  def infixType: Parser[Boolean] = ("l-infix" | "infix" | "r-infix") ^^ { _ != "r-infix" }
 
-  def rules: Parser[Set[QuasiRule]] = ???
+  // QuasiTerms
+  def term: Parser[QuasiTerm] =
+    termNoInfix ~ rep(name ~ termNoInfix) ^^ { case head ~ tail => QuasiInfix(head, tail.map{ case op ~ term => (op,term) } )}
+
+  def termNoInfix: Parser[QuasiTerm] =
+    "(" ~> (term <~ ")")
+    | name ~ ("(" ~> (repsep(term, ",") <~ ")")) ^^ { case name ~ args => QuasiApp(name, args) }
+
+  // Constraint
+  def constraint: Parser[QuasiTerm] = "[" ~> term <~ "]"
+
+  // Rules
+  def rules: Parser[Set[QuasiRule]] = rep(rule) ^^ { _.toSet }
+
+  def rule: Parser[QuasiRule] =
+    term ~ ("->" ~> term) ~ (opt(constraint) <~ ";") ^^ { case left ~ right ~ constraint => QuasiRule(left, right, constraint) }
 
   def parse(input: String): Either[QuasiSystem,ParseError] = {
     parseAll[QuasiSystem](system, input) match {
