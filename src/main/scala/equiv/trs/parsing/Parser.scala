@@ -15,15 +15,15 @@ case class QuasiRule(left: QuasiTerm, right: QuasiTerm, constraint: Option[Quasi
 case class QuasiSystem(theory: String, logic: String, solver: String, signature: Signature, rules: Set[QuasiRule])
 
 class TRSParser() extends RegexParsers {
-  // a name can consist of anything except some reserved characters '(', ')', ':', ','
-  val name: Parser[String] = """[^():,]+""".r
+  // a name can consist of anything except some reserved characters '(', ')', ':', ',', ';', '[', ']'
+  val name: Parser[String] = not("->") ~> """[^():,;\[\]]+""".r
 
   val unsignedInt: Parser[Int] = """\d+""".r ^^ { _.toInt }
 
   def system: Parser[QuasiSystem] =
-    ("THEORY" ~> name) ~
-    ("LOGIC" ~> name) ~
-    ("SOLVER" ~> name) ~
+    ("THEORY" ~> name <~ ";") ~
+    ("LOGIC" ~> name <~ ";") ~
+    ("SOLVER" ~> name <~ ";") ~
     ("SIGNATURE" ~> signature) ~
     ("RULES" ~> rules)
     ^^ { case theory ~ logic ~ solver ~ signature ~ rules => QuasiSystem(theory, logic, solver, signature, rules) }
@@ -48,8 +48,8 @@ class TRSParser() extends RegexParsers {
     termNoInfix ~ rep(name ~ termNoInfix) ^^ { case head ~ tail => QuasiInfix(head, tail.map{ case op ~ term => (op,term) } )}
 
   def termNoInfix: Parser[QuasiTerm] =
-    "(" ~> (term <~ ")")
-    | name ~ ("(" ~> (repsep(term, ",") <~ ")")) ^^ { case name ~ args => QuasiApp(name, args) }
+      "(" ~> (term <~ ")")
+      | name ~ opt("(" ~> repsep(term, ",") <~ ")") ^^ { case name ~ args => QuasiApp(name, args.getOrElse(List.empty)) }
 
   // Constraint
   def constraint: Parser[QuasiTerm] = "[" ~> term <~ "]"
@@ -68,23 +68,29 @@ class TRSParser() extends RegexParsers {
     }
   }
 }
-/*
-THEORY arrays ;
-LOGIC QF_LIA ;
-SOLVER intsolver ;
 
-SIGNATURE
-  f      : Int => result       ;
-  u1     : Int * Int => result ;
-  u2     : Int * Int => result ;
-  u3     : Int * Int => result ;
-  return : Int => result       ;
+object TRSParserTest {
+  def main(args: Array[String]): Unit = {
+    val result = new TRSParser().parse(
+      """THEORY arrays ;
+        |LOGIC QF_LIA ;
+        |SOLVER intsolver ;
+        |
+        |SIGNATURE
+        |  f      : Int => result       ;
+        |  u1     : Int * Int => result ;
+        |  u2     : Int * Int => result ;
+        |  u3     : Int * Int => result ;
+        |  return : Int => result       ;
+        |
+        |RULES
+        |  f(x) -> u1(x,rnd)      [true]   ;
+        |  u1(x,y) -> u1(x + 1,y) [x < 0]  ;
+        |  u1(x,y) -> u2(x, y)    [x >= 0] ;
+        |  u2(x,y) -> u3(x, 5)    [x = x] ;
+        |  u3(x,y) -> return(y) ;
+        |""".stripMargin)
 
-RULES
-  f(x) -> u1(x,rnd)      [true]   ;
-  u1(x,y) -> u1(x + 1,y) [x < 0]  ;
-  u1(x,y) -> u2(x, y)    [x >= 0] ;
-  u2(x,y) -> u3(x, 5)    [x = x] ;
-  u3(x,y) -> return(y) ;
-
-*/
+    println(result)
+  }
+}
