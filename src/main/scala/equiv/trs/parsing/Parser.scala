@@ -25,7 +25,7 @@ class TRSParser() extends RegexParsers {
   def signature: Parser[Signature] = rep(symbolDeclaration) ^^ { typings => Signature(typings.toSet) }
 
   def symbolDeclaration: Parser[FunctionSymbol] =
-    name ~ (":" ~> opt{ rep1(name) <~ "=>" } ~ name) ^^ { case fun ~ (input ~ output) => FunctionSymbol(fun, Typing(input.getOrElse(List.empty).map(Sort), Sort(output))) }
+    name ~ (":" ~> opt{ rep1(name) <~ "=>" } ~ (name <~ ";")) ^^ { case fun ~ (input ~ output) => FunctionSymbol(fun, Typing(input.getOrElse(List.empty).map(Sort), Sort(output))) }
 
   def rules: Parser[Set[QuasiRule]] = ???
 
