@@ -74,7 +74,7 @@
                     <launchers>
                         <launcher>
                             <id>Equiv</id>
-                            <mainClass>equiv</mainClass>
+                            <mainClass>equiv.Equiv</mainClass>
                             <args>
                                 <arg>some argument</arg>
                             </args>
