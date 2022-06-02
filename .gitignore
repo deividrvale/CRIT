@@ -1,3 +1,7 @@
 *.class
 *.log
 .metals/metals.lock.db
+.bloop/
+.metals/
+.vscode/
+target/
