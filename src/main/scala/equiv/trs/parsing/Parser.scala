@@ -24,7 +24,7 @@ trait QuasiTerm {
         QuasiApp(fun, args.map(_.infix2app(signature)))
       case QuasiInfix(head, Nil) =>
         head.infix2app(signature)
-      case quasiInfix @ QuasiInfix(head, tail) =>
+      case quasiInfix @ QuasiInfix(_, tail) =>
         // find the weakest infix operators
         val infixOperators = tail.map(_._1).toSet.map{ op => (op, signature(op).infix.map(_.bindingStrength).get) }
         val weakestBinding = infixOperators.map(_._2).min
@@ -88,6 +88,8 @@ class TRSParser(readFile: String => String) extends RegexParsers {
   // a name can consist of anything except some reserved characters '(', ')', ':', ',', ';', '[', ']'
   val name: Parser[String] = not("->") ~> """[^():,;\[\]\s]+""".r
 
+  val querySimplification: Parser[String] = """\[.*?]""".r
+
   val unsignedInt: Parser[Int] = """\d+""".r ^^ { _.toInt }
 
   // check whether some symbol is used infix, but has not been defined infix
@@ -106,22 +108,28 @@ class TRSParser(readFile: String => String) extends RegexParsers {
     rep("INCLUDE" ~> name <~ ";") ~
     ("DECLARE" ~> signature) ~
     opt("WELLFOUNDED" ~> rep1sep(name, ",") <~ ";") ~
-    opt("CHAIN" ~> rep1sep(name, ",") <~ ";") ~
-    opt("SMT-RENAMINGS" ~> renamings) ^^ { case includes ~ signature ~ wellfounded ~ chains ~ renamings =>
-      (Theory(Signature(signature.functions), renamings.getOrElse(Set.empty)) :: includes.map(readTheoryRecursive)).reduce(_.union(_))
+    opt("CHAIN" ~> rep1(term ~ (":" ~> term <~ ";"))) ~
+    opt("SMT-RENAMINGS" ~> renamings) ~
+    opt("SMT-TRANSLATIONS" ~> translations) ^^ { case includes ~ signature ~ wellFounded ~ chains ~ smtRenamings ~ smtTranslations =>
+      (Theory(Signature(signature.functions), smtRenamings.getOrElse(Set.empty)) :: includes.map(readTheoryRecursive)).reduce(_.union(_))
     }
 
   def system: Parser[QuasiSystem] =
-    ("THEORY" ~> name <~ ";") ~
-    ("LOGIC" ~> name <~ ";") ~
-    ("SOLVER" ~> name <~ ";") ~
-    ("SIGNATURE" ~> signature) ~
-    ("RULES" ~> rules)
+    ((("THEORY" ~> name <~ ";") ~
+      ("LOGIC" ~> name <~ ";") ~
+      ("SOLVER" ~> name <~ ";") ~
+      ("SIGNATURE" ~> signature)
+    ) ^^ {
+      case theory ~ logic ~ solver ~ signature =>
+        (theory, logic, solver, signature.union(readTheoryRecursive(theory).signature))
+    } ) ~
+    ("RULES" ~> rules) ~
+    opt("QUERY simplification" ~> querySimplification)
     ^? (
-      { case theory ~ logic ~ solver ~ signature ~ rules if undefinedInfix(signature.union(readTheoryRecursive(theory).signature), rules).isEmpty =>
+      { case (theory, logic, solver, signature) ~ rules ~ querySimplification if undefinedInfix(signature, rules).isEmpty =>
         val signatureMap = signature.functions.map{ fun => fun.name -> fun }.toMap
         QuasiSystem(theory, logic, solver, signature, rules.map(_.infix2app(signatureMap))) },
-      { case theory ~ _ ~ _ ~ signature ~ rules => undefinedInfix(signature.union(readTheoryRecursive(theory).signature), rules).get }
+      { case (_, _, _, signature) ~ rules ~ _ => undefinedInfix(signature, rules).get }
     )
 
   // Signature definitionK
@@ -161,8 +169,16 @@ class TRSParser(readFile: String => String) extends RegexParsers {
 
   def renaming: Parser[Renaming] = name ~ ("->" ~> name) <~ ";" ^^ { case left ~ right => Renaming(left, right) }
 
+  // Translations
+  def translations: Parser[Set[(QuasiTerm,List[String])]] = rep(translation) ^^ { _.toSet }
+
+  def translation: Parser[(QuasiTerm,List[String])] = term ~ ("->" ~> wrapped) <~ opt(";") ^^ { case term ~ replacement => (term,replacement) }
+  def wrapped: Parser[List[String]] = "(" ~ rep(name ^^ { List(_) } | wrapped) ~ ")" ^^ { case left ~ middle ~ right => List(left) ++ middle.flatten ++ List(right) }
+
   def dropCommnets(input: String) : String = {
-    input.replaceAll("(?s)/\\*.*?\\*/", "")
+    input
+      .replaceAll("(?s)/\\*.*?\\*/", "")
+      .replaceAll("(?s)END OF FILE.*", "")
   }
 
   def parseTheory(input: String): Either[Theory,ParseError] = {
