@@ -1,0 +1,42 @@
+THEORY arrays ;
+LOGIC QF_LIA ;
+SOLVER intsolver ;
+
+SIGNATURE
+  f      : Int => result       ;
+  u1     : Int * Int => result ;
+  u2     : Int * Int => result ;
+  u3     : Int * Int => result ;
+  return : Int => result       ;
+
+RULES
+  f(x) -> u1(x,rnd)      [true]   ;
+  u1(x,y) -> u1(x + 1,y) [x < 0]  ;
+  u1(x,y) -> u2(x, y)    [x >= 0] ;
+  u2(x,y) -> u3(x, 5)    [x = x] ;
+  u3(x,y) -> return(y) ;
+
+QUERY simplification [f return]
+
+END OF FILE
+
+This example demonstrates a feature of the simplifier.
+
+We can see the f-function as an initial translation of an integer
+function:
+
+  int f(int x) {
+    int y;
+    while (x < 0) x++;
+    y = 5;
+    return y;
+  }
+
+Note that de variable y is not immediately instantiated on declaration
+(which is quite common in realistic programs).  Consequently, it is
+hard to verify that the given file (where the uninitialised variable
+translates to a "random" variable in the right-hand side) is
+confluent.  However, in its simplification, this randomness
+disappears, as a variable is not carried around when it is clearly
+never used.
+

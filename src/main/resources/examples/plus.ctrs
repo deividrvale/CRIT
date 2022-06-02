@@ -1,0 +1,35 @@
+THEORY ints     ;
+LOGIC QF_LIA    ;
+SOLVER internal ;
+
+SIGNATURE
+  plus              ;
+  o                 ;
+  s                 ;
+
+RULES
+  plus(o,y)    -> y ;
+  plus(s(x),y) -> s(plus(x,y)) ;
+
+QUERY user-equivalence plus(s(x),y) -><- plus(y,s(x)) [true] ;
+                       plus(x,s(y)) -><- s(plus(y,x)) [true] ;
+                       plus(x,s(y)) -><- s(plus(x,y)) [true] ;
+                       plus(x,o) -><- x [true] ;
+
+END OF FILE
+
+This example file demonstrates the use of manual inductive theorem
+proving on an unconstrained system.  Since the only lemma generation
+method currently built into Ctrl is a generalisation method focused
+on the constraints, we manually introduce the lemma equations in the
+file.  Ctrl presents them to the user from the bottom to the top.
+
+When proving the third equation (so second from the top), it is
+necessary to use a force-expand.  This is CORRECT: Ctrl fails to
+prove termination, but the system resulting from adding the rule
+plus(x, s(y)) -> s(plus(y, x)) is non-problematic: the failure
+occurs due to a weakness in the termination module, which focuses on
+constrained systems (we need polynomial interpretations to prove
+termination here, and these interpretations are currently only used
+for systems on the integers!).
+

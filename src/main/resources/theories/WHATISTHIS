@@ -1,0 +1,37 @@
+This directory contains the theory/ files which the input files use
+for the theory signature.  The most important ones are:
+
+core.thr: the core symbols.  For Ctrl to function properly, it is
+  recommended to include this file either directly (using THEORY) or
+  indirectly (using INCLUDE in an included theory file) into all
+  example files.
+
+  Alternatively, another file which also defines each of [true, 
+  false, and, or, not, =] may be included instead.
+
+ints.thr: the integer theory, corresponding to TODO.
+
+itrs.thr: a theory roughly combining core and ints.  This theory is
+  is the standard include for Integer TRSs, as they use different
+  namings for these symbols.
+
+arrays.thr: a theory of integer arrays.  This theory is NOT supported
+  by SMT-LIB, but corresponds roughly to the way arrays are used in
+  imperative programming languages (without explicitly looking at
+  pointers).  The arrsolver smt-solver (whose code is given in the
+  ArraySolver/ directory) translates this theory with the
+  corresponding logic QF_INTARRAY to an SMT-file with AUFNIA logic.
+
+strings.thr: a theory of C-strings, with specific symbols used in the
+  strcpy and strlen examples.  The arrsolver can also handle these
+  symbols.
+
+letter.thr: proof-of-concept: a theory which does not involve the
+  integers at all.
+
+matrices.thr: proof-of-concept: a theory on two-dimensional matrices.
+  Untested (no SMT-solver for this theory is included).
+
+mixed-int.thr: proof-of-concept: a theory which simulates the
+  integer theory without actually using the integers directly.
+

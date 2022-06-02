@@ -1,0 +1,21 @@
+THEORY matrices ;
+LOGIC QF_LIA ;
+SOLVER manual ;
+
+SIGNATURE start, mirror, helper, done, !INTEGER, !ARRAY!Column ;
+
+RULES
+  start -> mirror({{0:0}:{1:1}}, 0) ;
+  mirror(matrix, x) -> done(matrix) [x >= cols(matrix)] ;
+  mirror(matrix, x) -> helper(matrix, x, 0) [x < cols(matrix)] ;
+  helper(matrix, x, y) -> mirror(matrix, x + 1) [y >= rows(matrix)] ;
+  helper(matrix, x, y) -> helper(store(store(matrix, x, y, select(matrix, y, x)), y, x, select(matrix, x, y)), x, y + 1) [y < rows(matrix)] ;
+
+QUERY normal form start
+
+END OF FILE
+
+A demonstration of an uncommon theory: 2-dimensional integer matrices.
+Unfortunately, no solver is available for this theory, so the manual
+solver is chosen.
+

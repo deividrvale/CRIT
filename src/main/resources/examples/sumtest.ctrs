@@ -1,0 +1,92 @@
+THEORY ints
+LOGIC  QF_LIA
+SOLVER internal
+
+SIGNATURE
+  sum: Int => result_1;
+  error_1: result_1;
+  return_1: Int => result_1;
+  u_1: Int * result_1 => result_1;
+  u_2: Int * Int => result_1;
+  sum1: Int => result_1;
+  u_3: Int * Int => result_1;
+  u_4: Int * Int * Int => result_1;
+  u_5: Int * Int * Int * Int => result_1;
+  u_6: Int * Int * Int * Int => result_1;
+  u_7: Int * Int * Int * Int => result_1;
+  u_8: Int * Int * Int * Int => result_1;
+  u_9: Int * Int * Int * Int => result_1;
+  u_10: Int * Int * Int * Int => result_1;
+  u_11: Int * Int * Int * Int => result_1;
+  return_1: Int => result_1;
+  error_1: result_1;
+  sum2: Int => result_1;
+  u_12: Int * Int => result_1;
+  u_13: Int * Int * Int => result_1;
+  u_14: Int * Int * Int => result_1;
+  u_15: Int * Int * Int => result_1;
+  u_16: Int * Int * Int => result_1;
+  u_17: Int * Int * Int => result_1;
+  u_18: Int * Int * Int => result_1;
+  return_1: Int => result_1;
+  error_1: result_1;
+  sum3: Int => result_1;
+  u_19: Int * Int => result_1;
+  u_20: Int * Int * Int => result_1;
+  u_21: Int * Int * Int => result_1;
+  u_22: Int * Int * Int * Int => result_1;
+  u_23: Int * Int * Int * Int => result_1;
+  u_24: Int * Int * Int * Int => result_1;
+  u_25: Int * Int * Int * Int => result_1;
+  u_26: Int * Int * Int * Int => result_1;
+  u_27: Int * Int * Int => result_1;
+  u_28: Int * Int * Int => result_1;
+  u_29: Int * Int * Int => result_1;
+  u_30: Int * Int => result_1;
+  return_1: Int => result_1;
+  error_1: result_1;
+
+RULES
+  sum(n_1) -> return_1(0)  [(n_1 < 0)];
+  sum(n_1) -> u_1(n_1, sum((n_1 - 1)))  [(n_1 >= 0)];
+  u_1(n_1, return_1(w_1)) -> u_2(n_1, w_1);
+  u_1(n_1, error_1) -> error_1;
+  u_2(n_1, w_1) -> return_1((n_1 + w_1));
+  sum1(n_1) -> u_3(n_1, 0);
+  u_3(n_1, i_2) -> u_4(n_1, i_2, 0);
+  u_4(n_1, i_2, j_2) -> u_5(n_1, i_2, j_2, 0);
+  u_5(n_1, i_2, j_2, sum_2) -> u_6(n_1, i_2, j_2, sum_2);
+  u_6(n_1, i_2, j_2, sum_2) -> u_7(n_1, i_2, j_2, (sum_2 + j_2))  [(i_2 <= n_1)];
+  u_7(n_1, i_2, j_2, sum_2) -> u_8(n_1, i_2, (j_2 + 1), sum_2);
+  u_8(n_1, i_2, j_2, sum_2) -> u_9(n_1, i_2, j_2, sum_2);
+  u_9(n_1, i_2, j_2, sum_2) -> u_10(n_1, i_2, j_2, sum_2);
+  u_10(n_1, i_2, j_2, sum_2) -> u_11(n_1, (i_2 + 1), j_2, sum_2);
+  u_11(n_1, i_2, j_2, sum_2) -> u_6(n_1, i_2, j_2, sum_2);
+  u_6(n_1, i_2, j_2, sum_2) -> return_1(sum_2)  [(i_2 > n_1)];
+  sum2(n_1) -> u_12(n_1, rnd_2);
+  u_12(n_1, i_2) -> u_13(n_1, i_2, 0);
+  u_13(n_1, i_2, sum_2) -> u_14(n_1, i_2, sum_2);
+  u_14(n_1, i_2, sum_2) -> u_15(n_1, n_1, sum_2);
+  u_15(n_1, i_2, sum_2) -> u_16(n_1, i_2, (sum_2 + i_2))  [(i_2 >= 0)];
+  u_16(n_1, i_2, sum_2) -> u_17(n_1, i_2, sum_2);
+  u_17(n_1, i_2, sum_2) -> u_18(n_1, (i_2 - 1), sum_2);
+  u_18(n_1, i_2, sum_2) -> u_15(n_1, i_2, sum_2);
+  u_15(n_1, i_2, sum_2) -> return_1(sum_2)  [(i_2 < 0)];
+  sum3(n_1) -> u_19(n_1, 0);
+  u_19(n_1, ret_2) -> u_20(n_1, ret_2, 0);
+  u_20(n_1, ret_2, i_3) -> u_21(n_1, ret_2, i_3);
+  u_21(n_1, ret_2, i_3) -> u_22(n_1, ret_2, i_3, 0)  [(i_3 <= n_1)];
+  u_22(n_1, ret_2, i_3, j_4) -> u_23(n_1, ret_2, i_3, j_4);
+  u_23(n_1, ret_2, i_3, j_4) -> u_24(n_1, (ret_2 + 1), i_3, j_4)  [(j_4 < i_3)];
+  u_24(n_1, ret_2, i_3, j_4) -> u_25(n_1, ret_2, i_3, j_4);
+  u_25(n_1, ret_2, i_3, j_4) -> u_26(n_1, ret_2, i_3, (j_4 + 1));
+  u_26(n_1, ret_2, i_3, j_4) -> u_23(n_1, ret_2, i_3, j_4);
+  u_23(n_1, ret_2, i_3, j_4) -> u_27(n_1, ret_2, i_3)  [(j_4 >= i_3)];
+  u_27(n_1, ret_2, i_3) -> u_28(n_1, ret_2, i_3);
+  u_28(n_1, ret_2, i_3) -> u_29(n_1, ret_2, (i_3 + 1));
+  u_29(n_1, ret_2, i_3) -> u_21(n_1, ret_2, i_3);
+  u_21(n_1, ret_2, i_3) -> u_30(n_1, ret_2)  [(i_3 > n_1)];
+  u_30(n_1, ret_2) -> return_1(ret_2);
+
+QUERY do-simplify [sum sum1 sum2 sum3] and equivalence sum(n) -><- sum3(n) [true]
+

@@ -1,7 +1,8 @@
 package equiv.trs.parsing
 
-import equiv.trs.{FunctionSymbol, Infix, Signature, Sort, Term, Typing}
+import equiv.trs.{FunctionSymbol, Infix, Renaming, Signature, Sort, Term, Theory, Typing}
 
+import scala.io.Source
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 
@@ -83,7 +84,7 @@ case class QuasiRule(left: QuasiTerm, right: QuasiTerm, constraint: Option[Quasi
 
 case class QuasiSystem(theory: String, logic: String, solver: String, signature: Signature, rules: Set[QuasiRule])
 
-class TRSParser() extends RegexParsers {
+class TRSParser(readFile: String => String) extends RegexParsers {
   // a name can consist of anything except some reserved characters '(', ')', ':', ',', ';', '[', ']'
   val name: Parser[String] = not("->") ~> """[^():,;\[\]\s]+""".r
 
@@ -101,6 +102,15 @@ class TRSParser() extends RegexParsers {
     }
   }
 
+  def theory: Parser[Theory] =
+    rep("INCLUDE" ~> name <~ ";") ~
+    ("DECLARE" ~> signature) ~
+    opt("WELLFOUNDED" ~> rep1sep(name, ",") <~ ";") ~
+    opt("CHAIN" ~> rep1sep(name, ",") <~ ";") ~
+    opt("SMT-RENAMINGS" ~> renamings) ^^ { case includes ~ signature ~ wellfounded ~ renamings =>
+      (Theory(Signature(signature.functions), renamings.getOrElse(Set.empty)) :: includes.map(readTheoryRecursive)).reduce(_.union(_))
+    }
+
   def system: Parser[QuasiSystem] =
     ("THEORY" ~> name <~ ";") ~
     ("LOGIC" ~> name <~ ";") ~
@@ -108,13 +118,13 @@ class TRSParser() extends RegexParsers {
     ("SIGNATURE" ~> signature) ~
     ("RULES" ~> rules)
     ^? (
-      { case theory ~ logic ~ solver ~ signature ~ rules if undefinedInfix(signature, rules).isEmpty =>
+      { case theory ~ logic ~ solver ~ signature ~ rules if undefinedInfix(signature.union(readTheoryRecursive(theory).signature), rules).isEmpty =>
         val signatureMap = signature.functions.map{ fun => fun.name -> fun }.toMap
         QuasiSystem(theory, logic, solver, signature, rules.map(_.infix2app(signatureMap))) },
-      { case _ ~ _ ~ _ ~ signature ~ rules => undefinedInfix(signature, rules).get }
+      { case theory ~ _ ~ _ ~ signature ~ rules => undefinedInfix(signature.union(readTheoryRecursive(theory).signature), rules).get }
     )
 
-  // Signature definition
+  // Signature definitionK
   def signature: Parser[Signature] = rep(symbolDeclaration) ^^ { typings => Signature(typings.toSet) }
 
   def symbolDeclaration: Parser[FunctionSymbol] =
@@ -146,8 +156,32 @@ class TRSParser() extends RegexParsers {
   def rule: Parser[QuasiRule] =
     term ~ ("->" ~> term) ~ (opt(constraint) <~ ";") ^^ { case left ~ right ~ constraint => QuasiRule(left, right, constraint) }
 
-  def parse(input: String): Either[QuasiSystem,ParseError] = {
-    parseAll[QuasiSystem](system, input) match {
+  // Renamings
+  def renamings: Parser[Set[Renaming]] = rep(renaming) ^^ { _.toSet }
+
+  def renaming: Parser[Renaming] = name ~ ("->" ~> name) <~ ";" ^^ { case left ~ right => Renaming(left, right) }
+
+  def dropCommnets(input: String) : String = {
+    input.replaceAll("(?s)/\\*.*?\\*/", "")
+  }
+
+  def parseTheory(input: String): Either[Theory,ParseError] = {
+    parseAll[Theory](theory, dropCommnets(input)) match {
+      case Success(x, _) => Left(x)
+      case x: Failure => Right(ParseError(x.toString()))
+      case x: Error => Right(ParseError(x.toString()))
+    }
+  }
+
+  def readTheoryRecursive(file : String) : Theory = {
+    parseTheory(readFile(s"theories/$file.thr")) match {
+      case Left(signature) => signature
+      case Right(error) => throw new RuntimeException(s"Exception parsing theory $file:\n\n" + error.message)
+    }
+  }
+
+  def parseSystem(input: String): Either[QuasiSystem,ParseError] = {
+    parseAll[QuasiSystem](system, dropCommnets(input)) match {
       case Success(x, _) => Left(x)
       case x: Failure => Right(ParseError(x.toString()))
       case x: Error => Right(ParseError(x.toString()))
@@ -157,26 +191,11 @@ class TRSParser() extends RegexParsers {
 
 object TRSParserTest {
   def main(args: Array[String]): Unit = {
-    val result = new TRSParser().parse(
-      """THEORY arrays ;
-        |LOGIC QF_LIA ;
-        |SOLVER intsolver ;
-        |
-        |SIGNATURE
-        |  f      : Int => result       ;
-        |  u1     : Int * Int => result ;
-        |  u2     : Int * Int => result ;
-        |  u3     : Int * Int => result ;
-        |  return : Int => result       ;
-        |
-        |RULES
-        |  f(x) -> u1(x,rnd)      [true]   ;
-        |  u1(x,y) -> u1(x + 1,y) [x < 0]  ;
-        |  u1(x,y) -> u2(x, y)    [x >= 0] ;
-        |  u2(x,y) -> u3(x, 5)    [x = x] ;
-        |  u3(x,y) -> return(y) ;
-        |""".stripMargin)
-
+    val result = new TRSParser(readFile).parseSystem(readFile("examples/declare.ctrs"))
     println(result)
+  }
+
+  def readFile(file: String) : String = {
+    Source.fromResource(file).getLines().mkString("\n")
   }
 }

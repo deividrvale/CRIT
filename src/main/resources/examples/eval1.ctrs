@@ -1,0 +1,21 @@
+THEORY ints  ;
+LOGIC QF_LIA ;
+SOLVER internal ;
+
+SIGNATURE eval1, eval2, eval3, !INTEGER ;
+
+RULES
+  eval1(x,y) -> eval2(x,y)         [x >! y] ;
+  eval1(x,y) -> eval3(x,y)         [y >= x > 0] ;
+  eval2(x,y) -> eval2(x - 1,y + 1) [x > 1] ;
+  eval2(x,y) -> eval1(x,y)         [not (x > 0)];
+  eval3(x,y) -> eval3(x + 1,y - 1) [x > 0]      ;
+  eval3(x,y) -> eval2(x - 1,y + 1) [x > 0]      ;
+
+QUERY normal form eval1(5,9)
+
+END OF FILE
+
+A simple example of normalisation.  Note how the custom function >! is
+used (and this presents no problem to Ctrl).
+

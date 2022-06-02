@@ -1,0 +1,22 @@
+THEORY mixed-ints ;
+LOGIC QF_LIA      ;
+SOLVER intsolver  ;
+
+SIGNATURE eval1, eval2, eval3, !MIXED!"!" ;
+
+RULES
+  eval1(x,y) -> eval2(x,y)             [x > y > "0"]  ;
+  eval1(x,y) -> eval3(x,y)             [y >= x > "0"] ;
+  eval2(x,y) -> eval2(x - "1",y + "1") [x > "1"]      ;
+  eval2(x,y) -> eval1(x,y)             [not (x > "0")];
+  eval3(x,y) -> eval3(x + "1",y - "1") [x > "0"]      ;
+  eval3(x,y) -> eval2(x - "1",y + "1") [x > "0"]      ;
+
+QUERY normal form eval1("5", "9")
+
+END OF FILE
+
+This is a copy of eval1, using mixed integers instead of integers.
+Note how we are obliged to put all these integers inside "quotes", as
+this is how the MIXED declaration was done.
+

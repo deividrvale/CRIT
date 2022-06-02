@@ -1,0 +1,63 @@
+THEORY letter ;
+SOLVER manual ;
+
+SIGNATURE f ;
+
+RULES
+  f(x,y,z) -> f(p(x),not(y),s(s(z))) [x # 'a'] ;
+  f(x,y,z) -> f(x,y,p(z)) [z # 'a'] ;
+
+QUERY termination
+
+END OF FILE
+
+This is a proof-of-concept example file, showing a terminating program
+on a theory that does not include the integers.  The "letter" theory
+has the > symbol marked as well-founded, which makes a termination
+argument using the value criterion possible.
+
+As there is no solver for the toy theory "letter", a manual solver is
+selected.  To handle the satisfiability questions for this system,
+paste the following answers into Ctrl as queried:
+
+y
+'c'
+'b'
+y
+'c'
+'b'
+'b'
+y
+'b'
+'a'
+'b'
+y
+'c'
+'b'
+y
+'a'
+'b'
+n
+n
+n
+y
+'a'
+'b'
+y
+'a'
+'b'
+y
+true
+false
+false
+true
+y
+'a'
+'b'
+n
+n
+y
+false
+true
+true
+

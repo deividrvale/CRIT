@@ -1,0 +1,105 @@
+THEORY arrays
+LOGIC  QF_INTARRAY
+SOLVER arrsolver
+
+SIGNATURE
+  main: Int * IntArray => result_1;
+  outer: Int * IntArray * Int => result_1;
+  inner: Int * IntArray * Int * Int => result_1;
+  error: result_1;
+  return: IntArray => result_1;
+  errortest;
+
+RULES
+  main(Alen, A) -> outer(Alen, A, 0);
+  outer(Alen, A, i) -> inner(Alen, A, i, 0)  [i < Alen];
+  inner(Alen, A, i, j) -> error  [j < Alen /\ (0 > i \/ i >= size(A))];
+  inner(Alen, A, i, j) -> return(A)  [j < Alen /\ select(A, i) = 0 /\ 0 <= i < size(A)];
+  inner(Alen, A, i, j) -> inner(Alen, A, i, j + 1)  [j < Alen /\ select(A, i) # 0 /\ 0 <= i < size(A)];
+  inner(Alen, A, i, j) -> outer(Alen, A, i + 1)  [j >= Alen];
+  outer(Alen, A, i) -> return(A)  [i >= Alen];
+  errortest(error) -> false;
+  errortest(return(w)) -> true;
+
+QUERY do-simplify [main errortest] and user-equivalence errortest(main(Alen, A)) -><- true [alen >= 1 /\ size(A) = Alen]
+
+
+
+END OF FILE
+
+Proving memory-safety of:
+
+void main(int Alen, int A[]) {
+  int i = 0;
+
+  while (i < Alen) {
+    int j = 0;
+    while (j < Alen) {
+      if (A[i] == 0) {
+        return;
+      }
+      j++;
+    }
+    i++;
+  }
+}
+
+[alen >= 1 /\ Blen >= 1 /\ size(A) = Alen /\ size(B) = Blen]
+
+This benchmark *can* be handled using our technique, but not automatically.
+The automatic process both fails because the variables v_i are initialised together, and because the termination module cannot handle the rules following expansion.
+A manual process succeeds when using the following commands (force-expand bypasses the termination requirement):
+
+auto
+case 1
+auto
+case 1
+auto
+auto
+auto
+case 1
+auto
+auto
+auto
+generalise v3
+force-expand 1
+auto
+auto
+skip
+auto
+case 1
+auto
+case 1
+auto
+auto
+auto
+auto
+case 1
+auto
+auto
+auto
+generalise v3
+force-expand 1
+auto
+auto
+skip
+auto
+generalise
+force-expand 1
+auto
+case 1
+auto
+auto
+auto
+auto
+case 1
+auto
+auto
+auto
+generalise
+force-expand 1
+auto
+auto
+auto
+auto
+
