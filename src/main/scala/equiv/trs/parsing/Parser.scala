@@ -107,7 +107,7 @@ class TRSParser(readFile: String => String) extends RegexParsers {
     ("DECLARE" ~> signature) ~
     opt("WELLFOUNDED" ~> rep1sep(name, ",") <~ ";") ~
     opt("CHAIN" ~> rep1sep(name, ",") <~ ";") ~
-    opt("SMT-RENAMINGS" ~> renamings) ^^ { case includes ~ signature ~ wellfounded ~ renamings =>
+    opt("SMT-RENAMINGS" ~> renamings) ^^ { case includes ~ signature ~ wellfounded ~ chains ~ renamings =>
       (Theory(Signature(signature.functions), renamings.getOrElse(Set.empty)) :: includes.map(readTheoryRecursive)).reduce(_.union(_))
     }
 
