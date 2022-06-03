@@ -8,82 +8,6 @@ import scala.util.parsing.combinator.RegexParsers
 
 case class ParseError(message: String)
 
-trait QuasiTerm {
-  // collect all infix operators in a QuasiTerm
-  def infixOperators : Set[String] = {
-    this match {
-      case QuasiApp(_, args) => args.flatMap(_.infixOperators).toSet
-      case QuasiInfix(head, tail) => tail.map(_._1).toSet ++ head.infixOperators ++ tail.flatMap(_._2.infixOperators)
-    }
-  }
-
-  // transform all infix operators to function application
-  def infix2app(signature: Map[String,FunctionSymbol]) : QuasiApp = {
-    this match {
-      case QuasiApp(fun, args) =>
-        QuasiApp(fun, args.map(_.infix2app(signature)))
-      case QuasiInfix(head, Nil) =>
-        head.infix2app(signature)
-      case quasiInfix @ QuasiInfix(_, tail) =>
-        // find the weakest infix operators
-        val infixOperators = tail.map(_._1).toSet.map{ op => (op, signature(op).infix.map(_.bindingStrength).get) }
-        val weakestBinding = infixOperators.map(_._2).min
-        val weakest = infixOperators.filter(_._2 == weakestBinding).map(_._1)
-
-        // lift the weakest operators to the top
-        val lifted = quasiInfix.liftOps(weakest)
-        // transform the subterms
-        val liftedApp = QuasiInfix(lifted.head.infix2app(signature), lifted.tail.map{ case (op,term) => (op, term.infix2app(signature)) })
-
-        // introduce apps from left or right
-        if(signature(weakest.head).infix.exists(_.isLeft)) {
-          liftedApp.appFromLeft.asInstanceOf[QuasiApp]
-        } else {
-          liftedApp.appFromRight.asInstanceOf[QuasiApp]
-        }
-    }
-  }
-}
-
-case class QuasiApp(fun: String, args: List[QuasiTerm]) extends QuasiTerm
-
-// a chain of terms interspersed with infix operators
-case class QuasiInfix(head: QuasiTerm, tail: List[(String, QuasiTerm)]) extends QuasiTerm {
-  // lift the given operators to the 'root'
-  def liftOps(ops: Set[String]): QuasiInfix = {
-    tail.zipWithIndex.find { case ((op, _), _) => ops.contains(op) } match {
-      case Some((_, index)) =>
-        val (prefix, suffix) = tail.splitAt(index)
-        val suffixLifted = QuasiInfix(suffix.head._2, suffix.tail).liftOps(ops)
-        QuasiInfix( QuasiInfix(head, prefix),  (suffix.head._1, suffixLifted.head) :: suffixLifted.tail )
-      case None =>
-        QuasiInfix(this, List.empty)
-    }
-  }
-
-  def appFromLeft : QuasiTerm = {
-    if(tail.isEmpty) return head
-    QuasiApp(tail.head._1, List(head, QuasiInfix(tail.head._2,tail.tail).appFromLeft))
-  }
-
-  def appFromRight : QuasiTerm = {
-    if(tail.isEmpty) return head
-    QuasiApp(tail.last._1, List(QuasiInfix(head,tail.init).appFromRight, tail.last._2))
-  }
-}
-
-case class QuasiRule(left: QuasiTerm, right: QuasiTerm, constraint: Option[QuasiTerm]) {
-  def infixOperators : Set[String] = {
-    left.infixOperators ++ right.infixOperators ++ constraint.toSet.flatMap{ term => term.infixOperators }
-  }
-
-  def infix2app(signature: Map[String,FunctionSymbol]) : QuasiRule = {
-    QuasiRule(left.infix2app(signature), right.infix2app(signature), constraint.map(_.infix2app(signature)))
-  }
-}
-
-case class QuasiSystem(theory: String, logic: String, solver: String, signature: Signature, rules: Set[QuasiRule])
-
 class TRSParser(readFile: String => String) extends RegexParsers {
   // a name can consist of anything except some reserved characters '(', ')', ':', ',', ';', '[', ']'
   val name: Parser[String] = not("->") ~> """[^():,;\[\]\s]+""".r
@@ -94,7 +18,7 @@ class TRSParser(readFile: String => String) extends RegexParsers {
 
   // check whether some symbol is used infix, but has not been defined infix
   def undefinedInfix(signature: Signature, rules: Set[QuasiRule]): Option[String] = {
-    val signatureMap = signature.functions.map{ fun => fun.name -> fun }.toMap
+    val signatureMap = signature.asMap
 
     // make sure all infix symbols are defined infix
     val missingInfix = rules.flatMap(_.infixOperators).find{ infix => !signatureMap.contains(infix) || signatureMap(infix).infix.isEmpty }
@@ -127,8 +51,7 @@ class TRSParser(readFile: String => String) extends RegexParsers {
     opt("QUERY simplification" ~> querySimplification)
     ^? (
       { case (theory, logic, solver, signature) ~ rules ~ querySimplification if undefinedInfix(signature, rules).isEmpty =>
-        val signatureMap = signature.functions.map{ fun => fun.name -> fun }.toMap
-        QuasiSystem(theory, logic, solver, signature, rules.map(_.infix2app(signatureMap))) },
+        QuasiSystem(theory, logic, solver, signature, rules.map(_.infix2app(signature.asMap))) },
       { case (_, _, _, signature) ~ rules ~ _ => undefinedInfix(signature, rules).get }
     )
 
@@ -207,8 +130,13 @@ class TRSParser(readFile: String => String) extends RegexParsers {
 
 object TRSParserTest {
   def main(args: Array[String]): Unit = {
-    val result = new TRSParser(readFile).parseSystem(readFile("examples/declare.ctrs"))
-    println(result)
+    new TRSParser(readFile).parseSystem(readFile("examples/declare.ctrs")) match {
+      case Left(quasiSystem) =>
+        println(quasiSystem)
+        val system = quasiSystem.toSystem
+        println(system)
+      case Right(error) => println(error.message)
+    }
   }
 
   def readFile(file: String) : String = {
