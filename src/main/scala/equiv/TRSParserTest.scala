@@ -6,9 +6,9 @@ import scala.io.Source
 
 object TRSParserTest {
   def main(args: Array[String]): Unit = {
-    new TRSParser(readFile).parseSystem(readFile("examples/declare.ctrs")) match {
+    new TRSParser(readFile).parseSystem(readFile("examples/decompose.ctrs")) match {
       case Left(quasiSystem) =>
-        // println(quasiSystem)
+        println(quasiSystem)
         val system = quasiSystem.toSystem
         println(system)
       case Right(error) => println(error.message)

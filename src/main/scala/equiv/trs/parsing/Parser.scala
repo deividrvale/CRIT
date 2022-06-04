@@ -13,7 +13,7 @@ class TRSParser(readFile: String => String) extends RegexParsers {
   // a name can consist of anything except some reserved characters '(', ')', ':', ',', ';', '[', ']'
   val name: Parser[String] = not("->") ~> """[^():,;\[\]\s]+""".r
 
-  val querySimplification: Parser[String] = """\[.*?]""".r
+  val query: Parser[String] = """.*""".r
 
   val unsignedInt: Parser[Int] = """\d+""".r ^^ { _.toInt }
 
@@ -44,18 +44,19 @@ class TRSParser(readFile: String => String) extends RegexParsers {
   def system: Parser[QuasiSystem] =
     ((("THEORY" ~> name <~ ";") ~
       ("LOGIC" ~> name <~ ";") ~
-      ("SOLVER" ~> name <~ ";") ~
+      (opt("SOLVER" ~> name <~ ";") ^^ { _.getOrElse("") }) ~
       ("SIGNATURE" ~> signature)
     ) ^^ {
       case theory ~ logic ~ solver ~ signature =>
         (theory, logic, solver, signature.union(readTheoryRecursive(theory).signature))
     } ) ~
     ("RULES" ~> rules) ~
-    opt("QUERY simplification" ~> querySimplification)
+    opt("IRREGULAR") ~
+    opt("QUERY" ~> query)
     ^? (
-      { case (theory, logic, solver, signature) ~ rules ~ querySimplification if undefinedInfix(signature, rules).isEmpty =>
+      { case (theory, logic, solver, signature) ~ rules ~ irregular ~ querySimplification if undefinedInfix(signature, rules).isEmpty =>
         QuasiSystem(theory, logic, solver, signature, rules.map(_.infix2app(signature.leftAsMap))) },
-      { case (_, _, _, signature) ~ rules ~ _ => undefinedInfix(signature, rules).get }
+      { case (_, _, _, signature) ~ rules ~ _ ~ _ => undefinedInfix(signature, rules).get }
     )
 
   // Signature definitionK
