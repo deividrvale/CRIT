@@ -1,8 +1,6 @@
 package equiv.trs
 
-case class Constraint(term: Term) {
-  assert(term.sort == Sort.Bool)
-}
+import equiv.trs.Term.App
 
 case class Rule(left: Term, right: Term, constraint: Option[Constraint]) {
   assert(left.sort == right.sort)
@@ -11,6 +9,8 @@ case class Rule(left: Term, right: Term, constraint: Option[Constraint]) {
     case App(fun, _) => assert(!fun.typing.isTheory)
     case _ => assert(false)
   }
-}
 
-case class System(theory: String, logic: String, solver: String, signature: Signature, rules: Set[Rule])
+  override def toString: String = {
+    s"$left -> $right ${constraint.map(_.toString).getOrElse("")}"
+  }
+}
