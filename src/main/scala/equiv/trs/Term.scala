@@ -4,10 +4,27 @@ trait Term {
   def sort: Sort
 }
 
-case class Var(name: String, sort: Sort) extends Term
+object Term {
+  case class Var(name: String, sort: Sort) extends Term {
+    override def toString: String = {
+      s"$name:$sort"
+    }
+  }
 
-case class App(fun: FunctionSymbol, args: List[Term]) extends Term {
-  assert(fun.typing.input == args.map(_.sort))
+  case class App(fun: FunctionSymbol, args: List[Term]) extends Term {
+    private val sortsArgsAny: Set[Sort] = args.indices.filter{ i => fun.typing.getSort(Some(i)).contains(Sort.Any) }.map{ i => args(i).sort }.toSet
 
-  def sort: Sort = fun.typing.output
+    assert(
+      args.length >= fun.typing.input.length &&
+      args.indices.forall{ i => val sort = fun.typing.getSort(Some(i)); sort.contains(Sort.Any) || sort.contains(args(i).sort) } &&
+      sortsArgsAny.size <= 1,
+      s"The term ${fun.name}( ${args.mkString(", ")} ) is not well-typed; here $fun."
+    )
+
+    val sort: Sort = if(fun.typing.output == Sort.Any) sortsArgsAny.head else fun.typing.output
+
+    override def toString: String = {
+      s"${fun.name}${if(args.nonEmpty) args.mkString("( ", ", ", " )") else ""}"
+    }
+  }
 }
