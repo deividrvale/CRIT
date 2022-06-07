@@ -7,7 +7,7 @@ object Temp {
   /** x : Int */
   val varX: Term = Var("x", Sort.Int)
   /** - : Int x Int => Int */
-  val minus: FunctionSymbol = FunctionSymbol("-", Typing(List(Sort.Int, Sort.Int), Sort.Int, true))
+  val minus: FunctionSymbol = FunctionSymbol("-", Typing(List(Sort.Int, Sort.Int), Sort.Int, true), Some(Infix(InfixKind.Right, 1)))
   /** 0 : Int */
   val valZero: Term = App(FunctionSymbol("0", Typing(List(), Sort.Int, true)), List())
   /** 1 : Int */
@@ -15,9 +15,9 @@ object Temp {
   /** x - 1 : Int */
   val xMinusOne: Term = App(minus, List(varX, valOne))
   /** > : Int x Int => Bool  */
-  val funcGT: FunctionSymbol = FunctionSymbol(">", Typing(List(Sort.Int, Sort.Int), Sort.Bool, true))
+  val funcGT: FunctionSymbol = FunctionSymbol(">", Typing(List(Sort.Int, Sort.Int), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
   /** <= : Int x Int => Bool */
-  val funcLE: FunctionSymbol = FunctionSymbol("<=", Typing(List(Sort.Int, Sort.Int), Sort.Bool, true))
+  val funcLE: FunctionSymbol = FunctionSymbol("<=", Typing(List(Sort.Int, Sort.Int), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
   /** return : Int => Int */
   val funcReturn: FunctionSymbol = FunctionSymbol("return", Typing(List(Sort.Int), Sort.Int))
 

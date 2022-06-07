@@ -7,7 +7,7 @@ trait Term {
 object Term {
   case class Var(name: String, sort: Sort) extends Term {
     override def toString: String = {
-      s"$name:$sort"
+      s"$name" //s"$name:$sort"
     }
   }
 
@@ -24,7 +24,13 @@ object Term {
     val sort: Sort = if(fun.typing.output == Sort.Any) sortsArgsAny.head else fun.typing.output
 
     override def toString: String = {
+      if isInfix then s"${args.head} ${fun.name} ${args(1)}" else
       s"${fun.name}${if(args.nonEmpty) args.mkString("( ", ", ", " )") else ""}"
+    }
+
+    def isInfix: Boolean = this.fun.infix match {
+        case None => false
+        case Some(Infix(_, _)) => this.args.length == 2
     }
   }
 }
