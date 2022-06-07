@@ -1,4 +1,5 @@
 package equiv.trs
+import equiv.trs.Term.{App, Var}
 
 val functionSymbol = FunctionSymbol("f", Typing(List(Sort.Int), Sort.Int))           // f : Int => Int
 val varX = Var("x", Sort.Int)                                                        // x : Int
