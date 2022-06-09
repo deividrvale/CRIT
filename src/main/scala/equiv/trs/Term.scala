@@ -1,6 +1,5 @@
 package equiv.trs
 
-import equiv.ri.Rewrite.doTermsMatch
 import equiv.trs.Term.{App, Position, Var}
 import equiv.utils.MapUtils
 
@@ -45,9 +44,9 @@ trait Term {
     property(this) match {
       case Some(x) => (this,List.empty,x) :: result
       case None => result
-    } 
+    }
   }
-  
+
   /**
    * Searches all subterms that are instances of the given term.
    */
