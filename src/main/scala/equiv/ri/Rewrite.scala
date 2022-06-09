@@ -15,12 +15,6 @@ object Rewrite {
 
   def findRedex(constrainedTerm: ConstrainedTerm, rule: Rule): List[Int] = ???
 
-  /**  */
-  def doTermsMatch(term1: Term, term2: Term) : Boolean = term1 match {
-    case Var(_, _) => term1.instanceOf(term2).nonEmpty
-    case App(_, args) => term1.instanceOf(term2).nonEmpty || args.exists(doTermsMatch(_, term2))
-  }
-
   /** TODO Get a list of possible positions where we can apply the given rewrite rule in the term */
   def getPossibleRewritePositions(constrainedTerm: ConstrainedTerm, rule: Rule) : List[List[Int]] = ???
 

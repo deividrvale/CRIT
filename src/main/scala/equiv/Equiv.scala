@@ -16,7 +16,7 @@ object Equiv {
   }
 
   def testApp(rule: Rule, consTerm: ConstrainedTerm): Unit = {
-    println(s"Is rule $rule applicable on term $consTerm?: ${doTermsMatch(consTerm.term, rule.left)}")
+    println(s"Is rule $rule applicable on term $consTerm?: ${consTerm.term.findSubTermInstances(rule.left).nonEmpty}")
   }
 
 }

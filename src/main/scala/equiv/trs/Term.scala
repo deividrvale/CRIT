@@ -1,6 +1,7 @@
 package equiv.trs
 
-import equiv.trs.Term.{App, Var}
+import equiv.ri.Rewrite.doTermsMatch
+import equiv.trs.Term.{App, Position, Var}
 import equiv.utils.MapUtils
 
 trait Term {
@@ -31,7 +32,26 @@ trait Term {
     }
   }
 
-//  def findSubterms(property )
+  /**
+   * Searches all subterms with the given property.
+   * @param property A property of terms.
+   * @return All subterms with the property together with their positions.
+   */
+  def findSubTerms[X](property: Term => Option[X]) : List[(Term,Position,X)] = {
+    val result = this match {
+      case Var(_, _) => List.empty
+      case App(_, args) => args.zipWithIndex.flatMap{ case (arg,i) => arg.findSubTerms(property).map{ case (t,p,x) => (t,i::p,x) } }
+    }
+    property(this) match {
+      case Some(x) => (this,List.empty,x) :: result
+      case None => result
+    } 
+  }
+  
+  /**
+   * Searches all subterms that are instances of the given term.
+   */
+  def findSubTermInstances(other: Term): List[(Term, Position, Map[Var, Term])] = findSubTerms(t => t.instanceOf(other))
 
   /** Substitute a sub-term with `replacement` at the given `position`.
    * @param position Position of substitution as a list of Ints
