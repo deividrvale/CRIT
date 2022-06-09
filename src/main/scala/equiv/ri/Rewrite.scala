@@ -3,6 +3,8 @@ import equiv.trs.Core.boolTrue
 import equiv.trs.Term.{App, Var}
 import equiv.trs.{ConstrainedTerm, Constraint, Core, Rule, Term}
 
+import scala.language.postfixOps
+
 object Rewrite {
 
   /** Substitute a sub-term of `term1` with `term2` at the given `position`.
@@ -39,13 +41,16 @@ object Rewrite {
   /** @return A list of variables that occur in the given constrained term */
   def getConstrainedTermVars(ct: ConstrainedTerm): List[Term] = getTermVars(ct.term) ++ getTermVars(ct.constraint.term)
 
-  /** Checks whether a certain rewrite rule is applicable somewhere in the given constrained term */
-  def isRuleApplicable(constrainedTerm: ConstrainedTerm, rule: Rule) : Boolean = ???
+  def isConstraintSatisfied(constrainedTerm: ConstrainedTerm, rule: Rule): Boolean = true // TODO
 
-  /** Checks whether a certain rewrite rule is applicable at the root of the given constrained term */
-  def isRuleApplicableAtRoot(constrainedTerm: ConstrainedTerm, rule: Rule) : Boolean = matchTerms(constrainedTerm.term, rule.left)
+  def findRedex(constrainedTerm: ConstrainedTerm, rule: Rule): List[Int] = ???
 
   /**  */
+  def doTermsMatch(term1: Term, term2: Term) : Boolean = term1 match {
+    case Var(_, _) => matchTerms(term1, term2)
+    case App(_, args) => matchTerms(term1, term2) || args.map(doTermsMatch(_, term2)).foldLeft(false)(_ || _)
+  }
+
   def matchTerms(term1: Term, term2: Term) : Boolean = (term1, term2) match {
     case (Var(_, sort1), Var(_, sort2)) => sort1 == sort2
     case (Var(_, _), App(_, _)) => false
@@ -54,7 +59,7 @@ object Rewrite {
       (args1 zip args2).map(matchTerms).foldLeft(true)(_ && _)
   }
 
-  /** Get a list of possible positions where we can apply the given rewrite rule in the term */
+  /** TODO Get a list of possible positions where we can apply the given rewrite rule in the term */
   def getPossibleRewritePositions(constrainedTerm: ConstrainedTerm, rule: Rule) : List[List[Int]] = ???
 
 }

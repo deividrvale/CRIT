@@ -25,7 +25,7 @@ object Term {
 
     override def toString: String = {
       if isInfix then s"${args.head} ${fun.name} ${args(1)}" else
-      s"${fun.name}${if(args.nonEmpty) args.mkString("( ", ", ", " )") else ""}"
+      s"${fun.name}${if(args.nonEmpty) args.mkString("(", ", ", ")") else ""}"
     }
 
     def isInfix: Boolean = this.fun.infix match {
