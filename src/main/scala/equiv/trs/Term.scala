@@ -47,6 +47,10 @@ trait Term {
     }
   }
 
+  def findSubTermsBool(property: Term => Boolean) : List[(Term,Position)] = {
+    findSubTerms({ t => if(property(t)) Some(()) else None }).map{ case (t,p,_) => (t,p) }
+  }
+
   /**
    * Searches all subterms that are instances of the given term.
    */
