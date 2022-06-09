@@ -8,6 +8,8 @@ object Temp {
   val funcG: FunctionSymbol = FunctionSymbol("g", Typing(List(Sort.Int), Sort.Int))
   /** x : Int */
   val varX: Term = Var("x", Sort.Int)
+  /** y : Int */
+  val varY: Term = Var("y", Sort.Int)
   /** - : Int x Int => Int */
   val minus: FunctionSymbol = FunctionSymbol("-", Typing(List(Sort.Int, Sort.Int), Sort.Int, true), Some(Infix(InfixKind.Right, 1)))
   /** 0 : Int */
@@ -26,9 +28,9 @@ object Temp {
   /** f( x ) */
   val termFx: Term = App(funcF, List(varX))
   /** g( x ) */
-  val termGx: Term = App(funcG, List(varX))
+  val termGx: Term = App(funcG, List(varY))
   /** g( f( x ) ) */
-  val termGFx: Term = App(funcG, List(App(funcF, List(varX))))
+  val termGFx: Term = App(funcG, List(App(funcF, List(varY))))
   /** f( x - 1 ) */
   val termFxMinOne: Term = App(funcF, List(xMinusOne))
   /** return( 0 ) */
