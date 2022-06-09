@@ -31,6 +31,8 @@ trait Term {
     }
   }
 
+//  def findSubterms(property )
+
   /** Substitute a sub-term with `replacement` at the given `position`.
    * @param position Position of substitution as a list of Ints
    * @param replacement Term to substitute
@@ -55,6 +57,8 @@ trait Term {
 }
 
 object Term {
+  type Position = List[Int]
+
   case class Var(name: String, sort: Sort) extends Term {
     override def toString: String = {
       s"$name" //s"$name:$sort"
