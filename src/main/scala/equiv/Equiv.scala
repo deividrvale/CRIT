@@ -11,8 +11,6 @@ import equiv.trs.Core.boolTrue
 
 object Equiv {
   def main(args: Array[String]): Unit = {
-    println("Hello")
-
     val eq1 = Equation(termFy, termGFx, Constraint(boolTrue))
     val pfSt1 = ProofState(Set(eq1), Set(rho1, rho2), true)
     println(pfSt1)
