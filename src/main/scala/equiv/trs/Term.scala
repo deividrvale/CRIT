@@ -56,7 +56,7 @@ trait Term {
    */
   def findSubTermInstances(other: Term): List[(Term, Position, Map[Var, Term])] = findSubTerms(t => t.instanceOf(other))
 
-  /** Substitute a sub-term with `replacement` at the given `position`.
+  /** Substitute a subterm with `replacement` at the given `position`.
    * @param position Position of substitution as a list of Ints
    * @param replacement Term to substitute
    */

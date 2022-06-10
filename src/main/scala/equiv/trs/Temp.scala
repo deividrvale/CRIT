@@ -27,10 +27,16 @@ object Temp {
 
   /** f( x ) */
   val termFx: Term = App(funcF, List(varX))
+  /** f( y ) */
+  val termFy: Term = App(funcF, List(varY))
   /** g( x ) */
-  val termGx: Term = App(funcG, List(varY))
+  val termGx: Term = App(funcG, List(varX))
+  /** g( y ) */
+  val termGy: Term = App(funcG, List(varY))
   /** g( f( x ) ) */
-  val termGFx: Term = App(funcG, List(App(funcF, List(varY))))
+  val termGFx: Term = App(funcG, List(App(funcF, List(varX))))
+  /** g( f( y ) ) */
+  val termGFy: Term = App(funcG, List(App(funcF, List(varY))))
   /** f( x - 1 ) */
   val termFxMinOne: Term = App(funcF, List(xMinusOne))
   /** return( 0 ) */
