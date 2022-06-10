@@ -1,29 +1,44 @@
 package equiv.trs
 
-import equiv.trs.Term.{App, Position, Var}
+import equiv.trs.Term.{App, Position, Substitution, Var}
 import equiv.utils.MapUtils
 
 trait Term {
   def sort: Sort
 
-  /** @return A list of variables that occur in the given term */
+  /** @return A set of variables that occur in the given term */
   def vars: Set[Var] = this match {
     case x@Var(_, _) => Set(x)
     case App(_, args) => args.toSet.flatMap(_.vars)
   }
 
-  /**
-   * Checks if the current term matches the given term.
-   * @return A substitution if the terms match, otherwise None.
-   */
-  def instanceOf(other: Term) : Option[Map[Var,Term]] = {
+  /** @return A set of all occurring function symbols */
+  def functionSymbols: Set[FunctionSymbol] = this match {
+    case Var(_, _) => Set()
+    case App(f, args) => Set(f) ++ args.flatMap(t => t.functionSymbols)
+  }
+
+  /** @return A set of the names of all occurring function symbols */
+  def functionSymbolNames: Set[String] = this.functionSymbols.map(f => f.name)
+
+  /** @return The subterm at the given position */
+  def subTermAt(position: Position): Term = position match {
+    case List() => this
+    case x::xs => this match {
+      case App(_, args) => args(x).subTermAt(xs)
+    }
+  }
+
+  /** Checks if the current term matches the given term.
+   * @return A substitution if the terms match, otherwise None. */
+  def instanceOf(other: Term) : Option[Substitution] = {
     if(this.sort != other.sort) None else
     (this,other) match {
       case (_, v@Var(_,_)) => Some(Map(v -> this))
       case (Var(_, _), App(_, _)) => None
       case (App(f1, args1), App(f2, args2)) =>
-        if(f1 == f2 && args1.length == args2.length) {
-          (args1 zip args2).map(_.instanceOf(_)).foldLeft[Option[Map[Var,Term]]](Some(Map.empty)){
+        if(f1 == f2 && args1.length == args2.length) { // TODO: probably not necessary to check equality of args lengths
+          (args1 zip args2).map(_.instanceOf(_)).foldLeft[Option[Substitution]](Some(Map.empty)){
             case (Some(map1),Some(map2)) => MapUtils.union(map1,map2)
             case _ => None
           }
@@ -51,19 +66,17 @@ trait Term {
     findSubTerms({ t => if(property(t)) Some(()) else None }).map{ case (t,p,_) => (t,p) }
   }
 
-  /**
-   * Searches all subterms that are instances of the given term.
-   */
-  def findSubTermInstances(other: Term): List[(Term, Position, Map[Var, Term])] = findSubTerms(t => t.instanceOf(other))
+  /** Searches all subterms that are instances of the given term. */
+  def findSubTermInstances(other: Term): List[(Term, Position, Substitution)] = findSubTerms(t => t.instanceOf(other))
 
   /** Substitute a subterm with `replacement` at the given `position`.
    * @param position Position of substitution as a list of Ints
    * @param replacement Term to substitute
    */
-  def substituteAtPos(position: List[Int], replacement: Term): Term = (this, position, replacement) match {
+  def substituteAtPos(position: Position, replacement: Term): Term = (this, position, replacement) match {
     case (_, List(), _) => replacement
     case (App(f, args), x::xs, t2) => App(f, args.updated(x, args(x).substituteAtPos(xs, t2)))
-    case _ => throw RuntimeException(s"Could not substitute position ${position} in ${this} by ${replacement}.")
+    case _ => throw RuntimeException(s"Could not substitute position $position in $this by $replacement.")
   }
 
   /** Substitute all occurrences of `matchTerm` by `replacementTerm`
@@ -77,10 +90,22 @@ trait Term {
       case App(f, args) => App(f, args.map(_.substituteAll(matchTerm, replacementTerm)))
     }
   }
+
+  /** Apply a substitution to all variables in a term
+   * @return The term after the substitution */
+  def applySubstitution(substitution: Substitution): Term = this match {
+    case x@Var(_, _) => if substitution.contains(x) then substitution(x) else x
+    case App(f, args) => App(f, args.map(_.applySubstitution(substitution)))
+  }
+
+  // TODO Use substitution
+  def rewriteAtPos(position: Position, replacement: Term, substitution: Substitution): Term =
+    substituteAtPos(position, replacement.applySubstitution(substitution))
 }
 
 object Term {
   type Position = List[Int]
+  type Substitution = Map[Var, Term]
 
   case class Var(name: String, sort: Sort) extends Term {
     override def toString: String = {
