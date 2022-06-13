@@ -14,7 +14,14 @@ object TRSParserTest {
     if (folder.exists && folder.isDirectory) {
       folder.listFiles.filter(_.isFile).filter(_.getName.endsWith(".ctrs")).toList.sorted.foreach{ file =>
         println(file.getName)
-        println(if(parseTRS("examples/" + file.getName).isEmpty) { failures += 1; "FAILED" } else "ok")
+        parseTRS("examples/" + file.getName) match {
+          case Some(system) =>
+            // println(system)
+            println("OK")
+          case None =>
+            println("FAILED")
+            failures += 1
+        }
         println()
       }
     }
