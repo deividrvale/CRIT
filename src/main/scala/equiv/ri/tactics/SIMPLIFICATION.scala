@@ -11,16 +11,10 @@ import scala.annotation.tailrec
 object SIMPLIFICATION {
   /**
    * @return Updated proofstate together with the equation, side, position and applied rule */
-  @tailrec
   def trySimplification(pfSt: ProofState, rules: Set[Rule]): Option[(Equation, Equation)] = {
-    if pfSt.equations.isEmpty
-    then None
-    else
-      val oldEquation = pfSt.equations.head
-      trySimplificationOnEquation(oldEquation, rules) match {
-        case None => trySimplification(pfSt.removeEquation(oldEquation), rules)
-        case Some(newEquation) => Some((oldEquation, newEquation))
-      }
+    pfSt.equations.view.flatMap { oldEquation =>
+      trySimplificationOnEquation(oldEquation, rules).map((oldEquation,_))
+    }.headOption
   }
 
   def trySimplificationOnEquation(equation: Equation, rules: Set[Rule]): Option[Equation] = {
