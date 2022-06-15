@@ -49,7 +49,7 @@ object SIMPLIFICATION {
   def trySimplificationOnEquationSideWithRule(term: Term, rule: Rule): Option[Term] = {
     term.findSubTerms(t => t.instanceOf(rule.left)) match {
       case List() => None
-      case (term, position, substitution)::_ => Some(term.rewriteAtPos(position, rule.right, substitution))
+      case (_, position, substitution)::_ => Some(term.rewriteAtPos(position, rule.right, substitution))
     }
   }
 
