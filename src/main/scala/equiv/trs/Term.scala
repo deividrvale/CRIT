@@ -101,6 +101,11 @@ trait Term {
   // TODO Use substitution
   def rewriteAtPos(position: Position, replacement: Term, substitution: Substitution): Term =
     substituteAtPos(position, replacement.applySubstitution(substitution))
+
+  def toStringApplicative : String = this match {
+    case App(f,args) => if(args.isEmpty) s"${f.name}" else s"(${f.name} ${args.map(_.toStringApplicative).mkString(" ")})"
+    case Var(v,_) => v
+  }
 }
 
 object Term {
@@ -113,7 +118,7 @@ object Term {
     }
   }
 
-  case class App(fun: FunctionSymbol, args: List[Term]) extends Term {
+  case class App(fun: FunctionSymbol, args: List[Term] = List.empty) extends Term {
     private val sortsArgsAny: Set[Sort] = args.indices.filter{ i => fun.typing.getSort(Some(i)).contains(Sort.Any) }.map{ i => args(i).sort }.toSet
 
     assert(
