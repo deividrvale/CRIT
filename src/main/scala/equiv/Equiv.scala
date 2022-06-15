@@ -11,13 +11,11 @@ import equiv.trs.Core.boolTrue
 
 object Equiv {
   def main(args: Array[String]): Unit = {
-    val eq1 = Equation(termFy, termGFx, Constraint(boolTrue))
+    val eq1 = Equation(termGFy, termGy, Constraint(boolTrue))
     val pfSt1 = ProofState(Set(eq1), Set(rho1, rho2), true)
     println(pfSt1)
     val pfSt2 = pfSt1.trySimplification()
     println(pfSt2)
-    val pfSt3 = pfSt2.trySimplification()
-    println(pfSt3)
   }
 
   def testApp(rule: Rule, consTerm: ConstrainedTerm): Unit = {
