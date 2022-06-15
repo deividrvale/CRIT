@@ -1,6 +1,6 @@
 package equiv.ri
 
-import equiv.ri.Equation.Equation
+import equiv.ri.Equation
 import equiv.trs.Rule
 
 object Tactics {

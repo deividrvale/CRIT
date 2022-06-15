@@ -1,8 +1,7 @@
 package equiv
 
-import equiv.ri.ProofState.*
+import equiv.ri.{Equation, ProofState}
 import equiv.ri.Rewrite.{rewriteAtPos, *}
-import equiv.ri.Equation.{Equation, Side}
 import equiv.trs.*
 import equiv.trs.Temp.*
 import equiv.trs.Term.Var

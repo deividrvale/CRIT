@@ -1,8 +1,8 @@
 package equiv.ri.tactics
 
-import equiv.ri.Equation.{Equation, Side}
-import equiv.ri.ProofState.ProofState
-import equiv.ri.tactics.SIMPLIFICATION.trySimplificationOnEquationSide
+import equiv.ri.{Equation, ProofState}
+import equiv.ri.Equation.Side
+import equiv.ri.tactics.SIMPLIFICATION.trySimplificationOnTerm
 import equiv.trs.{Rule, Term}
 import equiv.trs.Term.Position
 
@@ -18,38 +18,24 @@ object SIMPLIFICATION {
   }
 
   def trySimplificationOnEquation(equation: Equation, rules: Set[Rule]): Option[Equation] = {
-    trySimplificationOnEquationSide(equation, Side.Left, rules) match {
-      case None => trySimplificationOnEquationSide(equation, Side.Right, rules)
-      case x => x
-    }
+    List(Side.Left, Side.Right).view.flatMap{ side =>
+      trySimplificationOnEquationSide(equation, side, rules)
+    }.headOption
   }
 
   def trySimplificationOnEquationSide(equation: Equation, side: Side, rules: Set[Rule]): Option[Equation] = {
-    trySimplificationOnEquationSide(equation.getSide(side), rules) match {
-      case None => None
-      case Some(term) => side match {
-        case Side.Left => Some(Equation(term, equation.right, equation.cons))
-        case Side.Right => Some(Equation(equation.left, term, equation.cons))
-      }
-    }
+    trySimplificationOnTerm(equation.getSide(side), rules).map(equation.withSide(side,_))
   }
 
   @tailrec
-  def trySimplificationOnEquationSide(term: Term, rules: Set[Rule]): Option[Term] = {
-    if rules.isEmpty
-    then None
-    else
-      val rule = rules.head
-      trySimplificationOnEquationSideWithRule(term, rule) match {
-        case None => trySimplificationOnEquationSide(term, rules - rule)
-        case x => x
-      }
+  def trySimplificationOnTerm(term: Term, rules: Set[Rule]): Option[Term] = {
+    rules.view.flatMap { rule => trySimplificationOnTermWithRule(term, rule) }.headOption
   }
 
-  def trySimplificationOnEquationSideWithRule(term: Term, rule: Rule): Option[Term] = {
+  def trySimplificationOnTermWithRule(term: Term, rule: Rule): Option[Term] = {
     term.findSubTerms(t => t.instanceOf(rule.left)) match {
       case List() => None
-      case (term, position, substitution)::_ => Some(term.rewriteAtPos(position, rule.right, substitution))
+      case (_, position, substitution)::_ => Some(term.rewriteAtPos(position, rule.right, substitution))
     }
   }
 
