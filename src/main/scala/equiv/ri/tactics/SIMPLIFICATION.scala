@@ -27,7 +27,6 @@ object SIMPLIFICATION {
     trySimplificationOnTerm(equation.getSide(side), rules).map(equation.withSide(side,_))
   }
 
-  @tailrec
   def trySimplificationOnTerm(term: Term, rules: Set[Rule]): Option[Term] = {
     rules.view.flatMap { rule => trySimplificationOnTermWithRule(term, rule) }.headOption
   }
