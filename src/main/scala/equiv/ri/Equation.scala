@@ -1,6 +1,5 @@
 package equiv.ri
 
-import com.sun.tools.classfile.TypeAnnotation.Position
 import dotty.tools.dotc.ast.untpd.Mod.Infix
 import equiv.ri.Equation.Side
 import equiv.trs.Term.{App, Position, Substitution}
