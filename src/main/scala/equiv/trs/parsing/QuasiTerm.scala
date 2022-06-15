@@ -2,6 +2,7 @@ package equiv.trs.parsing
 
 import equiv.trs.parsing.QuasiTerm.{App, InfixChain}
 import equiv.trs.*
+import equiv.utils.MapUtils
 
 trait QuasiTerm {
   // collect all infix operators in a QuasiTerm
@@ -25,7 +26,7 @@ trait QuasiTerm {
     this match {
       case App(fun, args) =>
         App(fun, args.map(_.infix2app(signature)))
-      case InfixChain(head, Nil) =>
+      case InfixChain(head, List()) =>
         head.infix2app(signature)
       case quasiInfix @ InfixChain(head, tail) =>
         // find the weakest infix operators
@@ -42,10 +43,31 @@ trait QuasiTerm {
         signature(weakest.head).infix match {
           case Some(Infix(InfixKind.Left,_)) => liftedApp.appFromLeft.asInstanceOf[App]
           case Some(Infix(InfixKind.Right,_)) => liftedApp.appFromRight.asInstanceOf[App]
-          case Some(Infix(InfixKind.Chain,_)) => App(weakest.head, head :: tail.map(_._2))
+          case Some(Infix(InfixKind.Chain,_)) => App(weakest.head, liftedApp.head :: liftedApp.tail.map(_._2))
           case _ => throw new RuntimeException(s"Symbol ${weakest.head} has not been declared infix, but is used as infix.")
         }
     }
+  }
+
+  /**
+   * Checks if the current term matches the given term.
+   * @return A substitution if the terms match, otherwise None.
+   */
+  def instanceOf(other: QuasiTerm) : Option[Map[String,QuasiTerm]] = {
+    (this,other) match {
+      case (_, App(x,Nil)) => Some(Map(x -> this))
+      case (App(f1, args1), App(f2, args2)) =>
+        if(f1 == f2 && args1.length == args2.length) {
+          (args1 zip args2).map(_.instanceOf(_)).foldLeft[Option[Map[String,QuasiTerm]]](Some(Map.empty)){
+            case (Some(map1),Some(map2)) => MapUtils.union(map1,map2)
+            case _ => None
+          }
+        } else None
+    }
+  }
+
+  def substitute(s: Map[String,QuasiTerm]) : QuasiTerm = this match {
+    case App(f, args) => if (s.contains(f) && args.isEmpty) s(f) else App(f, args.map(_.substitute(s)))
   }
 
   def toTerm(signature: Map[String,FunctionSymbol], variableSorts: Map[String,Sort]) : Term = {

@@ -3,17 +3,22 @@ package equiv.trs.parsing
 import equiv.trs.parsing.QuasiTerm.{App, InfixChain}
 import equiv.trs.{FunctionSymbol, Signature, Sort, System, Typing}
 
-case class QuasiSystem(theory: String, logic: String, solver: String, signature: QuasiSignature, rules: Set[QuasiRule]) {
+case class QuasiSystem(theory: String, logic: String, solver: String, signatureOriginal: QuasiSignature, rules: Set[QuasiRule], chains: Set[QuasiRule]) {
   def deriveTypings: (Signature, Map[(QuasiRule, String), Sort]) = {
     // a function argument (Some(nr)) or output (None)
     type Port = (Any, Option[Int])
 
-    val symbols = signature.asMap
-    val symbolsTyped = signature.leftAsMap
+    val usedSymbols = rules.flatMap(_.functionSymbols)
+    val intSymbols = usedSymbols.filter(_._2 == 0).filter(_._1.toIntOption.nonEmpty).map(_._1)
+    val intSignature = QuasiSignature(intSymbols.map{ i => Left(FunctionSymbol(i,Typing(List.empty,Sort.Int))) })
+    val signature = signatureOriginal.union(intSignature)
+
+    val signatureSymbols = signature.asMap
+    val signatureSymbolsTyped = signature.leftAsMap
 
     // function symbols with arities
     var symbol2arity = signature.left.map { symbol => symbol.name -> (symbol.typing.input.length, symbol.typing.isTheory, symbol.typing.isVariadic) }.toMap
-    rules.flatMap(_.functionSymbols).filter { s => symbols.contains(s._1) || s._2 > 0 }.foreach { case (symbol, arity) =>
+    usedSymbols.filter { s => signatureSymbols.contains(s._1) || s._2 > 0 }.foreach { case (symbol, arity) =>
       if (symbol2arity.contains(symbol)) {
         val (theArity, theory, variadic) = symbol2arity(symbol)
         if (theArity != arity && !variadic) throw new RuntimeException(s"The symbol ${symbol} occurs with varying arities.")
@@ -39,7 +44,7 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signature:
 
     // checks if the given argument is polymorphic
     def isSortAny(symbol: String, arg: Option[Int]): Boolean = {
-      symbolsTyped.get(symbol).exists { functionSymbol =>
+      signatureSymbolsTyped.get(symbol).exists { functionSymbol =>
         val typing = functionSymbol.typing
         portOfSymbol(symbol, arg) match {
           case (_, Some(nr)) => typing.input(nr) == Sort.Any
@@ -104,6 +109,24 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signature:
       }
     }
 
+    // set missing types to "result"
+    val default = Sort("result")
+    symbol2arity.foreach { case (symbol, (arity, theory, variadic)) =>
+      (0 until arity).foreach { i =>
+        if (isSortAny(symbol, Some(i))) Sort.Any
+        else class2sort.get(port2class((symbol, Some(i)))) match {
+          case None => class2sort = class2sort.updated(port2class((symbol, Some(i))), default)
+          case _ =>
+        }
+      }
+
+      if(isSortAny(symbol, None)) Sort.Any else
+      class2sort.get(port2class((symbol, None))) match {
+        case None => class2sort = class2sort.updated(port2class((symbol, None)), default)
+        case _ =>
+      }
+    }
+
     // typing for each symbol
     (
       Signature(symbol2arity.map { case (symbol, (arity, theory, variadic)) =>
@@ -128,6 +151,29 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signature:
   }
 
   def toSystem: System = {
+    applyChains.toSystemIntroduceSorts
+  }
+
+  private def applyChains: QuasiSystem = {
+    this.copy(rules = rules.map{ rule =>
+      QuasiRule(applyChains(rule.left, chains), applyChains(rule.right, chains), rule.constraint.map(applyChains(_,chains)))
+    })
+  }
+
+  private def applyChains(term: QuasiTerm, chains: Set[QuasiRule]): QuasiTerm = {
+    chains.foldRight(term) { case (chain,t) => applyChain(t,chain) }
+  }
+
+  private def applyChain(term: QuasiTerm, chain: QuasiRule): QuasiTerm = term match {
+    case App(f,args) =>
+      val termArgsRewritten = App(f,args.map(applyChain(_,chain)))
+      termArgsRewritten.instanceOf(chain.left) match {
+        case Some(subsitution) => chain.right.substitute(subsitution)
+        case None => termArgsRewritten
+      }
+  }
+
+  private def toSystemIntroduceSorts: System = {
     val (signature, variableSortsAllRules) = deriveTypings
     val signatureMap = signature.asMap
     System(theory, logic, solver, signature, rules = rules.map { rule =>
@@ -138,7 +184,7 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signature:
 
   override def toString: String = {
     s"""SIGNATURE:
-       |  ${signature.functions.mkString("\n  ")}
+       |  ${signatureOriginal.functions.map(_.toString).toList.sorted.mkString("\n  ")}
        |
        |RULES:
        |  ${rules.mkString("\n  ")}

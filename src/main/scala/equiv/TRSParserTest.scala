@@ -1,17 +1,49 @@
 package equiv
 
-import equiv.trs.parsing.TRSParser
+import equiv.trs.System
+import equiv.trs.parsing.{QuasiSystem, TRSParser}
 
+import java.io.File
 import scala.io.Source
 
 object TRSParserTest {
   def main(args: Array[String]): Unit = {
-    new TRSParser(readFile).parseSystem(readFile("examples/decompose.ctrs")) match {
-      case Left(quasiSystem) =>
-        println(quasiSystem)
-        val system = quasiSystem.toSystem
-        println(system)
-      case Right(error) => println(error.message)
+    var failures = 0
+    val path = getClass.getResource("/examples")
+    val folder = new File(path.getPath)
+    if (folder.exists && folder.isDirectory) {
+      folder.listFiles.filter(_.isFile).filter(_.getName.endsWith(".ctrs")).toList.sorted.foreach{ file =>
+        println(file.getName)
+        parseTRS("examples/" + file.getName) match {
+          case Some(system) =>
+            // println(system)
+            println("OK")
+          case None =>
+            println("FAILED")
+            failures += 1
+        }
+        println()
+      }
+    }
+    println(s"Number of failures: $failures")
+  }
+
+  def parseTRS(name: String) : Option[System] = {
+    var parseResult : QuasiSystem = null
+    try {
+      new TRSParser(readFile).parseSystem(readFile(name)) match {
+        case Left(quasiSystem) =>
+          parseResult = quasiSystem
+          Some(quasiSystem.toSystem)
+        case Right(error) =>
+          println(s"Parsing failed: ${error.message}")
+          None
+      }
+    } catch {
+      case e : Throwable =>
+        if(parseResult != null) println("Parse result:\n" + parseResult.toString)
+        println(s"Error: ${e.getMessage}")
+        None
     }
   }
 

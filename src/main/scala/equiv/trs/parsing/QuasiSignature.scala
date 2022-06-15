@@ -4,7 +4,7 @@ import equiv.trs.FunctionSymbol
 
 case class QuasiSignature(functions: Set[Either[FunctionSymbol, String]]) {
   def union(other: QuasiSignature): QuasiSignature = QuasiSignature(functions ++ other.functions)
-
+  
   def asMap: Map[String, Either[FunctionSymbol, String]] = functions.map { f =>
     (f match
       case Left(symbol) => symbol.name

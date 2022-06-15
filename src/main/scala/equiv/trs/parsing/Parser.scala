@@ -13,7 +13,7 @@ class TRSParser(readFile: String => String) extends RegexParsers {
   // a name can consist of anything except some reserved characters '(', ')', ':', ',', ';', '[', ']'
   val name: Parser[String] = not("->") ~> """[^():,;\[\]\s]+""".r
 
-  val query: Parser[String] = """.*""".r
+  val query: Parser[String] = """(?s).*""".r
 
   val unsignedInt: Parser[Int] = """\d+""".r ^^ { _.toInt }
 
@@ -31,32 +31,38 @@ class TRSParser(readFile: String => String) extends RegexParsers {
     }
   }
 
+  def keywords: Parser[String] =
+    "INCLUDE" | "DECLARE" | "WELLFOUNDED" | "CHAIN" | "SMT-RENAMINGS" | "SMT-TRANSLATIONS" |
+    "THEORY" | "LOGIC" | "SOLVER" | "SIGNATURE" | "NON-STANDARD" | "IRREGULAR" | "QUERY"
+
   def theory: Parser[QuasiTheory] =
     rep("INCLUDE" ~> name <~ ";") ~
     ("DECLARE" ~> signature) ~
     opt("WELLFOUNDED" ~> rep1sep(name, ",") <~ ";") ~
-    opt("CHAIN" ~> rep1(term ~ (":" ~> term <~ ";"))) ~
+    opt("CHAIN" ~> rep1(term ~ (":" ~> term <~ ";")) ^^ { _.map{ case left ~ right => QuasiRule(left,right,None) } }) ~
     opt("SMT-RENAMINGS" ~> renamings) ~
     opt("SMT-TRANSLATIONS" ~> translations) ^^ { case includes ~ signature ~ wellFounded ~ chains ~ smtRenamings ~ smtTranslations =>
-      (QuasiTheory(QuasiSignature(signature.functions), smtRenamings.getOrElse(Set.empty)) :: includes.map(readTheoryRecursive)).reduce(_.union(_))
+      (QuasiTheory(QuasiSignature(signature.functions), chains.getOrElse(List.empty).toSet, smtRenamings.getOrElse(Set.empty)) :: includes.map(parseTheoryRecursive)).reduce(_.union(_))
     }
 
   def system: Parser[QuasiSystem] =
-    ((("THEORY" ~> name <~ ";") ~
-      ("LOGIC" ~> name <~ ";") ~
-      (opt("SOLVER" ~> name <~ ";") ^^ { _.getOrElse("") }) ~
+    ((("THEORY" ~> name <~ opt(";")) ~
+      ("LOGIC" ~> name <~ opt(";")) ~
+      (opt("SOLVER" ~> name <~ opt(";")) ^^ { _.getOrElse("") }) ~
       ("SIGNATURE" ~> signature)
     ) ^^ {
       case theory ~ logic ~ solver ~ signature =>
-        (theory, logic, solver, signature.union(readTheoryRecursive(theory).signature))
+        val theories = parseTheoryRecursive(theory)
+        (theory, logic, solver, signature.union(theories.signature), theories.chains)
     } ) ~
     ("RULES" ~> rules) ~
+    opt("NON-STANDARD") ~
     opt("IRREGULAR") ~
     opt("QUERY" ~> query)
     ^? (
-      { case (theory, logic, solver, signature) ~ rules ~ irregular ~ querySimplification if undefinedInfix(signature, rules).isEmpty =>
-        QuasiSystem(theory, logic, solver, signature, rules.map(_.infix2app(signature.leftAsMap))) },
-      { case (_, _, _, signature) ~ rules ~ _ ~ _ => undefinedInfix(signature, rules).get }
+      { case (theory, logic, solver, signature, chains) ~ rules ~ nonstandard ~ irregular ~ querySimplification if undefinedInfix(signature, rules).isEmpty =>
+        QuasiSystem(theory, logic, solver, signature, rules.map(_.infix2app(signature.leftAsMap)), chains.map(_.infix2app(signature.leftAsMap))) },
+      { case (_, _, _, signature,_) ~ rules ~ _ ~ _ ~ _ => undefinedInfix(signature, rules).get }
     )
 
   // Signature definitionK
@@ -92,13 +98,13 @@ class TRSParser(readFile: String => String) extends RegexParsers {
       | name ~ opt("(" ~> repsep(term, ",") <~ ")") ^^ { case name ~ args => App(name, args.getOrElse(List.empty)) }
 
   // Constraint
-  def constraint: Parser[QuasiTerm] = "[" ~> term <~ "]"
+  def constraint: Parser[QuasiTerm] = opt("<--") ~> "[" ~> term <~ "]"
 
   // Rules
   def rules: Parser[Set[QuasiRule]] = rep(rule) ^^ { _.toSet }
 
   def rule: Parser[QuasiRule] =
-    term ~ ("->" ~> term) ~ (opt(constraint) <~ ";") ^^ { case left ~ right ~ constraint => QuasiRule(left, right, constraint) }
+    not(keywords) ~> term ~ ("->" ~> term) ~ (opt(constraint) <~ opt(";")) ^^ { case left ~ right ~ constraint => QuasiRule(left, right, constraint) }
 
   // Renamings
   def renamings: Parser[Set[Renaming]] = rep(renaming) ^^ { _.toSet }
@@ -125,7 +131,7 @@ class TRSParser(readFile: String => String) extends RegexParsers {
     }
   }
 
-  def readTheoryRecursive(file : String) : QuasiTheory = {
+  def parseTheoryRecursive(file : String) : QuasiTheory = {
     parseTheory(readFile(s"theories/$file.thr")) match {
       case Left(signature) => signature
       case Right(error) => throw new RuntimeException(s"Exception parsing theory $file:\n\n" + error.message)
