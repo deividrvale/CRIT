@@ -11,26 +11,35 @@ enum SolverResult:
 object Z3 {
   def main(args: Array[String]): Unit = {
     def gt(x: Term, y: Term) = Term.App(FunctionSymbol(">", Typing(List(Sort.Int, Sort.Int), Sort.Bool)), List(x,y))
+    def lt(x: Term, y: Term) = Term.App(FunctionSymbol("<", Typing(List(Sort.Int, Sort.Int), Sort.Bool)), List(x,y))
     def and(x: Term, y: Term) = Term.App(FunctionSymbol("and", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool)), List(x,y))
+    def impl(x: Term, y: Term) = Term.App(FunctionSymbol("=>", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool)), List(x, y))
     def variable(v: String) = Term.Var(v, Sort.Int)
     def int(x: Int) = Term.App(FunctionSymbol(x.toString, Typing(List.empty, Sort.Int)))
-
     val x = variable("x")
 
     List(
-      gt(x, int(5)),
-      and( gt(x, int(5)), gt(int(2), x) ),
+      lt(x, int(-1)),
+      gt(int(2), int(5)),
+      gt(int(5), int(5)),
     ).foreach{ formula =>
       println(formula)
       println(solve(formula))
     }
   }
 
+  /** @return Whether the first term implies the second */
+  def constraintImplication(term1: Term, term2: Term): Boolean = {
+    val formula = TermUtils.and(term1, term2)
+    println(s"Solvable: $formula?")
+    solve(formula) == SolverResult.Satisfiable
+  }
+
   def solve[T](formula: Term) : SolverResult = {
-    val variables = formula.vars
-    val produceModels = false
-    val logic = "QF_LIA"
-    val inputFile = File.createTempFile("input", ".smt2")
+    val variables: Set[Term.Var] = formula.vars
+    val produceModels: Boolean = false
+    val logic: String = "QF_LIA"
+    val inputFile: File = File.createTempFile("input", ".smt2")
 
     new PrintWriter(inputFile) {
       write(
@@ -53,7 +62,7 @@ object Z3 {
     println(inputFile.getAbsolutePath)
     Thread.sleep(100000)
     */
-    val output = Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator
+    val output: Iterator[String] = Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator
 
     output.next() match {
       case "sat" => SolverResult.Satisfiable

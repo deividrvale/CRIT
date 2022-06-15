@@ -1,6 +1,7 @@
 package equiv.trs.parsing
 
 import equiv.trs.{Constraint, FunctionSymbol, Rule, Sort}
+import equiv.utils.{MapUtils, TermUtils}
 
 case class QuasiRule(left: QuasiTerm, right: QuasiTerm, constraint: Option[QuasiTerm]) {
   def infixOperators: Set[String] = {
@@ -16,7 +17,7 @@ case class QuasiRule(left: QuasiTerm, right: QuasiTerm, constraint: Option[Quasi
   }
 
   def toRule(signature: Map[String, FunctionSymbol], variableSorts: Map[String, Sort]): Rule = {
-    Rule(left.toTerm(signature, variableSorts), right.toTerm(signature, variableSorts), constraint.map { c => Constraint(c.toTerm(signature, variableSorts)) })
+    Rule(left.toTerm(signature, variableSorts), right.toTerm(signature, variableSorts), constraint.map { c => Constraint(c.toTerm(signature, variableSorts)) }.getOrElse(TermUtils.constraintTrue))
   }
 
   override def toString: String = {

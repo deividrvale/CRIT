@@ -37,7 +37,7 @@ trait Term {
       case (_, v@Var(_,_)) => Some(Map(v -> this))
       case (Var(_, _), App(_, _)) => None
       case (App(f1, args1), App(f2, args2)) =>
-        if(f1 == f2 && args1.length == args2.length) { // TODO: probably not necessary to check equality of args lengths
+        if(f1 == f2) {
           (args1 zip args2).map(_.instanceOf(_)).foldLeft[Option[Substitution]](Some(Map.empty)){
             case (Some(map1),Some(map2)) => MapUtils.union(map1,map2)
             case _ => None
@@ -98,7 +98,6 @@ trait Term {
     case App(f, args) => App(f, args.map(_.applySubstitution(substitution)))
   }
 
-  // TODO Use substitution
   def rewriteAtPos(position: Position, replacement: Term, substitution: Substitution): Term =
     substituteAtPos(position, replacement.applySubstitution(substitution))
 

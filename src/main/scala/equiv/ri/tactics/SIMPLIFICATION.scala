@@ -3,14 +3,15 @@ package equiv.ri.tactics
 import equiv.ri.{Equation, ProofState}
 import equiv.ri.Equation.Side
 import equiv.ri.tactics.SIMPLIFICATION.trySimplificationOnTerm
-import equiv.trs.{Rule, Term}
+import equiv.trs.{Constraint, Rule, Term}
 import equiv.trs.Term.Position
+import equiv.utils.Z3
 
 import scala.annotation.tailrec
 
 object SIMPLIFICATION {
   /**
-   * @return Updated proofstate together with the equation, side, position and applied rule */
+   * @return Either a pair with as first argument an old equation and as second argument the updated equation, or None if no simplification is possible */
   def trySimplification(pfSt: ProofState, rules: Set[Rule]): Option[(Equation, Equation)] = {
     pfSt.equations.view.flatMap { oldEquation =>
       trySimplificationOnEquation(oldEquation, rules).map((oldEquation,_))
@@ -24,15 +25,15 @@ object SIMPLIFICATION {
   }
 
   def trySimplificationOnEquationSide(equation: Equation, side: Side, rules: Set[Rule]): Option[Equation] = {
-    trySimplificationOnTerm(equation.getSide(side), rules).map(equation.withSide(side,_))
+    trySimplificationOnTerm(equation.getSide(side), equation.constraint, rules).map(equation.withSide(side,_))
   }
 
-  def trySimplificationOnTerm(term: Term, rules: Set[Rule]): Option[Term] = {
-    rules.view.flatMap { rule => trySimplificationOnTermWithRule(term, rule) }.headOption
+  def trySimplificationOnTerm(term: Term, constraint: Constraint, rules: Set[Rule]): Option[Term] = {
+    rules.view.flatMap { rule => trySimplificationOnTermWithRule(term, constraint, rule) }.headOption
   }
 
-  def trySimplificationOnTermWithRule(term: Term, rule: Rule): Option[Term] = {
-    term.findSubTerms(t => t.instanceOf(rule.left)) match {
+  def trySimplificationOnTermWithRule(term: Term, constraint: Constraint, rule: Rule): Option[Term] = {
+    term.findSubTerms(t => t.instanceOf(rule.left)).filter((_, _, s) => Z3.constraintImplication(constraint.term, rule.constraint.term.applySubstitution(s))) match {
       case List() => None
       case (_, position, substitution)::_ => Some(term.rewriteAtPos(position, rule.right, substitution))
     }

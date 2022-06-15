@@ -2,7 +2,7 @@ package equiv.trs
 
 import equiv.trs.Term.App
 
-case class Rule(left: Term, right: Term, constraint: Option[Constraint]) {
+case class Rule(left: Term, right: Term, constraint: Constraint) {
   assert(left.sort == right.sort)
 
   left match {
@@ -14,6 +14,6 @@ case class Rule(left: Term, right: Term, constraint: Option[Constraint]) {
   def isTerminating(rules: Set[Rule]): Boolean = true
 
   override def toString: String = {
-    s"$left -> $right ${constraint.map(_.toString).getOrElse("")}"
+    s"$left -> $right$constraint"
   }
 }

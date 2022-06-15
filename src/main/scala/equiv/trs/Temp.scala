@@ -1,5 +1,6 @@
 package equiv.trs
 import equiv.trs.Term.{App, Var}
+import equiv.utils.TermUtils.constraintTrue
 
 object Temp {
   /** f : Int => Int */
@@ -47,18 +48,18 @@ object Temp {
   var consXLEZero: Constraint = Constraint(App(funcLE, List(varX, valZero)))
 
   /**  f(x) -> f(x - 1)  [x > 0] */
-  val rho1: Rule = Rule(termFx, termFxMinOne, Some(consXGTZero))
+  val rho1: Rule = Rule(termFx, termFxMinOne, (consXGTZero))
   /** f(x) -> return(0) [x <= 0] */
-  val rho2: Rule = Rule(termFx, termReturnZero, Some(consXLEZero))
+  val rho2: Rule = Rule(termFx, termReturnZero, (consXLEZero))
 
   val system: System = System("", "", "", Signature(Set(funcF, funcReturn)), Set(rho1, rho2))
 
   /** f( x ) [ true ] */
-  val consTermFxTrue: ConstrainedTerm = ConstrainedTerm(termFx, Constraint(Core.boolTrue))
+  val consTermFxTrue: ConstrainedTerm = ConstrainedTerm(termFx, constraintTrue)
   /** g( x ) [ true ] */
-  val consTermGxTrue: ConstrainedTerm = ConstrainedTerm(termGx, Constraint(Core.boolTrue))
+  val consTermGxTrue: ConstrainedTerm = ConstrainedTerm(termGx, constraintTrue)
   /** g( f( x ) ) [ true ] */
-  val consTermGFxTrue: ConstrainedTerm = ConstrainedTerm(termGFx, Constraint(Core.boolTrue))
+  val consTermGFxTrue: ConstrainedTerm = ConstrainedTerm(termGFx, constraintTrue)
   /** f( x ) [ x > 0 ] */
   val consTermFxXGTZero: ConstrainedTerm = ConstrainedTerm(termFx, consXGTZero)
 }
