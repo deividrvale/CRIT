@@ -47,5 +47,5 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], flag: Boolean)
   }
 
   override def toString: String =
-    s"( { ${equations.foldRight("")((e1, e2) => e1.toString ++ ", " ++ e2) } }, { ${rules.foldRight("")((r1, r2) => r1.toString ++ ", " ++ r2)} }, $flag )"
+    s"( { ${equations.foldRight("")((e1, e2) => e1.toString ++ ", " ++ e2).dropRight(2) } }, { ${rules.foldRight("")((r1, r2) => r1.toString ++ ", " ++ r2).dropRight(2)} }, $flag )"
 }

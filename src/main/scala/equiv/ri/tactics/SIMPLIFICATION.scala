@@ -5,7 +5,7 @@ import equiv.ri.Equation.Side
 import equiv.ri.tactics.SIMPLIFICATION
 import equiv.trs.{Constraint, Rule, Term}
 import equiv.trs.Term.{Position, Var}
-import equiv.utils.Z3
+import equiv.utils.{TermUtils, Z3}
 
 import scala.annotation.tailrec
 
@@ -32,18 +32,20 @@ object SIMPLIFICATION {
   /** For the given equation and side, try the `trySimplificationOnTermWithRule` method */
   def trySimplificationOnEquationSideWithRule(equation: Equation, side: Side, rule: Rule): Option[Equation] = {
     val term = equation.getSide(side)
-    getFirstPossibleRewritePlaceData(term, equation.constraint, rule)
+    getFirstPossibleRewritePlaceData(term, equation, rule)
       .map((_, position, substitution) =>
         equation
           .replaceSide(side,term.rewriteAtPos(position, rule.right, substitution))
-          .addConstraint(rule.constraint.term.applySubstitution(substitution)))
+          .addConstraints(rule.constraints.map(_.applySubstitution(substitution))))
   }
 
   /** @return The first possible rewrite place: the subterm, position and substitution for the rule */
-  def getFirstPossibleRewritePlaceData(term: Term, constraint: Constraint, rule: Rule): Option[(Term, Position, Map[Var, Term])] = {
+  def getFirstPossibleRewritePlaceData(term: Term, equation: Equation, rule: Rule): Option[(Term, Position, Map[Var, Term])] = {
     term
       .findSubTerms(_.instanceOf(rule.left))
-      .filter((_, _, s) => Z3.constraintImplication(constraint.term, rule.constraint.term.applySubstitution(s)))
+      .filter((_, _, s) => Z3.constraintImplication(
+        equation.getConstrainsConjunctAsTerm,
+        rule.getConstrainsConjunctAsTerm.applySubstitution(s)))
       .headOption
   }
 

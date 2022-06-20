@@ -17,7 +17,11 @@ case class QuasiRule(left: QuasiTerm, right: QuasiTerm, constraint: Option[Quasi
   }
 
   def toRule(signature: Map[String, FunctionSymbol], variableSorts: Map[String, Sort]): Rule = {
-    Rule(left.toTerm(signature, variableSorts), right.toTerm(signature, variableSorts), constraint.map { c => Constraint(c.toTerm(signature, variableSorts)) }.getOrElse(TermUtils.constraintTrue))
+    Rule(
+      left.toTerm(signature, variableSorts),
+      right.toTerm(signature, variableSorts),
+      constraint.map { c => Set(Constraint(c.toTerm(signature, variableSorts))) }.getOrElse(Set())
+    )
   }
 
   override def toString: String = {

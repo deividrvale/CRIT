@@ -23,6 +23,8 @@ object Temp {
   val funcGT: FunctionSymbol = FunctionSymbol(">", Typing(List(Sort.Int, Sort.Int), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
   /** <= : Int x Int => Bool */
   val funcLE: FunctionSymbol = FunctionSymbol("<=", Typing(List(Sort.Int, Sort.Int), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
+  /** < : Int x Int => Bool */
+  val funcLT: FunctionSymbol = FunctionSymbol("<", Typing(List(Sort.Int, Sort.Int), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
   /** return : Int => Int */
   val funcReturn: FunctionSymbol = FunctionSymbol("return", Typing(List(Sort.Int), Sort.Int))
 
@@ -45,21 +47,23 @@ object Temp {
   /** [ x > 0 ] */
   var consXGTZero: Constraint = Constraint(App(funcGT,List(varX, valZero)))
   /** [ x <= 0 ] */
-  var consXLEZero: Constraint = Constraint(App(funcLE, List(varX, valZero)))
+  val consXLEZero: Constraint = Constraint(App(funcLE, List(varX, valZero)))
+  /** [ x < 0 ] */
+  val consXLTZero: Constraint = Constraint(App(funcLT, List(varX, valZero)))
 
   /**  f(x) -> f(x - 1)  [x > 0] */
-  val rho1: Rule = Rule(termFx, termFxMinOne, (consXGTZero))
+  val rho1: Rule = Rule(termFx, termFxMinOne, Set(consXGTZero))
   /** f(x) -> return(0) [x <= 0] */
-  val rho2: Rule = Rule(termFx, termReturnZero, (consXLEZero))
+  val rho2: Rule = Rule(termFx, termReturnZero, Set(consXLEZero))
 
   val system: System = System("", "", "", Signature(Set(funcF, funcReturn)), Set(rho1, rho2))
 
   /** f( x ) [ true ] */
-  val consTermFxTrue: ConstrainedTerm = ConstrainedTerm(termFx, constraintTrue)
+  val consTermFxTrue: ConstrainedTerm = ConstrainedTerm(termFx, Set())
   /** g( x ) [ true ] */
-  val consTermGxTrue: ConstrainedTerm = ConstrainedTerm(termGx, constraintTrue)
+  val consTermGxTrue: ConstrainedTerm = ConstrainedTerm(termGx, Set())
   /** g( f( x ) ) [ true ] */
-  val consTermGFxTrue: ConstrainedTerm = ConstrainedTerm(termGFx, constraintTrue)
+  val consTermGFxTrue: ConstrainedTerm = ConstrainedTerm(termGFx, Set())
   /** f( x ) [ x > 0 ] */
-  val consTermFxXGTZero: ConstrainedTerm = ConstrainedTerm(termFx, consXGTZero)
+  val consTermFxXGTZero: ConstrainedTerm = ConstrainedTerm(termFx, Set(consXGTZero))
 }

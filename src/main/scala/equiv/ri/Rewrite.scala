@@ -9,7 +9,7 @@ object Rewrite {
   def rewriteAtPos(constrainedTerm: ConstrainedTerm, position: Position, rule: Rule): ConstrainedTerm =
     ConstrainedTerm(
       constrainedTerm.term.substituteAtPos(position, rule.right),
-      constraintTrue)
+      Set())
 
   /** TODO Get a list of possible positions where we can apply the given rewrite rule in the term */
   def getPossibleRewritePositions(constrainedTerm: ConstrainedTerm, rule: Rule) : List[Position] = ???

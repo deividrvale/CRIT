@@ -35,6 +35,8 @@ object Z3 {
     solve(formula) == SolverResult.Unsatisfiable
   }
 
+  // TODO constraint satisfyable on iteslf?
+
   def solve[T](formula: Term) : SolverResult = {
     val variables: Set[Term.Var] = formula.vars
     val produceModels: Boolean = false

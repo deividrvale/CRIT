@@ -1,8 +1,9 @@
 package equiv.trs
 
 import equiv.trs.Term.App
+import equiv.utils.TermUtils
 
-case class Rule(left: Term, right: Term, constraint: Constraint) {
+case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends ConstrainedObject(constraints) {
   assert(left.sort == right.sort)
 
   left match {
@@ -14,6 +15,6 @@ case class Rule(left: Term, right: Term, constraint: Constraint) {
   def isTerminating(rules: Set[Rule]): Boolean = true
 
   override def toString: String = {
-    s"$left -> $right$constraint"
+    s"$left -> $right $printConstraints"
   }
 }
