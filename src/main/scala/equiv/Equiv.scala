@@ -10,7 +10,7 @@ import equiv.utils.TermUtils.constraintTrue
 
 object Equiv {
   def main(args: Array[String]): Unit = {
-    val eq1 = Equation(termFy, termGy, constraintTrue)
+    val eq1 = Equation(termFx, termGx, consXGTZero)
     val pfSt1 = ProofState(Set(eq1), Set(rho1, rho2), true)
     println(pfSt1)
     val pfSt2 = pfSt1.trySimplification()

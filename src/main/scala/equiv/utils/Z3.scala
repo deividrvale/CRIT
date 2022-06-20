@@ -30,9 +30,9 @@ object Z3 {
 
   /** @return Whether the first term implies the second */
   def constraintImplication(term1: Term, term2: Term): Boolean = {
-    val formula = TermUtils.and(term1, term2)
+    val formula = TermUtils.not(TermUtils.impl(term1, term2))
     println(s"Solvable: $formula?")
-    solve(formula) == SolverResult.Satisfiable
+    solve(formula) == SolverResult.Unsatisfiable
   }
 
   def solve[T](formula: Term) : SolverResult = {
@@ -58,10 +58,10 @@ object Z3 {
       close()
     }
 
-    /* For debugging:
-    println(inputFile.getAbsolutePath)
-    Thread.sleep(100000)
-    */
+//    For debugging:
+//    println(inputFile.getAbsolutePath)
+//    Thread.sleep(100000)
+
     val output: Iterator[String] = Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator
 
     output.next() match {
