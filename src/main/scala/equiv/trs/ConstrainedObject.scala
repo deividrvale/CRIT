@@ -1,10 +1,12 @@
 package equiv.trs
 
-import equiv.utils.TermUtils
+import equiv.utils.{TermUtils, Z3}
 
-class ConstrainedObject(constraints: Set[Constraint]) {
-  /** TODO Simplifies the constraints */
-  def simplify: ConstrainedObject = this
+trait ConstrainedObject(constraints: Set[Constraint]) {
+
+  /** Removes all constraints that are implied by another constraint in the set */
+   def simplify(): Set[Constraint] =
+     constraints.filter(c1 => !constraints.exists(c2 => c1 != c2 && Z3.constraintImplication(c2.term, c1.term)))
 
   /** Combine all constraints into a single constraint with conjunctions
    * @example `{ [x > 0], [x < 2] }` becomes `[x > 0 /\ x < 2]` */
@@ -17,6 +19,6 @@ class ConstrainedObject(constraints: Set[Constraint]) {
     constraints.foldRight(TermUtils.boolTrue)((c1, c2) => TermUtils.and(c1.term, c2))
 
   /** Print the set of constraints as a conjunction. */
-  def printConstraints: String =
+  override def toString: String =
     s"[ ${constraints.foldRight("")((c1, c2) => c1.term.toString ++ " /\\ " ++ c2).dropRight(4)} ]"
 }

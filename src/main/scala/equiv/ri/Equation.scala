@@ -14,7 +14,7 @@ object Equation {
     case Left, Right
 }
 
-case class Equation(left: Term, right : Term, constraints : Set[Constraint]) extends ConstrainedObject(constraints) {
+case class Equation(left: Term, right : Term, var constraints : Set[Constraint]) extends ConstrainedObject(constraints) {
   def getSide(side: Side): Term = side match {
     case Side.Left => left
     case Side.Right => right
@@ -57,6 +57,8 @@ case class Equation(left: Term, right : Term, constraints : Set[Constraint]) ext
     if rule.isTerminating(rules) then Set(rule) else Set()
   }
 
+  def simplifyM(): Equation = this.copy(constraints = super.simplify())
+
   // *************************************************** TACTICS *************************************************** //
 
   /** Transform the equation to a constrained term, where ~~ is seen as a fresh symbol. Then rewrite the constrained term using the given  */
@@ -79,5 +81,5 @@ case class Equation(left: Term, right : Term, constraints : Set[Constraint]) ext
     FunctionSymbol(freshName, Typing(List(left.sort, right.sort), left.sort), Some(equiv.trs.Infix(equiv.trs.InfixKind.Left, 0)))
   }
 
-  override def toString: String = s"$left ~~ $right $printConstraints"
+  override def toString: String = s"$left ~~ $right ${super.toString}"
 }

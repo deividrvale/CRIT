@@ -31,11 +31,13 @@ object Z3 {
   /** @return Whether the first term implies the second */
   def constraintImplication(term1: Term, term2: Term): Boolean = {
     val formula = TermUtils.not(TermUtils.impl(term1, term2))
-    println(s"Solvable: $formula?")
     solve(formula) == SolverResult.Unsatisfiable
   }
 
-  // TODO constraint satisfyable on iteslf?
+  /** Check if a term is satisfiable */
+  def isSatisfiable(term: Term): Boolean = {
+    solve(term) == SolverResult.Satisfiable
+  }
 
   def solve[T](formula: Term) : SolverResult = {
     val variables: Set[Term.Var] = formula.vars

@@ -7,16 +7,18 @@ import equiv.trs.Temp.*
 import equiv.trs.Term.Var
 import equiv.trs.Term
 import equiv.utils.TermUtils.constraintTrue
+import equiv.utils.Z3
 
 object Equiv {
   def main(args: Array[String]): Unit = {
-    val eq1 = Equation(termFx, termGx, Set(consXLTZero))
-    val pfSt1 = ProofState(Set(eq1), Set(rho1, rho2), true)
-    println(pfSt1)
-    val pfSt2 = pfSt1.trySimplification()
-    println(pfSt2)
-    val pfSt3 = pfSt2.trySimplification()
-    println(pfSt3)
+    val eq1 = Equation(termFx, termGx, Set(consXLTZero, consXLEZero))
+    var pfSt = ProofState(Set(eq1), Set(rho1, rho2), true)
+    println(pfSt)
+    for (_ <- 0 to 2) {
+      pfSt = pfSt.trySimplification()
+      pfSt = pfSt.simplifyAll()
+      println(pfSt)
+    }
   }
 
   def testApp(rule: Rule, consTerm: ConstrainedTerm): Unit = {

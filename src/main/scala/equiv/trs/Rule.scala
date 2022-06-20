@@ -15,6 +15,6 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends C
   def isTerminating(rules: Set[Rule]): Boolean = true
 
   override def toString: String = {
-    s"$left -> $right $printConstraints"
+    s"$left -> $right ${super.toString}"
   }
 }
