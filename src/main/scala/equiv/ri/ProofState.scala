@@ -46,7 +46,9 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], flag: Boolean)
   def trySimplification(): ProofState = {
     SIMPLIFICATION.trySimplification(this) match {
       case None => this
-      case Some((oldEquation, newEquation)) => this.replaceEquationWith(oldEquation, newEquation)
+      case Some((oldEquation, newEquation)) => 
+        println(s"SIMPLIFICATION on:     ${oldEquation.toPrintString()}")
+        this.replaceEquationWith(oldEquation, newEquation)
     }
   }
 

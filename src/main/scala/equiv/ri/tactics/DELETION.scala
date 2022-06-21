@@ -12,8 +12,8 @@ object DELETION {
     }
 
     def deletable(equation: Equation): Boolean = {
-        if equation.left == equation.right || Z3.isSatisfiable(equation.getConstrainsConjunctAsTerm) then
-            println(s"Deleted equation:    ${equation.toPrintString()}")
+        if equation.left == equation.right || !Z3.isSatisfiable(equation.getConstrainsConjunctAsTerm) then
+            println(s"DELETION on:    ${equation.toPrintString()}")
             true
         else 
             false
