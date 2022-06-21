@@ -1,7 +1,7 @@
 package equiv.trs
 
 import equiv.trs.Term.{App, Position, Substitution, Var}
-import equiv.utils.MapUtils
+import equiv.utils.{MapUtils, Print}
 
 trait Term {
   def sort: Sort
@@ -118,7 +118,7 @@ object Term {
 
     override def toPrintString(colours: Boolean = true): String = {
       if colours then
-        Console.BLUE + s"$name" + Console.RESET
+        Print.variableColour + s"$name" + Console.RESET
       else
         s"$name"
     }

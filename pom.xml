@@ -60,6 +60,7 @@
                 <version>2.15.2</version>
                 <executions>
                     <execution>
+                        <?m2e execute onConfiguration?>
                         <goals>
                             <goal>compile</goal>
                         </goals>

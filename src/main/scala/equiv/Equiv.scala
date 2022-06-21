@@ -1,7 +1,6 @@
 package equiv
 
 import equiv.ri.{Equation, ProofState}
-import equiv.ri.Rewrite.*
 import equiv.trs.*
 import equiv.trs.Temp.*
 import equiv.trs.Term.Var
@@ -11,22 +10,24 @@ import equiv.utils.Z3
 
 object Equiv {
   def main(args: Array[String]): Unit = {
-    val eq1 = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 3), consVarIntInt2("y", ">", 3)))
-    val newPfSt = ProofState(Set(eq1), Set(rho1, rho2), true)
+    val eq1: Equation = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 10)))
+    val delEq1: Equation = Equation(termFy, termFy, Set())
+    val delEq2: Equation = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 1), consVarIntInt("y", "<", 1)))
+    val newPfSt: ProofState = ProofState(Set(eq1, delEq2, delEq1), Set(rho1, rho2), true)
     loopSimplify(newPfSt)
   }
 
   def loopSimplify(pfSt: ProofState): Unit = {
-    var newPfSt = pfSt
-    var i = 0
+    var newPfSt: ProofState = pfSt
+    var i: Int = 0
     while
-      i < 4
+      i < 3
     do
       i += 1
-      println(newPfSt.toPrintString())
-      newPfSt = newPfSt.trySimplification().simplifyAll()
+      println(newPfSt.equations.map(_.toPrintString()))
+      newPfSt = newPfSt.trySimplification().simplifyAll().tryEqDeletion().tryDeletion()
 
-    println(newPfSt.toPrintString())
+    println(newPfSt.equations.map(_.toPrintString()))
   }
 
   def testApp(rule: Rule, consTerm: ConstrainedTerm): Unit = {

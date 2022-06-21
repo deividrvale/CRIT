@@ -2,7 +2,7 @@ package equiv.ri
 
 import equiv.ri.Equation
 import equiv.ri.Equation.Side
-import equiv.ri.tactics.SIMPLIFICATION
+import equiv.ri.tactics.{EXPANSION, SIMPLIFICATION, DELETION, EQ_DELETION}
 import equiv.trs.{Constraint, Rule, Term}
 import equiv.trs.Term.Position
 
@@ -43,14 +43,30 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], flag: Boolean)
 
   // *************************************************** TACTICS *************************************************** //
 
-  def trySimplification(): ProofState =
-    SIMPLIFICATION.trySimplification(this, rules) match {
+  def trySimplification(): ProofState = {
+    SIMPLIFICATION.trySimplification(this) match {
       case None => this
       case Some((oldEquation, newEquation)) => this.replaceEquationWith(oldEquation, newEquation)
     }
+  }
 
-  def EXPANSION(side: Side, equation: Equation): ProofState = {
-    ProofState(equations ++ equation.getExpd(side), rules ++ equation.maybeHypothesis(side, rules), flag)
+  def tryExpansion(): ProofState = {
+    EXPANSION.tryExpansion(this) match
+      case None => this
+      case Some((oldEquation, newEquations, maybeRule)) =>
+        val newPfSt = this.removeEquation(oldEquation).addEquations(newEquations)
+        maybeRule match {
+          case None => newPfSt
+          case Some(rule) => newPfSt.addRule(rule)
+        }
+  }
+
+  def tryEqDeletion(): ProofState = {
+    EQ_DELETION.tryEqDeletion(this)
+  }
+
+  def tryDeletion(): ProofState = {
+    DELETION.tryDeletion(this)
   }
 
   override def toString: String = toPrintString(false)

@@ -51,10 +51,38 @@ object Z3 {
     solve(term) == SolverResult.Satisfiable
   }
 
-  def solve[T](formula: Term) : SolverResult = {
+  /** TODO */
+  def simplify(formula: Term): Term = {
     val variables: Set[Term.Var] = formula.vars
-    val produceModels: Boolean = false
-    val logic: String = "QF_LIA"
+    val output: Iterator[String] = query(
+      s"""${variables.map{ v => s"(declare-fun $v () Int)" }.mkString("\n")}
+         |
+         |(check-sat)"""
+    )
+    Term.Var("x", Sort.Int)
+    ???
+  }
+
+  def solve(formula: Term) : SolverResult = {
+    val variables: Set[Term.Var] = formula.vars
+    val output: Iterator[String] = query(
+      s"""${variables.map{ v => s"(declare-fun $v () Int)" }.mkString("\n")}
+        |
+        |(assert
+        |   ${formula.toStringApplicative}
+        |)
+        |
+        |(check-sat)"""
+    )
+
+    output.next() match {
+      case "sat" => SolverResult.Satisfiable
+      case "unsat" => SolverResult.Unsatisfiable
+      case _ => SolverResult.Undetermined
+    }
+  }
+
+  private def query(query: String, produceModels: Boolean = false, logic: String = "QF_LIA"): Iterator[String] = {
     val inputFile: File = File.createTempFile("input", ".smt2")
 
     new PrintWriter(inputFile) {
@@ -62,28 +90,15 @@ object Z3 {
         s"""(set-option :produce-models $produceModels)
            |(set-logic $logic)
            |
-           |${variables.map{ v => s"(declare-fun $v () Int)" }.mkString("\n")}
-           |
-           |(assert
-           |  ${formula.toStringApplicative}
-           |)
-           |
-           |(check-sat)
-           |""".stripMargin
-      )
+           |$query
+           |""".stripMargin)
       close()
     }
 
-//    For debugging:
-//    println(inputFile.getAbsolutePath)
-//    Thread.sleep(100000)
+    ////    For debugging:
+    //    println(inputFile.getAbsolutePath)
+    //    Thread.sleep(100000)
 
-    val output: Iterator[String] = Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator
-
-    output.next() match {
-      case "sat" => SolverResult.Satisfiable
-      case "unsat" => SolverResult.Unsatisfiable
-      case _ => SolverResult.Undetermined
-    }
+    Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator
   }
 }

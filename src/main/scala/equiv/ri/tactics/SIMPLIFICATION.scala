@@ -11,9 +11,9 @@ import scala.annotation.tailrec
 
 object SIMPLIFICATION {
   /** For each equation, try the `trySimplificationOnEquation` method */
-  def trySimplification(pfSt: ProofState, rules: Set[Rule]): Option[(Equation, Equation)] = {
+  def trySimplification(pfSt: ProofState): Option[(Equation, Equation)] = {
     pfSt.equations.view.flatMap { oldEquation =>
-      trySimplificationOnEquation(oldEquation, rules).map((oldEquation,_))
+      trySimplificationOnEquation(oldEquation, pfSt.rules).map((oldEquation,_))
     }.headOption
   }
 
