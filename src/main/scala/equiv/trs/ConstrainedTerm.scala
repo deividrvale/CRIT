@@ -16,10 +16,8 @@ case class ConstrainedTerm(term: Term, constraints: Set[Constraint]) extends Con
   def rewriteAtPos(position: Position, replacement: Term, substitution: Substitution): ConstrainedTerm =
     ConstrainedTerm(term.rewriteAtPos(position, replacement, substitution), constraints)
 
-  override def toString: String = {
-    s"$term ${super.toString}"
-  }
+  override def toString: String = toPrintString(false)
 
-  override def toPrintString: String =
-    s"${term.toPrintString} ${super.toPrintString}"
+  override def toPrintString(colours: Boolean = true): String =
+    s"${term.toPrintString(colours)} ${super.toPrintString(colours)}"
 }

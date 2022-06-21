@@ -106,7 +106,7 @@ trait Term {
     case Var(v,_) => v
   }
 
-  def toPrintString: String
+  def toPrintString(colours: Boolean = true): String
 }
 
 object Term {
@@ -114,12 +114,13 @@ object Term {
   type Substitution = Map[Var, Term]
 
   case class Var(name: String, sort: Sort) extends Term {
-    override def toString: String = {
-      s"$name"
-    }
+    override def toString: String = toPrintString(false)
 
-    override def toPrintString: String = {
-      Console.BLUE + s"$name" + Console.RESET
+    override def toPrintString(colours: Boolean = true): String = {
+      if colours then
+        Console.BLUE + s"$name" + Console.RESET
+      else
+        s"$name"
     }
   }
 
@@ -135,18 +136,17 @@ object Term {
 
     val sort: Sort = if(fun.typing.output == Sort.Any) sortsArgsAny.head else fun.typing.output
 
-    override def toString: String = if isInfix then s"${args.head} ${fun.name} ${args(1)}" else
-    s"$fun${if(args.nonEmpty) args.mkString("(", ", ", ")") else ""}"
+    override def toString: String = toPrintString(false)
 
     def isInfix: Boolean = this.fun.infix match {
         case None => false
         case Some(Infix(_, _)) => this.args.length == 2
     }
 
-    override def toPrintString: String =
+    override def toPrintString(colours: Boolean = true): String =
       if isInfix then
-        s"${args.head.toPrintString} ${fun.toPrintString} ${args(1).toPrintString}"
+        s"${args.head.toPrintString(colours)} ${fun.toPrintString(colours)} ${args(1).toPrintString(colours)}"
       else
-        s"${fun.toPrintString}${if(args.nonEmpty) args.map(_.toPrintString).mkString("(", ", ", ")") else ""}"
+        s"${fun.toPrintString(colours)}${if(args.nonEmpty) args.map(_.toPrintString(colours)).mkString("(", ", ", ")") else ""}"
   }
 }

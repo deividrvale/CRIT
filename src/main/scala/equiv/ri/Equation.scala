@@ -83,5 +83,5 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
 
   override def toString: String = s"$left ~~ $right ${super.toString}"
 
-  override def toPrintString: String = s"${left.toPrintString} ~~ ${right.toPrintString} ${super.toPrintString}"
+  override def toPrintString(colours: Boolean = true): String = s"${left.toPrintString(colours)} ~~ ${right.toPrintString(colours)} ${super.toPrintString(colours)}"
 }

@@ -53,10 +53,9 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], flag: Boolean)
     ProofState(equations ++ equation.getExpd(side), rules ++ equation.maybeHypothesis(side, rules), flag)
   }
 
-  override def toString: String =
-    s"( { ${equations.mkString(sep = ", ") } }, { ${rules.mkString(sep= ", ")}, $flag )"
+  override def toString: String = toPrintString(false)
 
-  def toPrintString: String =
-    s"( { ${equations.map(_.toPrintString).mkString("", ", ", "") } }, { ${rules.map(_.toPrintString).mkString(sep= ", ")} }, $flag )"
+  def toPrintString(colours: Boolean = true): String =
+    s"( { ${equations.map(_.toPrintString(colours)).mkString("", ", ", "") } }, { ${rules.map(_.toPrintString(colours)).mkString(sep= ", ")} }, $flag )"
 
 }

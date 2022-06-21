@@ -1,7 +1,9 @@
 package equiv.trs
 
 case class Sort(name: String) {
-  override def toString: String = name
+  override def toString: String = toPrintString(false)
+
+  def toPrintString(colours: Boolean = true): String = name
 }
 
 object Sort {

@@ -8,7 +8,7 @@ case class Constraint(term: Term) {
 
   def applySubstitution(substitution: Substitution): Constraint = this.copy(term = term.applySubstitution(substitution))
 
-  override def toString: String = if this == TermUtils.constraintTrue then "" else s" [ $term ]"
+  override def toString: String = toPrintString(false)
 
-  def toPrintString: String = if this == TermUtils.constraintTrue then "" else s" [ ${term.toPrintString} ]"
+  def toPrintString(colours: Boolean = true): String = if this == TermUtils.constraintTrue then "" else s" [ ${term.toPrintString(colours)} ]"
 }

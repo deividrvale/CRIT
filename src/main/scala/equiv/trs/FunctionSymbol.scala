@@ -1,15 +1,16 @@
 package equiv.trs
 
 case class FunctionSymbol(name: String, typing: Typing, infix: Option[Infix] = None) {
-  override def toString: String = {
-    s"$name" // : $typing"
-  }
+  override def toString: String = toPrintString(false)
 
-  def toPrintString: String = {
-    typing.input match {
-      case List() => Console.GREEN + s"$name" + Console.RESET
-      case _ => Console.RED + s"$name" + Console.RESET
-    }
+  def toPrintString(colours: Boolean = true): String = {
+    if colours then
+      typing.input match {
+        case List() => Console.GREEN + s"$name" + Console.RESET
+        case _ => Console.RED + s"$name" + Console.RESET
+      }
+    else
+      s"$name"
   }
 }
 

@@ -1,7 +1,9 @@
 package equiv.trs
 
 case class Typing(input: List[Sort], output: Sort, isTheory: Boolean = false, isVariadic: Boolean = false) {
-  override def toString: String = {
+  override def toString: String = toPrintString(false)
+  
+  def toPrintString(colours: Boolean = true): String = {
     s"${if (input.nonEmpty) input.mkString("", " x ", (if (isVariadic) "*" else "") + " => ") else ""}$output"
   }
 

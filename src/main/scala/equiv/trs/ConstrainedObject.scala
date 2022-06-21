@@ -18,9 +18,9 @@ trait ConstrainedObject(constraints: Set[Constraint]) {
     constraints.foldRight(TermUtils.boolTrue)((c1, c2) => TermUtils.and(c1.term, c2))
 
   /** Print the set of constraints as a conjunction. */
-  override def toString: String =
-    s"[ ${constraints.mkString(sep = " /\\ ")} ]"
+  override def toString: String = toPrintString(false)
 
-  def toPrintString: String =
-    s"[ ${constraints.map(_.term.toPrintString).mkString(sep = " /\\ ")} ]"
+  /** Prints the set of constraints as a conjunction, possibly with colours */
+  def toPrintString(colours: Boolean = true): String =
+    s"[ ${constraints.map(_.term.toPrintString(colours)).mkString(sep = " /\\ ")} ]"
 }

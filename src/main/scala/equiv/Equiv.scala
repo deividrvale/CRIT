@@ -11,7 +11,7 @@ import equiv.utils.Z3
 
 object Equiv {
   def main(args: Array[String]): Unit = {
-    val eq1 = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 2)))
+    val eq1 = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 2), consVarIntInt("y", ">", 2)))
     var pfSt = ProofState(Set(eq1), Set(rho1, rho2), true)
     pfSt = pfSt.simplifyAll()
     println(pfSt.toPrintString)

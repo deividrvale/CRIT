@@ -14,11 +14,9 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends C
   /** TODO Check if addition of the current rule to the given terminating set keeps the set terminating */
   def isTerminating(rules: Set[Rule]): Boolean = true
 
-  override def toString: String = {
-    s"$left -> $right ${super.toString}"
-  }
+  override def toString: String = toPrintString(false)
 
-  override def toPrintString: String = {
-    s"${left.toPrintString} -> ${right.toPrintString} ${super.toPrintString}"
+  override def toPrintString(colours: Boolean = true): String = {
+    s"${left.toPrintString(colours)} -> ${right.toPrintString(colours)} ${super.toPrintString(colours)}"
   }
 }
