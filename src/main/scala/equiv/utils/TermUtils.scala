@@ -10,6 +10,7 @@ object TermUtils {
   def constraintFalse: Constraint = Constraint(boolFalse)
 
   def impl(x: Term, y: Term): App = Term.App(FunctionSymbol("=>", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool)), List(x, y))
+  def biImpl(x: Term, y: Term): App = Term.App(FunctionSymbol("<=>", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool)), List(x, y))
   def and(x: Term, y: Term): App = Term.App(FunctionSymbol("and", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool)), List(x, y))
   def not(x: Term): App = Term.App(FunctionSymbol("not", Typing(List(Sort.Bool), Sort.Bool)), List(x))
 }

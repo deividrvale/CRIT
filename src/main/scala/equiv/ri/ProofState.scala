@@ -34,12 +34,12 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], flag: Boolean)
   def addRule(rule: Rule): ProofState = ProofState(equations, rules + rule, flag)
 
   /** Simplify all equation constraints */
-  def simplifyAll(): ProofState = this.copy(equations = equations.map(_.simplifyM()))
+  def simplifyAll(): ProofState = this.copy(equations = equations.map(_.simplifyCons()))
 
   /** Given an equation in the proofstate, simplify its constraint and update the proofstate */
   def simplifyEquation(equation: Equation): ProofState =
     assert(equations.contains(equation))
-    this.copy(equations = equations - equation + equation.simplifyM())
+    this.copy(equations = equations - equation + equation.simplifyCons())
 
   // *************************************************** TACTICS *************************************************** //
 

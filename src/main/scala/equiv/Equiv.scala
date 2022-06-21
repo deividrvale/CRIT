@@ -11,15 +11,22 @@ import equiv.utils.Z3
 
 object Equiv {
   def main(args: Array[String]): Unit = {
-    val eq1 = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 2), consVarIntInt("y", ">", 2)))
-    var pfSt = ProofState(Set(eq1), Set(rho1, rho2), true)
-    pfSt = pfSt.simplifyAll()
-    println(pfSt.toPrintString)
-    for (_ <- 0 to 2) {
-      pfSt = pfSt.trySimplification()
-      pfSt = pfSt.simplifyAll()
-      println(pfSt.toPrintString)
-    }
+    val eq1 = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 3), consVarIntInt2("y", ">", 3)))
+    val newPfSt = ProofState(Set(eq1), Set(rho1, rho2), true)
+    loopSimplify(newPfSt)
+  }
+
+  def loopSimplify(pfSt: ProofState): Unit = {
+    var newPfSt = pfSt
+    var i = 0
+    while
+      i < 4
+    do
+      i += 1
+      println(newPfSt.toPrintString())
+      newPfSt = newPfSt.trySimplification().simplifyAll()
+
+    println(newPfSt.toPrintString())
   }
 
   def testApp(rule: Rule, consTerm: ConstrainedTerm): Unit = {

@@ -71,6 +71,9 @@ object Temp {
   def funcIntIntBool(operator: String): FunctionSymbol =
     FunctionSymbol(operator, Typing(List(Sort.Int, Sort.Int), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
 
+  def funcIntIntInt(operator: String): FunctionSymbol =
+    FunctionSymbol(operator, Typing(List(Sort.Int, Sort.Int), Sort.Int, true), Some(Infix(InfixKind.Right, 1)))
+
   /** @return A function symbol of type [Bool x Bool] => Bool */
   def funcBoolBoolBool(operator: String): FunctionSymbol =
     FunctionSymbol(operator, Typing(List(Sort.Bool, Sort.Bool), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
@@ -84,5 +87,12 @@ object Temp {
 
   /** A constraint for an integer variable and an integer value. */
   def consVarIntInt(variableName: String, operatorName: String, value: Int): Constraint =
-    Constraint(App(funcIntIntBool(operatorName),List(varInt(variableName), valInt(value))))
+    makeConsBin(varInt(variableName), funcIntIntBool(operatorName), valInt(value))
+
+  def consVarIntInt2(variableName: String, operatorName: String, value: Int): Constraint =
+    makeConsBin(App(funcIntIntInt("-"), List(varInt(variableName), valInt(1))), funcIntIntBool(operatorName), valInt(value - 1))
+
+  def makeConsBin(arg1: Term, fun: FunctionSymbol, arg2: Term): Constraint =
+    Constraint(App(fun, List(arg1, arg2)))
+
 }

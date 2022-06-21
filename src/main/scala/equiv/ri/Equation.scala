@@ -57,7 +57,7 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
     if rule.isTerminating(rules) then Set(rule) else Set()
   }
 
-  def simplifyM(): Equation = this.copy(constraints = super.simplify())
+  def simplifyCons(): Equation = this.copy(constraints = super.simplify())
 
   // *************************************************** TACTICS *************************************************** //
 
