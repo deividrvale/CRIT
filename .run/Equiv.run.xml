@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Equiv" type="Application" factoryName="Application">
+    <option name="ALTERNATIVE_JRE_PATH" value="18" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <option name="MAIN_CLASS_NAME" value="equiv.Equiv" />
+    <module name="LCTRS-RI-Tool" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="equiv.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
