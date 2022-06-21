@@ -117,14 +117,14 @@ class TRSParser(readFile: String => String) extends RegexParsers {
   def translation: Parser[(QuasiTerm,List[String])] = term ~ ("->" ~> wrapped) <~ opt(";") ^^ { case term ~ replacement => (term,replacement) }
   def wrapped: Parser[List[String]] = "(" ~ rep(name ^^ { List(_) } | wrapped) ~ ")" ^^ { case left ~ middle ~ right => List(left) ++ middle.flatten ++ List(right) }
 
-  def dropCommnets(input: String) : String = {
+  def dropComments(input: String) : String = {
     input
       .replaceAll("(?s)/\\*.*?\\*/", "")
       .replaceAll("(?s)END OF FILE.*", "")
   }
 
   def parseTheory(input: String): Either[QuasiTheory,ParseError] = {
-    parseAll[QuasiTheory](theory, dropCommnets(input)) match {
+    parseAll[QuasiTheory](theory, dropComments(input)) match {
       case Success(x, _) => Left(x)
       case x: Failure => Right(ParseError(x.toString()))
       case x: Error => Right(ParseError(x.toString()))
@@ -139,7 +139,7 @@ class TRSParser(readFile: String => String) extends RegexParsers {
   }
 
   def parseSystem(input: String): Either[QuasiSystem,ParseError] = {
-    parseAll[QuasiSystem](system, dropCommnets(input)) match {
+    parseAll[QuasiSystem](system, dropComments(input)) match {
       case Success(x, _) => Left(x)
       case x: Failure => Right(ParseError(x.toString()))
       case x: Error => Right(ParseError(x.toString()))

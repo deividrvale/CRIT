@@ -19,4 +19,7 @@ case class ConstrainedTerm(term: Term, constraints: Set[Constraint]) extends Con
   override def toString: String = {
     s"$term ${super.toString}"
   }
+
+  override def toPrintString: String =
+    s"${term.toPrintString} ${super.toPrintString}"
 }

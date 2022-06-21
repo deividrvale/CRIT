@@ -11,13 +11,14 @@ import equiv.utils.Z3
 
 object Equiv {
   def main(args: Array[String]): Unit = {
-    val eq1 = Equation(termFx, termGx, Set(consXLTZero, consXLEZero))
+    val eq1 = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 2)))
     var pfSt = ProofState(Set(eq1), Set(rho1, rho2), true)
-    println(pfSt)
+    pfSt = pfSt.simplifyAll()
+    println(pfSt.toPrintString)
     for (_ <- 0 to 2) {
       pfSt = pfSt.trySimplification()
       pfSt = pfSt.simplifyAll()
-      println(pfSt)
+      println(pfSt.toPrintString)
     }
   }
 

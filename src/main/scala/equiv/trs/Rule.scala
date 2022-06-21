@@ -17,4 +17,8 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends C
   override def toString: String = {
     s"$left -> $right ${super.toString}"
   }
+
+  override def toPrintString: String = {
+    s"${left.toPrintString} -> ${right.toPrintString} ${super.toPrintString}"
+  }
 }

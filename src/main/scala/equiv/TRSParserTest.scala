@@ -14,15 +14,18 @@ object TRSParserTest {
     if (folder.exists && folder.isDirectory) {
       folder.listFiles.filter(_.isFile).filter(_.getName.endsWith(".ctrs")).toList.sorted.foreach{ file =>
         println(file.getName)
-        parseTRS("examples/" + file.getName) match {
-          case Some(system) =>
-            // println(system)
-            println("OK")
-          case None =>
-            println("FAILED")
-            failures += 1
+        if file.getName == "decompose.ctrs" then {
+          val lctrs = parseTRS("examples/" + file.getName)
+          lctrs match {
+            case Some(system) =>
+              // println(system)
+              println("OK")
+            case None =>
+              println("FAILED")
+              failures += 1
+          }
+          println()
         }
-        println()
       }
     }
     println(s"Number of failures: $failures")

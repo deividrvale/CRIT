@@ -66,4 +66,23 @@ object Temp {
   val consTermGFxTrue: ConstrainedTerm = ConstrainedTerm(termGFx, Set())
   /** f( x ) [ x > 0 ] */
   val consTermFxXGTZero: ConstrainedTerm = ConstrainedTerm(termFx, Set(consXGTZero))
+
+  /** @return A function symbol of type [Int x Int] => Bool */
+  def funcIntIntBool(operator: String): FunctionSymbol =
+    FunctionSymbol(operator, Typing(List(Sort.Int, Sort.Int), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
+
+  /** @return A function symbol of type [Bool x Bool] => Bool */
+  def funcBoolBoolBool(operator: String): FunctionSymbol =
+    FunctionSymbol(operator, Typing(List(Sort.Bool, Sort.Bool), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
+
+  /** @return An integer value */
+  def valInt(value: Int): Term =
+    App(FunctionSymbol(value.toString, Typing(List(), Sort.Int, true)), List())
+
+  /** @return An integer variable */
+  def varInt(name: String): Term = Var(name, Sort.Int)
+
+  /** A constraint for an integer variable and an integer value. */
+  def consVarIntInt(variableName: String, operatorName: String, value: Int): Constraint =
+    Constraint(App(funcIntIntBool(operatorName),List(varInt(variableName), valInt(value))))
 }

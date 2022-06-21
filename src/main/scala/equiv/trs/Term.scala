@@ -105,6 +105,8 @@ trait Term {
     case App(f,args) => if(args.isEmpty) s"${f.name}" else s"(${f.name} ${args.map(_.toStringApplicative).mkString(" ")})"
     case Var(v,_) => v
   }
+
+  def toPrintString: String
 }
 
 object Term {
@@ -113,12 +115,16 @@ object Term {
 
   case class Var(name: String, sort: Sort) extends Term {
     override def toString: String = {
-      s"$name" //s"$name:$sort"
+      s"$name"
+    }
+
+    override def toPrintString: String = {
+      Console.BLUE + s"$name" + Console.RESET
     }
   }
 
   case class App(fun: FunctionSymbol, args: List[Term] = List.empty) extends Term {
-    private val sortsArgsAny: Set[Sort] = args.indices.filter{ i => fun.typing.getSort(Some(i)).contains(Sort.Any) }.map{ i => args(i).sort }.toSet
+    private val sortsArgsAny = args.indices.filter{ i => fun.typing.getSort(Some(i)).contains(Sort.Any) }.map{ i => args(i).sort }.toSet
 
     assert(
       args.length >= fun.typing.input.length &&
@@ -129,14 +135,18 @@ object Term {
 
     val sort: Sort = if(fun.typing.output == Sort.Any) sortsArgsAny.head else fun.typing.output
 
-    override def toString: String = {
-      if isInfix then s"${args.head} ${fun.name} ${args(1)}" else
-      s"${fun.name}${if(args.nonEmpty) args.mkString("(", ", ", ")") else ""}"
-    }
+    override def toString: String = if isInfix then s"${args.head} ${fun.name} ${args(1)}" else
+    s"$fun${if(args.nonEmpty) args.mkString("(", ", ", ")") else ""}"
 
     def isInfix: Boolean = this.fun.infix match {
         case None => false
         case Some(Infix(_, _)) => this.args.length == 2
     }
+
+    override def toPrintString: String =
+      if isInfix then
+        s"${args.head.toPrintString} ${fun.toPrintString} ${args(1).toPrintString}"
+      else
+        s"${fun.toPrintString}${if(args.nonEmpty) args.map(_.toPrintString).mkString("(", ", ", ")") else ""}"
   }
 }

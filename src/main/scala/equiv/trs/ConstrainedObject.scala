@@ -3,9 +3,8 @@ package equiv.trs
 import equiv.utils.{TermUtils, Z3}
 
 trait ConstrainedObject(constraints: Set[Constraint]) {
-
   /** Removes all constraints that are implied by another constraint in the set */
-   def simplify(): Set[Constraint] =
+  def simplify(): Set[Constraint] =
      constraints.filter(c1 => !constraints.exists(c2 => c1 != c2 && Z3.constraintImplication(c2.term, c1.term)))
 
   /** Combine all constraints into a single constraint with conjunctions
@@ -20,5 +19,8 @@ trait ConstrainedObject(constraints: Set[Constraint]) {
 
   /** Print the set of constraints as a conjunction. */
   override def toString: String =
-    s"[ ${constraints.foldRight("")((c1, c2) => c1.term.toString ++ " /\\ " ++ c2).dropRight(4)} ]"
+    s"[ ${constraints.mkString(sep = " /\\ ")} ]"
+
+  def toPrintString: String =
+    s"[ ${constraints.map(_.term.toPrintString).mkString(sep = " /\\ ")} ]"
 }

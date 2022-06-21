@@ -83,7 +83,7 @@ trait QuasiTerm {
               Term.Var(fun, variableSorts(fun))
             }
         }
-      case _ => throw new RuntimeException("The conversion from QuasiTerm to Term is only allows after all QuasiInfix have been eliminated.")
+      case _ => throw new RuntimeException("The conversion from QuasiTerm to Term is only allowed after all QuasiInfix have been eliminated.")
     }
   }
 }
