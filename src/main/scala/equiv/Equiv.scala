@@ -39,16 +39,16 @@ object Equiv {
     do
       i += 1
       // TODO: RI tactics
-      currentPfSt = currentPfSt.tryEqDeletion()
       currentPfSt = currentPfSt.tryDeletion()
       currentPfSt = currentPfSt.trySimplification()
+      currentPfSt = currentPfSt.tryExpansion()
       println(currentPfSt.toPrintString())
 
     println("Done")
   }
 
   def sample(): Unit = {
-    val eq1: Equation = Equation(termFy, termGy, Set())
+    val eq1: Equation = Equation(termFy, termReturnZero, Set())
     val delEq1: Equation = Equation(termFy, termFy, Set())
     val delEq2: Equation = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 1), consVarIntInt("y", "<", 1)))
     val newPfSt: ProofState = ProofState(Set(eq1), Set(rho1, rho2), true)

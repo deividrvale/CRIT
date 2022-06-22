@@ -5,6 +5,7 @@ import equiv.trs.Rule
 import equiv.ri.Equation.Side
 import equiv.trs.Term
 import equiv.trs.Term.{Var, App}
+import equiv.trs.Constraint
 
 
 object EXPANSION {
@@ -24,10 +25,10 @@ object EXPANSION {
   }
 
   def tryExpansionOnEquationSide(equation: Equation, side: Side, rules: Set[Rule]): Option[(Set[Equation], Option[Rule])] = {
-    tryExpansionOnTerm(equation.getSide(side), rules).map( terms => (Set(), None) ) // TODO
+    tryExpansionOnTerm(equation.getSide(side), rules).map( terms => (terms.map((t, cons) => equation.replaceSide(side, t).addConstraints(cons)), None) ) // TODO
   }
 
-  def tryExpansionOnTerm(term: Term, rules: Set[Rule]): Option[(Set[Term])] = {
+  def tryExpansionOnTerm(term: Term, rules: Set[Rule]): Option[(Set[(Term, Set[Constraint])])] = {
     term match {
       case Var(_, _) => None
       case t@App(f, args) => tryExpansionOnSubTerm(t, rules) match {
@@ -37,10 +38,10 @@ object EXPANSION {
     }
   }
 
-  def tryExpansionOnSubTerm(term: Term, rules: Set[Rule]): Option[Set[Term]] = {
+  def tryExpansionOnSubTerm(term: Term, rules: Set[Rule]): Option[Set[(Term, Set[Constraint])]] = {
     val applicableRuleSubstitutionPairs = rules.map(rule => term.instanceOf(rule.left).map((rule, _)) ).flatten
     if applicableRuleSubstitutionPairs.isEmpty then None 
-    else Some(applicableRuleSubstitutionPairs.map((rule, sub) => term.rewriteAtPos(List(), rule, sub)))
+    else Some(applicableRuleSubstitutionPairs.map((rule, sub) => (term.rewriteAtPos(List(), rule, sub), rule.substituteConstraints(sub))))
   }
 
 }
