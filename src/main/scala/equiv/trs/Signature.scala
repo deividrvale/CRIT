@@ -9,5 +9,5 @@ case class Signature(functions: Set[FunctionSymbol]) {
   def toPrintString(colours: Boolean = true): String = {
     functions.toList.map(_.toPrintString(colours, true)).mkString("\n")
   }
-}/*.sortBy(_.typing.toString)*/
+}
 

@@ -35,7 +35,7 @@ object SIMPLIFICATION {
     getFirstPossibleRewritePlaceData(term, equation, rule)
       .map((_, position, substitution) =>
         equation
-          .replaceSide(side,term.rewriteAtPos(position, rule.right, substitution))
+          .replaceSide(side,term.rewriteAtPos(position, rule, substitution))
           .addConstraints(rule.constraints.map(_.applySubstitution(substitution))))
   }
 

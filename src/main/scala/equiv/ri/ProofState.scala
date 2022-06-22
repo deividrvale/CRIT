@@ -11,12 +11,16 @@ object ProofState {
 }
 
 case class ProofState(equations: Set[Equation], rules: Set[Rule], flag: Boolean) {
+  /** Check if the ProofState has reached a terminal state, i.e. the set of equations is empty */
+  def isFinished: Boolean = equations.isEmpty
+
   /** Check if the proofstate flag is complete (true) */
-  def isComplete: Boolean = flag
+  def isFlagComplete: Boolean = flag
 
   /** Change the value of the flag: `true` corresponds to `COMPLETE`, `false` corresponds to `INCOMPLETE` */
   def setFlag(newFlag: Boolean): ProofState = ProofState(equations, rules, newFlag)
 
+  /** Remove the given equation from the set of equations */
   def removeEquation(equation: Equation): ProofState = ProofState(equations - equation, rules, flag)
 
   /** Add a single equation to the proofstate */

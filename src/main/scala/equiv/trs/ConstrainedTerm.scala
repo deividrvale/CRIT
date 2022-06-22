@@ -13,8 +13,8 @@ case class ConstrainedTerm(term: Term, constraints: Set[Constraint]) extends Con
   def substituteAtPos(position: Position, replacement: Term): ConstrainedTerm =
     ConstrainedTerm(term.substituteAtPos(position, replacement), constraints)
 
-  def rewriteAtPos(position: Position, replacement: Term, substitution: Substitution): ConstrainedTerm =
-    ConstrainedTerm(term.rewriteAtPos(position, replacement, substitution), constraints)
+  def rewriteAtPos(position: Position, rule: Rule, substitution: Substitution): ConstrainedTerm =
+    ConstrainedTerm(term.rewriteAtPos(position, rule, substitution), constraints)
 
   override def toString: String = toPrintString(false)
 

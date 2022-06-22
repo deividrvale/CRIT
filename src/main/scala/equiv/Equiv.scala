@@ -8,36 +8,53 @@ import equiv.trs.Term
 import equiv.utils.TermUtils.constraintTrue
 import equiv.utils.Z3
 
-object Equiv {
-  def main(args: Array[String]): Unit = {
-    val eq1: Equation = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 10)))
-    val delEq1: Equation = Equation(termFy, termFy, Set())
-    val delEq2: Equation = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 1), consVarIntInt("y", "<", 1)))
-    val newPfSt: ProofState = ProofState(Set(eq1, delEq2, delEq1), Set(rho1, rho2), true)
-    
-    val system = TRSParserTest.parseTRS("examples/declare.ctrs")
-    system match {
-      case Some(s) => println(s.toPrintString())
-      case None => println("Failed to parse")
-    }
+import scala.io.StdIn.readLine
 
+object Equiv {
+  def main(args: Array[String]): Unit = {    
+    sample()
+    // parseAndDoRI("decompose")
   }
 
-  def loopSimplify(pfSt: ProofState): Unit = {
-    var newPfSt: ProofState = pfSt
-    var i: Int = 0
-    while
-      i < 3
+  def parseAndDoRI(fileName: String): Unit = {
+    val system = TRSParserTest.parseTRS(s"examples/$fileName.ctrs")
+    system match {
+      case Some(s) => {
+        val equations: Set[Equation] = Set() // TODO get starting equation
+        val pfSt: ProofState = ProofState(equations, s.rules, true)
+        doRI(pfSt)
+      }
+      case None => println("Failed to parse.")
+    }
+  }
+
+  def doRI(pfSt: ProofState, maxIterations: Int = 10): Unit = {
+    println("Starting state:\n" + pfSt.toPrintString())
+
+    var currentPfSt = pfSt
+
+    var i = 0
+    while 
+      !pfSt.isFinished && i < maxIterations
     do
       i += 1
-      println(newPfSt.equations.map(_.toPrintString()))
-      newPfSt = newPfSt.trySimplification().simplifyAll().tryEqDeletion().tryDeletion()
+      // TODO: RI tactics
+      currentPfSt = currentPfSt.tryEqDeletion()
+      currentPfSt = currentPfSt.tryDeletion()
+      currentPfSt = currentPfSt.trySimplification()
+      println(currentPfSt.toPrintString())
 
-    println(newPfSt.equations.map(_.toPrintString()))
+    println("Done")
   }
 
-  def testApp(rule: Rule, consTerm: ConstrainedTerm): Unit = {
-    println(s"Is rule $rule applicable on term $consTerm?: ${consTerm.term.findSubTermInstances(rule.left).nonEmpty}")
+  def sample(): Unit = {
+    val eq1: Equation = Equation(termFy, termGy, Set())
+    val delEq1: Equation = Equation(termFy, termFy, Set())
+    val delEq2: Equation = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 1), consVarIntInt("y", "<", 1)))
+    val newPfSt: ProofState = ProofState(Set(eq1), Set(rho1, rho2), true)
+
+    doRI(newPfSt)
   }
+
 
 }

@@ -29,7 +29,7 @@ trait Term {
     }
   }
 
-  /** Checks if the current term matches the given term.
+  /** Checks if the current term (`this`) matches the given term.
    * @return A substitution if the terms match, otherwise None. */
   def instanceOf(other: Term) : Option[Substitution] = {
     if(this.sort != other.sort) None else
@@ -46,11 +46,9 @@ trait Term {
     }
   }
 
-  /**
-   * Searches all subterms with the given property.
+  /** Searches all subterms with the given property.
    * @param property A property of terms.
-   * @return All subterms with the property together with their positions.
-   */
+   * @return All subterms with the property together with their positions. */
   def findSubTerms[X](property: Term => Option[X]) : List[(Term,Position,X)] = {
     val result = this match {
       case Var(_, _) => List.empty
@@ -71,8 +69,7 @@ trait Term {
 
   /** Substitute a subterm with `replacement` at the given `position`.
    * @param position Position of substitution as a list of Ints
-   * @param replacement Term to substitute
-   */
+   * @param replacement Term to substitute */
   def substituteAtPos(position: Position, replacement: Term): Term = (this, position, replacement) match {
     case (_, List(), _) => replacement
     case (App(f, args), x::xs, t2) => App(f, args.updated(x, args(x).substituteAtPos(xs, t2)))
@@ -81,8 +78,7 @@ trait Term {
 
   /** Substitute all occurrences of `matchTerm` by `replacementTerm`
    * @param matchTerm Sub-term that will be replaced
-   * @param replacementTerm Term that will replace occurrences of `matchTerm`
-   */
+   * @param replacementTerm Term that will replace occurrences of `matchTerm` */
   def substituteAll(matchTerm: Term, replacementTerm: Term): Term = {
     if this == matchTerm then replacementTerm else
     this match {
@@ -98,8 +94,8 @@ trait Term {
     case App(f, args) => App(f, args.map(_.applySubstitution(substitution)))
   }
 
-  def rewriteAtPos(position: Position, replacement: Term, substitution: Substitution): Term =
-    substituteAtPos(position, replacement.applySubstitution(substitution))
+  def rewriteAtPos(position: Position, rule: Rule, substitution: Substitution): Term =
+    substituteAtPos(position, rule.right.applySubstitution(substitution))
 
   def toStringApplicative : String = this match {
     case App(f,args) => if(args.isEmpty) s"${f.name}" else s"(${f.name} ${args.map(_.toStringApplicative).mkString(" ")})"
@@ -138,15 +134,16 @@ object Term {
 
     override def toString: String = toPrintString(false)
 
-    def isInfix: Boolean = this.fun.infix match {
-        case None => false
-        case Some(Infix(_, _)) => this.args.length == 2
-    }
-
-    override def toPrintString(colours: Boolean = true): String =
+    override def toPrintString(colours: Boolean = true): String = {
       if isInfix then
         s"${args.head.toPrintString(colours)} ${fun.toPrintString(colours)} ${args(1).toPrintString(colours)}"
-      else
-        s"${fun.toPrintString(colours)}${if(args.nonEmpty) args.map(_.toPrintString(colours)).mkString("(", ", ", ")") else ""}"
+        else
+          s"${fun.toPrintString(colours)}${if(args.nonEmpty) args.map(_.toPrintString(colours)).mkString("(", ", ", ")") else ""}"
+    }
+    
+    def isInfix: Boolean = this.fun.infix match {
+      case None => false
+      case Some(Infix(_, _)) => this.args.length == 2
+    }
   }
 }

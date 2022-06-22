@@ -64,7 +64,7 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
   /** Transform the equation to a constrained term, where ~~ is seen as a fresh symbol. Then rewrite the constrained term using the given  */
   def SIMPLIFICATION(rule: Rule, side: Side, position: Term.Position, substitution: Substitution): Equation = {
     ConstrainedTerm(App(getFreshFunctionSymbol(rule), List(this.left, this.right)), this.constraints)
-      .rewriteAtPos(List(side match { case Side.Left => 0; case Side.Right => 1 }) ++ position, rule.right, substitution)
+      .rewriteAtPos(List(side match { case Side.Left => 0; case Side.Right => 1 }) ++ position, rule, substitution)
     match {
       case ConstrainedTerm(App(_, args), cons) => Equation(args.head, args(1), cons)
     }

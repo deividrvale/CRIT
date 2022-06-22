@@ -9,7 +9,7 @@ RULES
 
 IRREGULAR
 
-QUERY normal form start
+QUERY f(4) -><- product(2,2)
 
 END OF FILE
 
