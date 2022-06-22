@@ -14,7 +14,13 @@ object Equiv {
     val delEq1: Equation = Equation(termFy, termFy, Set())
     val delEq2: Equation = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 1), consVarIntInt("y", "<", 1)))
     val newPfSt: ProofState = ProofState(Set(eq1, delEq2, delEq1), Set(rho1, rho2), true)
-    loopSimplify(newPfSt)
+    
+    val system = TRSParserTest.parseTRS("examples/declare.ctrs")
+    system match {
+      case Some(s) => println(s.toPrintString())
+      case None => println("Failed to parse")
+    }
+
   }
 
   def loopSimplify(pfSt: ProofState): Unit = {

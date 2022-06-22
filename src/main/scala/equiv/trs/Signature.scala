@@ -7,7 +7,7 @@ case class Signature(functions: Set[FunctionSymbol]) {
   override def toString: String = toPrintString(false)
 
   def toPrintString(colours: Boolean = true): String = {
-    functions.toList.sortBy(_.typing.toString).map(_.toPrintString(colours)).mkString("\n")
+    functions.toList.map(_.toPrintString(colours, true)).mkString("\n")
   }
-}
+}/*.sortBy(_.typing.toString)*/
 

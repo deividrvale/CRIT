@@ -4,7 +4,7 @@ case class Typing(input: List[Sort], output: Sort, isTheory: Boolean = false, is
   override def toString: String = toPrintString(false)
   
   def toPrintString(colours: Boolean = true): String = {
-    s"${if (input.nonEmpty) input.mkString("", " x ", (if (isVariadic) "*" else "") + " => ") else ""}$output"
+    s"${if (input.nonEmpty) input.map(_.toPrintString()).mkString("", " x ", (if (isVariadic) "*" else "") + " => ") else ""}${output.toPrintString()}"
   }
 
   def getSort(arg: Option[Int]): Option[Sort] = {

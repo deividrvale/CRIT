@@ -14,27 +14,26 @@ object TRSParserTest {
     if (folder.exists && folder.isDirectory) {
       folder.listFiles.filter(_.isFile).filter(_.getName.endsWith(".ctrs")).toList.sorted.foreach{ file =>
         println(file.getName)
-        if file.getName == "decompose.ctrs" then {
-          val lctrs = parseTRS("examples/" + file.getName)
-          lctrs match {
-            case Some(system) =>
-              // println(system)
-              println("OK")
-            case None =>
-              println("FAILED")
-              failures += 1
-          }
-          println()
+        val lctrs = parseTRS("examples/" + file.getName)
+        lctrs match {
+          case Some(system) =>
+            println("OK")
+          case None =>
+            println("FAILED")
+            failures += 1
         }
+        println()
       }
     }
     println(s"Number of failures: $failures")
   }
 
-  def parseTRS(name: String) : Option[System] = {
+  /** Tries to parse the .ctrs file with the given fileName. 
+    * @return Some(System) on a success, None otherwise */
+  def parseTRS(fileName: String) : Option[System] = {
     var parseResult : QuasiSystem = null
     try {
-      new TRSParser(readFile).parseSystem(readFile(name)) match {
+      new TRSParser(readFile).parseSystem(readFile(fileName)) match {
         case Left(quasiSystem) =>
           parseResult = quasiSystem
           Some(quasiSystem.toSystem)
