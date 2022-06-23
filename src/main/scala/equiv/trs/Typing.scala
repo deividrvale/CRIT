@@ -1,6 +1,6 @@
 package equiv.trs
 
-case class Typing(input: List[Sort], output: Sort, isTheory: Boolean = false, isVariadic: Boolean = false) {
+case class Typing(input: List[Sort], output: Sort, isVariadic: Boolean = false) {
   override def toString: String = toPrintString(false)
   
   def toPrintString(colours: Boolean = true): String = {

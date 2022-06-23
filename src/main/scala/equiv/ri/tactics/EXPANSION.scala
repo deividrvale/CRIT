@@ -43,9 +43,12 @@ object EXPANSION {
   }
 
   def tryExpansionOnSubTerm(term: Term, rules: Set[Rule]): Option[Set[(Term, Set[Constraint])]] = {
-    val applicableRuleSubstitutionPairs = rules.map(rule => term.instanceOf(rule.left).map((rule, _)) ).flatten
-    if applicableRuleSubstitutionPairs.isEmpty then None 
-    else Some(applicableRuleSubstitutionPairs.map((rule, sub) => (term.rewriteAtPos(List(), rule, sub), rule.substituteConstraints(sub))))
+    if !term.isBasic() then None else {
+      val applicableRuleSubstitutionPairs = rules.map(rule => term.instanceOf(rule.left).map((rule, _)) ).flatten
+      if applicableRuleSubstitutionPairs.isEmpty then None else {
+        Some(applicableRuleSubstitutionPairs.map((rule, sub) => (term.rewriteAtPos(List(), rule, sub), rule.substituteConstraints(sub))))
+      }
+    }
   }
 
 }

@@ -17,7 +17,7 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
     val signatureSymbolsTyped = signature.leftAsMap
 
     // function symbols with arities
-    var symbol2arity = signature.left.map { symbol => symbol.name -> (symbol.typing.input.length, symbol.typing.isTheory, symbol.typing.isVariadic) }.toMap
+    var symbol2arity = signature.left.map { symbol => symbol.name -> (symbol.typing.input.length, symbol.isTheory, symbol.typing.isVariadic) }.toMap
     usedSymbols.filter { s => signatureSymbols.contains(s._1) || s._2 > 0 }.foreach { case (symbol, arity) =>
       if (symbol2arity.contains(symbol)) {
         val (theArity, theory, variadic) = symbol2arity(symbol)
@@ -144,7 +144,7 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
             case None => throw new RuntimeException(s"Failed to derive the output sort of $symbol.")
           }
 
-        FunctionSymbol(symbol, Typing(inputSorts, outputSort, theory, variadic), signature.left.find(_.name == symbol).flatMap(_.infix))
+        FunctionSymbol(symbol, Typing(inputSorts, outputSort, isVariadic = variadic), theory, signature.left.find(_.name == symbol).flatMap(_.infix))
       }.toSet),
       variables.map { case port@((rule, name), _) => (rule, name) -> class2sort(port2class(port)) }.toMap
     )

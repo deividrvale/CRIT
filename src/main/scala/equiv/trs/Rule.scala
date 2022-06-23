@@ -7,7 +7,7 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends C
   assert(left.sort == right.sort)
 
   left match {
-    case App(fun, _) => assert(!fun.typing.isTheory)
+    case App(fun, _) => assert(!fun.isTheory)
     case _ => assert(false)
   }
 

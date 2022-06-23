@@ -4,8 +4,8 @@ import equiv.trs.Term.App
 import equiv.trs.{Constraint, FunctionSymbol, Sort, Term, Typing}
 
 object TermUtils {
-  val boolTrue: Term = App(FunctionSymbol("true", Typing(List(), Sort.Bool, true)),List())
-  val boolFalse: Term = App(FunctionSymbol("false", Typing(List(), Sort.Bool, true)),List())
+  val boolTrue: Term = App(FunctionSymbol("true", Typing(List(), Sort.Bool), isTheory = true),List())
+  val boolFalse: Term = App(FunctionSymbol("false", Typing(List(), Sort.Bool), isTheory = true),List())
   def constraintTrue: Constraint = Constraint(boolTrue)
   def constraintFalse: Constraint = Constraint(boolFalse)
 

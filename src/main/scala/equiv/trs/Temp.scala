@@ -12,21 +12,21 @@ object Temp {
   /** y : Int */
   val varY: Term = Var("y", Sort.Int)
   /** - : Int x Int => Int */
-  val minus: FunctionSymbol = FunctionSymbol("-", Typing(List(Sort.Int, Sort.Int), Sort.Int, true), Some(Infix(InfixKind.Right, 1)))
+  val minus: FunctionSymbol = FunctionSymbol("-", Typing(List(Sort.Int, Sort.Int), Sort.Int), true, Some(Infix(InfixKind.Right, 1)))
   /** 0 : Int */
-  val valZero: Term = App(FunctionSymbol("0", Typing(List(), Sort.Int, true)), List())
+  val valZero: Term = App(FunctionSymbol("0", Typing(List(), Sort.Int)), List())
   /** 1 : Int */
-  val valOne: Term = App(FunctionSymbol("1", Typing(List(), Sort.Int, true)), List())
+  val valOne: Term = App(FunctionSymbol("1", Typing(List(), Sort.Int)), List())
   /** x - 1 : Int */
   val xMinusOne: Term = App(minus, List(varX, valOne))
   /** = : Int x Int => Bool  */
-  val funcEq: FunctionSymbol = FunctionSymbol("=", Typing(List(Sort.Int, Sort.Int), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
+  val funcEq: FunctionSymbol = FunctionSymbol("=", Typing(List(Sort.Int, Sort.Int), Sort.Bool), true, Some(Infix(InfixKind.Right, 1)))
   /** > : Int x Int => Bool  */
-  val funcGT: FunctionSymbol = FunctionSymbol(">", Typing(List(Sort.Int, Sort.Int), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
+  val funcGT: FunctionSymbol = FunctionSymbol(">", Typing(List(Sort.Int, Sort.Int), Sort.Bool), true, Some(Infix(InfixKind.Right, 1)))
   /** <= : Int x Int => Bool */
-  val funcLE: FunctionSymbol = FunctionSymbol("<=", Typing(List(Sort.Int, Sort.Int), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
+  val funcLE: FunctionSymbol = FunctionSymbol("<=", Typing(List(Sort.Int, Sort.Int), Sort.Bool), true, Some(Infix(InfixKind.Right, 1)))
   /** < : Int x Int => Bool */
-  val funcLT: FunctionSymbol = FunctionSymbol("<", Typing(List(Sort.Int, Sort.Int), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
+  val funcLT: FunctionSymbol = FunctionSymbol("<", Typing(List(Sort.Int, Sort.Int), Sort.Bool), true, Some(Infix(InfixKind.Right, 1)))
   /** return : Int => Int */
   val funcReturn: FunctionSymbol = FunctionSymbol("return", Typing(List(Sort.Int), Sort.Int))
 
@@ -75,18 +75,18 @@ object Temp {
 
   /** @return A function symbol of type [Int x Int] => Bool */
   def funcIntIntBool(operator: String): FunctionSymbol =
-    FunctionSymbol(operator, Typing(List(Sort.Int, Sort.Int), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
+    FunctionSymbol(operator, Typing(List(Sort.Int, Sort.Int), Sort.Bool), true, Some(Infix(InfixKind.Right, 1)))
 
   def funcIntIntInt(operator: String): FunctionSymbol =
-    FunctionSymbol(operator, Typing(List(Sort.Int, Sort.Int), Sort.Int, true), Some(Infix(InfixKind.Right, 1)))
+    FunctionSymbol(operator, Typing(List(Sort.Int, Sort.Int), Sort.Int), true, Some(Infix(InfixKind.Right, 1)))
 
   /** @return A function symbol of type [Bool x Bool] => Bool */
   def funcBoolBoolBool(operator: String): FunctionSymbol =
-    FunctionSymbol(operator, Typing(List(Sort.Bool, Sort.Bool), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
+    FunctionSymbol(operator, Typing(List(Sort.Bool, Sort.Bool), Sort.Bool), true, Some(Infix(InfixKind.Right, 1)))
 
   /** @return An integer value */
   def valInt(value: Int): Term =
-    App(FunctionSymbol(value.toString, Typing(List(), Sort.Int, true)), List())
+    App(FunctionSymbol(value.toString, Typing(List(), Sort.Int), true), List())
 
   /** @return An integer variable */
   def varInt(name: String): Term = Var(name, Sort.Int)

@@ -6,6 +6,9 @@ import equiv.utils.{MapUtils, Print}
 trait Term {
   def sort: Sort
 
+  /** TODO Check if this term is basic, i.e. its root is a defined symbol and all its arguments are constructor terms */
+  def isBasic(): Boolean = true
+
   /** @return A set of variables that occur in the given term */
   def vars: Set[Var] = this match {
     case x@Var(_, _) => Set(x)
