@@ -19,6 +19,8 @@ object Temp {
   val valOne: Term = App(FunctionSymbol("1", Typing(List(), Sort.Int, true)), List())
   /** x - 1 : Int */
   val xMinusOne: Term = App(minus, List(varX, valOne))
+  /** = : Int x Int => Bool  */
+  val funcEq: FunctionSymbol = FunctionSymbol("=", Typing(List(Sort.Int, Sort.Int), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
   /** > : Int x Int => Bool  */
   val funcGT: FunctionSymbol = FunctionSymbol(">", Typing(List(Sort.Int, Sort.Int), Sort.Bool, true), Some(Infix(InfixKind.Right, 1)))
   /** <= : Int x Int => Bool */
@@ -44,12 +46,16 @@ object Temp {
   val termFxMinOne: Term = App(funcF, List(xMinusOne))
   /** return( 0 ) */
   val termReturnZero: Term = App(funcReturn, List(valZero))
+  /** return( x ) */
+  val termReturnX: Term = App(funcReturn, List(varX))
   /** [ x > 0 ] */
   var consXGTZero: Constraint = Constraint(App(funcGT,List(varX, valZero)))
   /** [ x <= 0 ] */
   val consXLEZero: Constraint = Constraint(App(funcLE, List(varX, valZero)))
   /** [ x < 0 ] */
   val consXLTZero: Constraint = Constraint(App(funcLT, List(varX, valZero)))
+  /** [ x = 0 ] */
+  val consXEqZero: Constraint = Constraint(App(funcEq, List(varX, valZero)))
 
   /**  f(x) -> f(x - 1)  [x > 0] */
   val rho1: Rule = Rule(termFx, termFxMinOne, Set(consXGTZero))

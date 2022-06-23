@@ -15,8 +15,9 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends C
     constraints.map(_.applySubstitution(substitution))
   }
 
-  /** TODO Check if addition of the current rule to the given terminating set keeps the set terminating */
-  def isTerminating(rules: Set[Rule]): Boolean = true
+  /** TODO Check if the addition of `this` rule to the given set of rules is terminating.
+   * @return This rule if it is terminating, otherwise None */
+  def getIfTerminating(rules: Set[Rule]): Option[Rule] = Some(this)
 
   override def toString: String = toPrintString(false)
 

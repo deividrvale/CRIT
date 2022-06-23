@@ -7,7 +7,7 @@ import equiv.utils.TermUtils
 
 object EQ_DELETION {
   // TODO
-  def tryEqDeletion(pfSt: ProofState): ProofState = {
-    pfSt
+  def tryEqDeletion(pfSt: ProofState): Option[ProofState] = {
+    None
   }
 }

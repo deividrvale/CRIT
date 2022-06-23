@@ -47,37 +47,31 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], flag: Boolean)
 
   // *************************************************** TACTICS *************************************************** //
 
-  def trySimplification(): ProofState = {
-    SIMPLIFICATION.trySimplification(this) match {
-      case None => this
-      case Some((oldEquation, newEquation)) => 
-        println(s"SIMPLIFICATION on:     ${oldEquation.toPrintString()}")
-        this.replaceEquationWith(oldEquation, newEquation)
-    }
+  def trySimplification(): Option[ProofState] = {
+    SIMPLIFICATION.trySimplification(this).map( (oldEquation, newEquation) => 
+        this.replaceEquationWith(oldEquation, newEquation) )
   }
 
-  def tryExpansion(): ProofState = {
-    EXPANSION.tryExpansion(this) match
-      case None => this
-      case Some((oldEquation, newEquations, maybeRule)) =>
-        val newPfSt = this.removeEquation(oldEquation).addEquations(newEquations)
-        maybeRule match {
-          case None => newPfSt
-          case Some(rule) => newPfSt.addRule(rule)
-        }
+  def tryExpansion(): Option[ProofState] = {
+    EXPANSION.tryExpansion(this).map( (oldEquation, newEquations, maybeRule) =>
+      val newPfSt = this.removeEquation(oldEquation).addEquations(newEquations)
+      maybeRule match {
+        case None => newPfSt
+        case Some(rule) => newPfSt.addRule(rule)
+      } )
   }
 
-  def tryEqDeletion(): ProofState = {
+  def tryEqDeletion(): Option[ProofState] = {
     EQ_DELETION.tryEqDeletion(this)
   }
 
-  def tryDeletion(): ProofState = {
+  def tryDeletion(): Option[ProofState] = {
     DELETION.tryDeletion(this)
   }
 
   override def toString: String = toPrintString(false)
 
   def toPrintString(colours: Boolean = true): String =
-    s"( { ${equations.map(_.toPrintString(colours)).mkString("", ", ", "") } }, { ${rules.map(_.toPrintString(colours)).mkString(sep= ", ")} }, $flag )"
+    s"( E = { ${equations.map(_.toPrintString(colours)).mkString("", ", ", "") } }, \n  H = { ${rules.map(_.toPrintString(colours)).mkString(sep= ", ")} },\n  flag = $flag )"
 
 }
