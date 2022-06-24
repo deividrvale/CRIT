@@ -10,6 +10,7 @@ import equiv.trs.FunctionSymbol
 import equiv.trs.Constraint
 import equiv.utils.TermUtils
 import equiv.trs.ConstrainedObject
+import scala.collection.immutable.LazyList.cons
 
 object EQ_DELETION {
   
@@ -21,23 +22,21 @@ object EQ_DELETION {
   }
 
   def tryEqDeletionOnEquation(equation: Equation, pfSt: ProofState): Option[Equation] = {
-    maybeReplace(equation.left, equation.right, equation.constraintVars, pfSt.definedSymbols).map( (t1, t2, cs) => Equation(t1, t2, equation.constraints + Constraint(TermUtils.not(ConstrainedObject.foldTerms(cs)))) )
+    val constraints = maybeReplace(equation.left, equation.right, equation.constraintVars, pfSt.definedSymbols)
+    if constraints.isEmpty then None else
+      Some( equation.copy(constraints = equation.constraints + Constraint(TermUtils.not(ConstrainedObject.foldTerms(constraints)))) )
   }
 
-  def maybeReplace(term1: Term, term2: Term, constrainedVars: Set[Var], definedSymbols: Set[FunctionSymbol]): Option[(Term, Term, Set[Term])] = {
+  def maybeReplace(term1: Term, term2: Term, constrainedVars: Set[Var], definedSymbols: Set[FunctionSymbol]): Set[Term] = {
     if term1.isEqDeletable(constrainedVars) && term2.isEqDeletable(constrainedVars) then 
-      Some((getFreshVar(term1.sort), getFreshVar(term2.sort), Set(TermUtils.is(term1, term2))))
+      Set(TermUtils.is(term1, term2))
     else (term1, term2) match {
       case (App(f1, args1), App(f2, args2)) => {
         if f1 == f2 then
-            var amountOfSubtermsNotReplaced = 0
-            var constraints: Set[Term] = Set()
-            val (args11, args21): (List[Term], List[Term]) = 
-              args1.zip(args2).map( (t1, t2) => maybeReplace(t1, t2, constrainedVars, definedSymbols).map( (t11, t21, cons) => { constraints ++= cons ; (t11, t21) } ).getOrElse( { amountOfSubtermsNotReplaced += 1; (t1, t2) } ) ).unzip
-            if amountOfSubtermsNotReplaced == args1.length then None else Some((App(f1, args11), App(f2, args21), constraints))
-        else None
+          args1.zip(args2).flatMap( (t1, t2) => maybeReplace(t1, t2, constrainedVars, definedSymbols) ).toSet
+        else Set()
       }
-      case _ => None
+      case _ => Set()
     }
   }
 }

@@ -10,7 +10,7 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
 
     val usedSymbols = rules.flatMap(_.functionSymbols)
     val intSymbols = usedSymbols.filter(_._2 == 0).filter(_._1.toIntOption.nonEmpty).map(_._1)
-    val intSignature = QuasiSignature(intSymbols.map{ i => Left(FunctionSymbol(i,Typing(List.empty,Sort.Int))) })
+    val intSignature = QuasiSignature(intSymbols.map{ i => Left(FunctionSymbol(i,Typing(List.empty,Sort.Int), isTheory = true)) }) //TODO maybe remove isTheory?
     val signature = signatureOriginal.union(intSignature)
 
     val signatureSymbols = signature.asMap
