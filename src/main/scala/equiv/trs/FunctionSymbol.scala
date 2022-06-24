@@ -1,6 +1,6 @@
 package equiv.trs
 
-import equiv.utils.Print
+import equiv.utils.PrintUtils
 
 case class FunctionSymbol(name: String, typing: Typing, isTheory: Boolean = false, infix: Option[Infix] = None) {
   override def toString: String = toPrintString(false)
@@ -8,8 +8,8 @@ case class FunctionSymbol(name: String, typing: Typing, isTheory: Boolean = fals
   def toPrintString(colours: Boolean = true, printTyping: Boolean = false): String = {
     (if colours then
         (typing.input match {
-          case List() => Print.zeroAryFunctionColour
-          case _ => Print.nAryFunctionColour 
+          case List() => PrintUtils.zeroAryFunctionColour
+          case _ => PrintUtils.nAryFunctionColour 
         }) + s"$name" + Console.RESET
       else
         s"$name") 

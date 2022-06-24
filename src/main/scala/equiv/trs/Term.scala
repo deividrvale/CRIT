@@ -1,10 +1,12 @@
 package equiv.trs
 
 import equiv.trs.Term.{App, Position, Substitution, Var}
-import equiv.utils.{MapUtils, Print}
+import equiv.utils.{MapUtils, PrintUtils}
 
 trait Term {
   def sort: Sort
+
+  def rootFunc: Option[FunctionSymbol]
 
   /** TODO Check if this term is basic, i.e. its root is a defined symbol and all its arguments are constructor terms */
   def isBasic(): Boolean = true
@@ -100,6 +102,8 @@ trait Term {
   def rewriteAtPos(position: Position, rule: Rule, substitution: Substitution): Term =
     substituteAtPos(position, rule.right.applySubstitution(substitution))
 
+  def isEqDeletable(constraintVars: Set[Var]) : Boolean
+
   def toStringApplicative : String = this match {
     case App(f,args) => if(args.isEmpty) s"${f.name}" else s"(${f.name} ${args.map(_.toStringApplicative).mkString(" ")})"
     case Var(v,_) => v
@@ -113,11 +117,15 @@ object Term {
   type Substitution = Map[Var, Term]
 
   case class Var(name: String, sort: Sort) extends Term {
+    override def rootFunc: Option[FunctionSymbol] = None
+
+    override def isEqDeletable(constraintVars: Set[Var]): Boolean = constraintVars.contains(this)
+
     override def toString: String = toPrintString(false)
 
     override def toPrintString(colours: Boolean = true): String = {
       if colours then
-        Print.variableColour + s"$name" + Console.RESET
+        PrintUtils.variableColour + s"$name" + Console.RESET
       else
         s"$name"
     }
@@ -132,6 +140,12 @@ object Term {
       sortsArgsAny.size <= 1,
       s"The term ${fun.name}( ${args.mkString(", ")} ) is not well-typed; here $fun."
     )
+
+    override def rootFunc: Option[FunctionSymbol] = Some(fun)
+
+    override def isEqDeletable(constraintVars: Set[Var]): Boolean = {
+      fun.isTheory && args.forall(_.isEqDeletable(constraintVars))
+    }
 
     val sort: Sort = if(fun.typing.output == Sort.Any) sortsArgsAny.head else fun.typing.output
 

@@ -5,12 +5,20 @@ import equiv.ri.Equation.Side
 import equiv.ri.tactics.{EXPANSION, SIMPLIFICATION, DELETION, EQ_DELETION}
 import equiv.trs.{Constraint, Rule, Term}
 import equiv.trs.Term.Position
+import equiv.trs.FunctionSymbol
+import equiv.trs.Term.Var
 
 object ProofState {
 
 }
 
 case class ProofState(equations: Set[Equation], rules: Set[Rule], flag: Boolean) {
+  /** The set of defined symbols of the given ruleset, i.e. the set of all function symbols that are the root of the left-hand side of a rule.
+   * @example The defined symbols in rule set `{ f(x) -> g(x - 1) [x > 0], h(x) -> return(x) }` are `f` and `h` */
+  val definedSymbols: Set[FunctionSymbol] = rules.flatMap( r => r.rootFunc )
+
+  def getVars(): Set[Var] = equations.flatMap(_.vars) ++ rules.flatMap(_.vars)
+
   /** Check if the ProofState has reached a terminal state, i.e. the set of equations is empty */
   def isFinished: Boolean = equations.isEmpty
 
@@ -41,9 +49,10 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], flag: Boolean)
   def simplifyAll(): ProofState = this.copy(equations = equations.map(_.simplifyCons()))
 
   /** Given an equation in the proofstate, simplify its constraint and update the proofstate */
-  def simplifyEquation(equation: Equation): ProofState =
+  def simplifyEquation(equation: Equation): ProofState = {
     assert(equations.contains(equation))
     this.copy(equations = equations - equation + equation.simplifyCons())
+  }
 
   // *************************************************** TACTICS *************************************************** //
 

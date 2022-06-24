@@ -8,6 +8,7 @@ import equiv.utils.TermUtils
 
 import scala.annotation.targetName
 import scala.util.Random
+import equiv.trs.Term.Var
 
 object Equation {
   enum Side:
@@ -15,6 +16,9 @@ object Equation {
 }
 
 case class Equation(left: Term, right : Term, var constraints : Set[Constraint]) extends ConstrainedObject(constraints) {
+
+  val vars: Set[Var] = left.vars ++ right.vars ++ constraints.flatMap(_.term.vars)
+
   def getSide(side: Side): Term = side match {
     case Side.Left => left
     case Side.Right => right
