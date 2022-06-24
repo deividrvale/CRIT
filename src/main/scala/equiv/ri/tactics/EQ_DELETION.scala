@@ -22,18 +22,19 @@ object EQ_DELETION {
   }
 
   def tryEqDeletionOnEquation(equation: Equation, pfSt: ProofState): Option[Equation] = {
-    val constraints = maybeReplace(equation.left, equation.right, equation.constraintVars, pfSt.definedSymbols)
+    val constraints = getEqualities(equation.left, equation.right, equation.constraintVars, pfSt.definedSymbols)
     if constraints.isEmpty then None else
+      println(s"EQ-DELETION on ${equation.toPrintString()}.")
       Some( equation.copy(constraints = equation.constraints + Constraint(TermUtils.not(ConstrainedObject.foldTerms(constraints)))) )
   }
 
-  def maybeReplace(term1: Term, term2: Term, constrainedVars: Set[Var], definedSymbols: Set[FunctionSymbol]): Set[Term] = {
+  def getEqualities(term1: Term, term2: Term, constrainedVars: Set[Var], definedSymbols: Set[FunctionSymbol]): Set[Term] = {
     if term1.isEqDeletable(constrainedVars) && term2.isEqDeletable(constrainedVars) then 
       Set(TermUtils.is(term1, term2))
     else (term1, term2) match {
       case (App(f1, args1), App(f2, args2)) => {
         if f1 == f2 then
-          args1.zip(args2).flatMap( (t1, t2) => maybeReplace(t1, t2, constrainedVars, definedSymbols) ).toSet
+          args1.zip(args2).flatMap( (t1, t2) => getEqualities(t1, t2, constrainedVars, definedSymbols) ).toSet
         else Set()
       }
       case _ => Set()

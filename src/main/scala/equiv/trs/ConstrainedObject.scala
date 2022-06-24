@@ -22,11 +22,16 @@ object ConstrainedObject {
   }
 
   def foldConstraints(constraints: Set[Constraint]): Term = {
-    constraints.foldRight(TermUtils.boolTrue)((c1, c2) => TermUtils.and(c1.term, c2))
+    foldTerms(constraints.map(_.term))
   }
 
   def foldTerms(constraints: Set[Term]): Term = {
-    constraints.foldRight(TermUtils.boolTrue)((c1, c2) => TermUtils.and(c1, c2))
+    if constraints.size > 1 then
+      constraints.tail.foldLeft(constraints.head)((c1, c2) => TermUtils.and(c1, c2))
+    else if !constraints.isEmpty then
+      constraints.head
+    else
+      TermUtils.boolTrue
   }
 
   def constraintSetToConjunct(constraints: Set[Constraint]): Constraint = {

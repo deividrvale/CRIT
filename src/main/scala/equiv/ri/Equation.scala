@@ -76,7 +76,7 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
     FunctionSymbol(freshName, Typing(List(left.sort, right.sort), left.sort), false, Some(equiv.trs.Infix(equiv.trs.InfixKind.Left, 0)))
   }
 
-  override def toString: String = s"$left ~~ $right ${super.toString}"
+  override def toString: String = toPrintString(false)
 
   override def toPrintString(colours: Boolean = true): String = s"${left.toPrintString(colours)} ~~ ${right.toPrintString(colours)} ${super.toPrintString(colours)}"
 }
