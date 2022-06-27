@@ -5,6 +5,8 @@ import equiv.trs.{Constraint, FunctionSymbol, Sort, Term, Typing}
 import equiv.trs.Term.Var
 
 object TermUtils {
+  val conjunctionSymbol: String = "/\\"
+
   val boolTrue: Term = App(FunctionSymbol("true", Typing(List(), Sort.Bool), isTheory = true),List())
   val boolFalse: Term = App(FunctionSymbol("false", Typing(List(), Sort.Bool), isTheory = true),List())
   def constraintTrue: Constraint = Constraint(boolTrue)

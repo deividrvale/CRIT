@@ -67,5 +67,5 @@ trait ConstrainedObject(constraints: Set[Constraint]) {
   /** Prints the set of constraints as a conjunction, possibly with colours */
   def toPrintString(colours: Boolean = true): String =
     if constraints.isEmpty then "" else
-    s"[ ${constraints.map(_.term.toPrintString(colours)).mkString(sep = " /\\ ")} ]"
+    s"[ ${constraints.map(_.term.toPrintString(colours)).mkString(sep = s" ${TermUtils.conjunctionSymbol} ")} ]"
 }
