@@ -61,7 +61,7 @@ object Equiv {
     val eq3: Equation = Equation(termFx, termReturnZero, Set())
     val delEq1: Equation = Equation(termFy, termFy, Set())
     val delEq2: Equation = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 1), consVarIntInt("y", "<", 1)))
-    val newPfSt: ProofState = ProofState(Set(eq1), Set(rho1, rho2), true)
+    val newPfSt: ProofState = ProofState(Set(eq1, eq2, eq3), Set(rho1, rho2), true)
 
     doRI(newPfSt)
   }

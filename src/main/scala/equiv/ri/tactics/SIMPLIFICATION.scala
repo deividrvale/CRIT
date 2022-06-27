@@ -34,7 +34,7 @@ object SIMPLIFICATION {
     val term = equation.getSide(side)
     getFirstPossibleRewritePlaceData(term, equation, rule)
       .map((_, position, substitution) =>
-        println(s"SIMPLIFICATION on ${equation.getSide(side).toPrintString()}.")
+        println(s"SIMPLIFICATION on $side side of ${equation.toPrintString()}.")
         equation
           .replaceSide(side,term.rewriteAtPos(position, rule, substitution))
           .addConstraints(rule.constraints.map(_.applySubstitution(substitution))))

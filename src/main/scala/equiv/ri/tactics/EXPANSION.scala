@@ -27,7 +27,7 @@ object EXPANSION {
   def tryExpansionOnEquationSide(equation: Equation, side: Side, rules: Set[Rule]): Option[(Set[Equation], Option[Rule])] = {
     tryExpansionOnTerm(equation.getSide(side), rules)
       .map( terms =>
-        println(s"EXPANSION on ${equation.getSide(side).toPrintString()}.")
+        println(s"EXPANSION on $side side of ${equation.toPrintString()}.")
         ( terms.map( (t, cons) => equation.replaceSide(side, t).addConstraints(cons) ), 
           Rule(equation.getSide(side), equation.getOppositeSide(side), equation.constraints).getIfTerminating(rules) ) )
   }
