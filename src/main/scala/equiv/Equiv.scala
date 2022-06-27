@@ -19,9 +19,16 @@ object Equiv {
   def sample(): Unit = {
     import Temp.SumRec.{sumRecRules, equation}
 
+    val eq1: Equation = Equation(termFx, termReturnX, Set(consXEqZero))
+    val eq2: Equation = Equation(termFx, termReturnZero, Set(consXLEZero))
+    val eq3: Equation = Equation(termFx, termReturnZero, Set())
+    val delEq1: Equation = Equation(termFy, termFy, Set())
+    val delEq2: Equation = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 1), consVarIntInt("y", "<", 1)))
+    val newPfSt: ProofState = ProofState(Set(eq1), Set(rho1, rho2), true)
+
     val pfSt = ProofState(Set(equation), sumRecRules, true)
 
-    doRI(pfSt)
+    doRI(newPfSt)
   }
 
   def parseAndDoRI(fileName: String): Unit = {
@@ -46,15 +53,13 @@ object Equiv {
       i += 1
       // TODO: RI tactics
       currentPfSt = 
-        currentPfSt.tryDeletion().getOrElse( 
-        currentPfSt.tryEqDeletion().getOrElse(
-          currentPfSt.trySimplification().getOrElse( 
-            currentPfSt.tryExpansion().getOrElse( 
-              { existApplicableTactics = false; currentPfSt } 
-            )
-          )
-        )
-       )
+      currentPfSt.tryDeletion().getOrElse( 
+      currentPfSt.tryConstructor().getOrElse(
+      currentPfSt.tryEqDeletion().getOrElse(
+      currentPfSt.trySimplification().getOrElse( 
+      currentPfSt.tryExpansion().getOrElse( 
+      { existApplicableTactics = false; currentPfSt } 
+      )))))
       println(currentPfSt.toPrintString())
 
     println(s"Done after $i iteration(s). Finished: ${currentPfSt.isFinished}.")

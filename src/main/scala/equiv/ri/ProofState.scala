@@ -7,6 +7,7 @@ import equiv.trs.{Constraint, Rule, Term}
 import equiv.trs.Term.Position
 import equiv.trs.FunctionSymbol
 import equiv.trs.Term.Var
+import equiv.ri.tactics.CONSTRUCTOR
 
 object ProofState {
 
@@ -76,6 +77,10 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], flag: Boolean)
 
   def tryDeletion(): Option[ProofState] = {
     DELETION.tryDeletion(this)
+  }
+
+  def tryConstructor(): Option[ProofState] = {
+    CONSTRUCTOR.tryConstructor(this)
   }
 
   override def toString: String = toPrintString(false)
