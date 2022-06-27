@@ -13,7 +13,7 @@ trait QuasiTerm {
     }
   }
 
-  // function symbols
+  /** Set of pairs of all function symbols occurring in the quasiterm, together with their number of arguments */
   def functionSymbols : Set[(String,Int)] = {
     this match {
       case App(fun, args) => Set((fun,args.length)) ++ args.flatMap(_.functionSymbols)
@@ -21,7 +21,7 @@ trait QuasiTerm {
     }
   }
 
-  // transform all infix operators to function application
+  /** Transform all infix operators to function application */
   def infix2app(signature: Map[String,FunctionSymbol]) : App = {
     this match {
       case App(fun, args) =>
@@ -49,10 +49,8 @@ trait QuasiTerm {
     }
   }
 
-  /**
-   * Checks if the current term matches the given term.
-   * @return A substitution if the terms match, otherwise None.
-   */
+  /** Checks if the current term matches the given term.
+   * @return A substitution if the terms match, otherwise None. */
   def instanceOf(other: QuasiTerm) : Option[Map[String,QuasiTerm]] = {
     (this,other) match {
       case (_, App(x,Nil)) => Some(Map(x -> this))

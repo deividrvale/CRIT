@@ -12,20 +12,17 @@ import scala.io.StdIn.readLine
 
 object Equiv {
   def main(args: Array[String]): Unit = {    
-    sample()
-    // parseAndDoRI("decompose")
+    // sample()
+    parseAndDoRI("decompose")
   }
 
   def parseAndDoRI(fileName: String): Unit = {
-    val system = TRSParserTest.parseTRS(s"examples/$fileName.ctrs")
-    system match {
-      case Some(s) => {
+    TRSParserTest.parseTRS(s"examples/$fileName.ctrs").map(
+      system =>
         val equations: Set[Equation] = Set() // TODO get starting equation
-        val pfSt: ProofState = ProofState(equations, s.rules, true)
+        val pfSt: ProofState = ProofState(equations, system.rules, true)
         doRI(pfSt)
-      }
-      case None => println("Failed to parse.")
-    }
+    )
   }
 
   def doRI(startingPfSt: ProofState, maxIterations: Int = 10): Unit = {
