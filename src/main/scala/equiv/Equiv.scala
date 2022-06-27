@@ -12,8 +12,16 @@ import scala.io.StdIn.readLine
 
 object Equiv {
   def main(args: Array[String]): Unit = {    
-    // sample()
-    parseAndDoRI("decompose")
+    sample()
+    // parseAndDoRI("decompose")
+  }
+  
+  def sample(): Unit = {
+    import Temp.SumRec.{sumRecRules, equation}
+
+    val pfSt = ProofState(Set(equation), sumRecRules, true)
+
+    doRI(pfSt)
   }
 
   def parseAndDoRI(fileName: String): Unit = {
@@ -25,7 +33,7 @@ object Equiv {
     )
   }
 
-  def doRI(startingPfSt: ProofState, maxIterations: Int = 10): Unit = {
+  def doRI(startingPfSt: ProofState, maxIterations: Int = 50): Unit = {
     println(s"Starting Rewriting Induction...")
     println(startingPfSt.toPrintString())
 
@@ -51,17 +59,5 @@ object Equiv {
 
     println(s"Done after $i iteration(s). Finished: ${currentPfSt.isFinished}.")
   }
-
-  def sample(): Unit = {
-    val eq1: Equation = Equation(termFx, termReturnX, Set(consXEqZero))
-    val eq2: Equation = Equation(termFx, termReturnZero, Set(consXLEZero))
-    val eq3: Equation = Equation(termFx, termReturnZero, Set())
-    val delEq1: Equation = Equation(termFy, termFy, Set())
-    val delEq2: Equation = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 1), consVarIntInt("y", "<", 1)))
-    val newPfSt: ProofState = ProofState(Set(eq1, eq2, eq3), Set(rho1, rho2), true)
-
-    doRI(newPfSt)
-  }
-
 
 }

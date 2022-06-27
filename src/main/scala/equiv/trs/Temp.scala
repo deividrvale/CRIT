@@ -1,6 +1,7 @@
 package equiv.trs
 import equiv.trs.Term.{App, Var}
 import equiv.utils.TermUtils.constraintTrue
+import equiv.ri.Equation
 
 object Temp {
   /** f : Int => Int */
@@ -73,16 +74,50 @@ object Temp {
   /** f( x ) [ x > 0 ] */
   val consTermFxXGTZero: ConstrainedTerm = ConstrainedTerm(termFx, Set(consXGTZero))
 
-  /** @return A function symbol of type [Int x Int] => Bool */
-  def funcIntIntBool(operator: String): FunctionSymbol =
-    FunctionSymbol(operator, Typing(List(Sort.Int, Sort.Int), Sort.Bool), true, Some(Infix(InfixKind.Right, 1)))
+  object Theory {
+    val add = funcIntIntInt("+")
+    val min = funcIntIntInt("-")
+    val le = funcIntIntBool("<=")
+    val ge = funcIntIntBool(">=")
+    val lt = funcIntIntBool("<")
+    val gt = funcIntIntBool(">")
+    val eq = funcIntIntBool("=")
+    val zero = valInt(0)
+    val one = valInt(1)
+  }
 
-  def funcIntIntInt(operator: String): FunctionSymbol =
-    FunctionSymbol(operator, Typing(List(Sort.Int, Sort.Int), Sort.Int), true, Some(Infix(InfixKind.Right, 1)))
+  object SumRec {
+    import Theory.*
+    val x = varInt("x")
+    val i = varInt("i")
+    val z = varInt("z")
+    val sumRec = funcIntInt("sumrec", false)
+    val u = funcIntIntIntInt("u", false)
+    val returnf = funcIntInt("return", false)
+    val sumRecRules = Set(
+      Rule(App(sumRec, List(x)), App(u, List(x, one, zero)), Set()),
+      Rule(App(u, List(x, i, z)), App(u, List(x, App(add, List(i, one)), App(add, List(z, i)))), Set(makeConsBin(i, le, x))),
+      Rule(App(u, List(x, i, z)), App(returnf, List(z)), Set(makeConsBin(i, gt, x)))
+    )
+    val equation: Equation = Equation(App(sumRec, List(valInt(4))), App(returnf, List(valInt(10))), Set())
+  }
+
+  /** @return A function symbol of type [Int x Int] => Bool */
+  def funcIntIntBool(operator: String, isTheory: Boolean = true): FunctionSymbol =
+    FunctionSymbol(operator, Typing(List(Sort.Int, Sort.Int), Sort.Bool), isTheory, Some(Infix(InfixKind.Right, 1)))
+
+  def funcIntInt(operator: String, isTheory: Boolean = true): FunctionSymbol =
+    FunctionSymbol(operator, Typing(List(Sort.Int), Sort.Int), isTheory, Some(Infix(InfixKind.Right, 1)))
+  
+  def funcIntIntInt(operator: String, isTheory: Boolean = true): FunctionSymbol =
+    FunctionSymbol(operator, Typing(List(Sort.Int, Sort.Int), Sort.Int), isTheory, Some(Infix(InfixKind.Right, 1)))
+  
+  def funcIntIntIntInt(operator: String, isTheory: Boolean = true): FunctionSymbol =
+    FunctionSymbol(operator, Typing(List(Sort.Int, Sort.Int, Sort.Int), Sort.Int), isTheory, Some(Infix(InfixKind.Right, 1)))
 
   /** @return A function symbol of type [Bool x Bool] => Bool */
-  def funcBoolBoolBool(operator: String): FunctionSymbol =
-    FunctionSymbol(operator, Typing(List(Sort.Bool, Sort.Bool), Sort.Bool), true, Some(Infix(InfixKind.Right, 1)))
+  def funcBoolBoolBool(operator: String, isTheory: Boolean = true): FunctionSymbol =
+    FunctionSymbol(operator, Typing(List(Sort.Bool, Sort.Bool), Sort.Bool), isTheory, Some(Infix(InfixKind.Right, 1)))
 
   /** @return An integer value */
   def valInt(value: Int): Term =
