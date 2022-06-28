@@ -53,10 +53,12 @@ object Equiv {
     "5" -> ("EXPANSION", (pfSt => EXPANSION.tryExpansion(pfSt))),
     "6" -> ("POSTULATE (Not implemented yet)", (pfSt => None)),
     "7" -> ("GENERALIZE (Not implemented yet)", (pfSt => None)),
-    "8" -> ("DISPROVE (Not implemented yet)", (pfSt => None)),
-    "9" -> ("COMPLETENESS", (pfSt => Some(COMPLETENESS.doCompleteness(pfSt)))),
+    "8" -> ("COMPLETENESS", (pfSt => COMPLETENESS.tryCompleteness(pfSt))),
     "0" -> ("Simplify with calc (Not implemented yet)", (pfSt => None)),
   )
+
+  val disproveString = "9"
+  val quitString = "Q"
 
   def doRI(startingPfSt: ProofState, maxIterations: Int = 50): Unit = {
     println(s"\nStarting Rewriting Induction...\n")
@@ -71,7 +73,8 @@ object Equiv {
       i += 1
       println("\nChoose which inference rule to apply. (Type the number.)")
       tacticInputs.toSeq.sortBy(_._1).foreach((nr, nameMethod) => println(s"$nr: ${nameMethod._1}"))
-      println("Q: Quit")
+      println(s"$disproveString: DISPROVE")
+      println(s"$quitString: Quit")
       println()
       
       // Read user input
@@ -83,8 +86,10 @@ object Equiv {
       }
       if tacticInputs.contains(choice) then {
         currentPfSt = tacticInputs(choice)._2(currentPfSt).getOrElse{ { println("Rule failed.") ; currentPfSt } }
-      } else if choice.toUpperCase == "Q" then {
+      } else if choice.toUpperCase == quitString.toUpperCase then {
         return
+      } else if choice == disproveString then {
+        DISPROVE.tryDisprove(currentPfSt).map( { println("DISPROVE succeeded") ; return } )
       }
 
       println(currentPfSt.toPrintString())
@@ -92,6 +97,6 @@ object Equiv {
     println(s"Done after $i iteration(s). Finished: ${currentPfSt.isFinished}.")
   }
 
-  def validInputs: Set[String] = tacticInputs.keySet ++ Set("Q")
+  def validInputs: Set[String] = tacticInputs.keySet ++ Set(disproveString, quitString)
 
 }

@@ -8,7 +8,7 @@ import equiv.utils.TermUtils
 
 object DISPROVE {
   /** @return `Some(false)` if the current proofstate can be disproven, `None` otherwise. */
-  def tryDisprove(pfSt: ProofState): Option[Boolean] = pfSt.flag match {
+  def tryDisprove(pfSt: ProofState): Option[Boolean] = pfSt.getFlag match {
     case false => None
     case true => pfSt.equations.view.flatMap( equation =>
       val s = equation.left; val t = equation.right; val phi = equation.getConstrainsConjunctAsTerm 

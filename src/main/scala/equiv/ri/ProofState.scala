@@ -8,12 +8,13 @@ import equiv.trs.Term.Position
 import equiv.trs.FunctionSymbol
 import equiv.trs.Term.Var
 import equiv.ri.tactics.CONSTRUCTOR
+import equiv.ri.tactics.COMPLETENESS
 
 object ProofState {
 
 }
 
-case class ProofState(equations: Set[Equation], rules: Set[Rule], flag: Boolean) {
+case class ProofState(equations: Set[Equation], rules: Set[Rule], private val flag: Boolean) {
   /** The set of all function symbols occurring in the proofstate */
   val functionSymbols: Set[FunctionSymbol] = rules.flatMap( _.functionSymbols )
 
@@ -29,11 +30,12 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], flag: Boolean)
   /** Check if the ProofState has reached a terminal state, i.e. the set of equations is empty */
   def isFinished: Boolean = equations.isEmpty
 
-  /** Check if the proofstate flag is complete (true) */
-  def isFlagComplete: Boolean = flag
+  /** Get the value of the flag: `true` corresponds to `COMPLETE`, `false` corresponds to `INCOMPLETE` */
+  def getFlag: Boolean = flag
 
-  /** Change the value of the flag: `true` corresponds to `COMPLETE`, `false` corresponds to `INCOMPLETE` */
-  def setFlag(newFlag: Boolean): ProofState = ProofState(equations, rules, newFlag)
+  /** Change the value of the flag: `true` corresponds to `COMPLETE`, `false` corresponds to `INCOMPLETE` 
+    * Also change the `COMPLETENESS.lastcompleteProofStateEquations` value to the current proofstate's equations if the flag is changed from true (COMPLETE) to false (INCOMPLETE) */
+  def setFlag(newFlag: Boolean): ProofState = { if flag && !newFlag then COMPLETENESS.lastCompleteProofStateEquations = Some(equations) ; ProofState(equations, rules, newFlag) }
 
   /** Remove the given equation from the set of equations */
   def removeEquation(equation: Equation): ProofState = ProofState(equations - equation, rules, flag)
