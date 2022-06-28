@@ -8,6 +8,8 @@ trait Term {
 
   def rootFunc: Option[FunctionSymbol]
 
+  def isTheory: Boolean
+
   /** TODO Check if this term is basic, i.e. its root is a defined symbol and all its arguments are constructor terms */
   def isBasic(): Boolean = true
 
@@ -20,7 +22,7 @@ trait Term {
   /** @return A set of all occurring function symbols */
   def functionSymbols: Set[FunctionSymbol] = this match {
     case Var(_, _) => Set()
-    case App(f, args) => Set(f) ++ args.flatMap(t => t.functionSymbols)
+    case App(f, args) => Set(f) ++ args.flatMap(_.functionSymbols)
   }
 
   /** @return A set of the names of all occurring function symbols */
@@ -119,6 +121,8 @@ object Term {
   case class Var(name: String, sort: Sort) extends Term {
     override def rootFunc: Option[FunctionSymbol] = None
 
+    override def isTheory: Boolean = sort.isTheory
+
     override def isEqDeletable(constraintVars: Set[Var]): Boolean = constraintVars.contains(this)
 
     override def toString: String = toPrintString(false)
@@ -142,6 +146,8 @@ object Term {
     )
 
     override def rootFunc: Option[FunctionSymbol] = Some(fun)
+
+    override def isTheory: Boolean = fun.isTheory && args.forall(_.isTheory)
 
     override def isEqDeletable(constraintVars: Set[Var]): Boolean = {
       fun.isTheory && args.forall(_.isEqDeletable(constraintVars))

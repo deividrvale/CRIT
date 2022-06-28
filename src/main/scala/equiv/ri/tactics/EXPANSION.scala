@@ -10,10 +10,11 @@ import equiv.trs.Constraint
 
 object EXPANSION {
 
-  def tryExpansion(pfSt: ProofState): Option[(Equation, Set[Equation], Option[Rule])] = {
+  def tryExpansion(pfSt: ProofState): Option[ProofState] = {
     pfSt.equations.view.flatMap { equation =>
       tryExpansionOnEquation(equation, pfSt.rules).map(
-        (equations, maybeRule) => (equation, equations, maybeRule)
+        // (equations, maybeRule) => (equation, equations, maybeRule)
+        (newEquations, maybeRule) => pfSt.removeEquation(equation).addEquations(newEquations).maybeAddRule(maybeRule)
       )
     }.headOption
   }

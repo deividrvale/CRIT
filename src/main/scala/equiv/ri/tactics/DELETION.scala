@@ -13,7 +13,7 @@ object DELETION {
     }
 
     def deletable(equation: Equation): Option[Equation] = {
-        if equation.left == equation.right || !Z3.isSatisfiable(equation.getConstrainsConjunctAsTerm) then
+        if equation.left == equation.right || !Z3.satisfiable(equation.getConstrainsConjunctAsTerm) then
             println(s"DELETION on ${equation.toPrintString()}.")
             Some(equation)
         else 

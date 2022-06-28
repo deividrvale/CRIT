@@ -100,6 +100,9 @@ object Temp {
       Rule(App(u, List(x, i, z)), App(returnf, List(z)), Set(makeConsBin(i, gt, x)))
     )
     val equation: Equation = Equation(App(sumRec, List(valInt(4))), App(returnf, List(valInt(10))), Set())
+
+    val eqT1: Equation = Equation(varInt("y1"), varInt("y2"), Set(Constraint(App(Theory.eq, List(varInt("y1"), one))), Constraint(App(Theory.eq, List(varInt("y2"), one)))))
+    val eqT2: Equation = Equation(App(add, List(one, one)), one, Set())
   }
 
   /** @return A function symbol of type [Int x Int] => Bool */

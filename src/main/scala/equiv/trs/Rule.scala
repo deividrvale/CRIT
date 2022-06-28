@@ -14,6 +14,8 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends C
 
   val vars: Set[Var] = left.vars ++ right.vars ++ constraints.flatMap(_.term.vars)
 
+  val functionSymbols: Set[FunctionSymbol] = left.functionSymbols ++ right.functionSymbols ++ constraints.flatMap(_.term.functionSymbols)
+
   def rootFunc = left.rootFunc
 
   def substituteConstraints(substitution: Substitution): Set[Constraint] = {

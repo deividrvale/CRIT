@@ -110,7 +110,7 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
     }
 
     // set missing types to "result"
-    val default = Sort("result")
+    val default = Sort("result", false)
     symbol2arity.foreach { case (symbol, (arity, theory, variadic)) =>
       (0 until arity).foreach { i =>
         if (isSortAny(symbol, Some(i))) Sort.Any

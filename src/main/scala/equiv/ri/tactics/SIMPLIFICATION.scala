@@ -11,10 +11,11 @@ import scala.annotation.tailrec
 
 object SIMPLIFICATION {
   /** For each equation, try the `trySimplificationOnEquation` method */
-  def trySimplification(pfSt: ProofState): Option[(Equation, Equation)] = {
-    pfSt.equations.view.flatMap { oldEquation =>
-      trySimplificationOnEquation(oldEquation, pfSt.rules).map((oldEquation,_))
-    }.headOption
+  def trySimplification(pfSt: ProofState): Option[ProofState] = {
+    pfSt.equations
+      .view
+      .flatMap( oldEquation => trySimplificationOnEquation(oldEquation, pfSt.rules).map( pfSt.replaceEquationWith(oldEquation,_) ) )
+      .headOption
   }
 
   /** For each side of the equation, try the `trySimplificationOnEquationSide` method */
@@ -44,7 +45,7 @@ object SIMPLIFICATION {
   def getFirstPossibleRewritePlaceData(term: Term, equation: Equation, rule: Rule): Option[(Term, Position, Map[Var, Term])] = {
     term
       .findSubTerms(_.instanceOf(rule.left))
-      .filter((_, _, s) => Z3.constraintImplication(
+      .filter((_, _, s) => Z3.implies(
         equation.getConstrainsConjunctAsTerm,
         rule.getConstrainsConjunctAsTerm.applySubstitution(s)))
       .headOption

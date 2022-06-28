@@ -17,6 +17,7 @@ object TermUtils {
   def and(x: Term, y: Term): App = Term.App(FunctionSymbol("and", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool), isTheory = true), List(x, y))
   def not(x: Term): App = Term.App(FunctionSymbol("not", Typing(List(Sort.Bool), Sort.Bool), isTheory = true), List(x))
   def is(x: Term, y: Term): App = Term.App(FunctionSymbol("=", Typing(List(Sort.Any, Sort.Any), Sort.Bool), isTheory = true), List(x, y))
+  def notis(x: Term, y:Term): App = not(is(x,y))
 
   var lastVarName = "v0"
 

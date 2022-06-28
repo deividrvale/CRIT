@@ -14,11 +14,17 @@ object ProofState {
 }
 
 case class ProofState(equations: Set[Equation], rules: Set[Rule], flag: Boolean) {
+  /** The set of all function symbols occurring in the proofstate */
+  val functionSymbols: Set[FunctionSymbol] = rules.flatMap( _.functionSymbols )
+
   /** The set of defined symbols of the given ruleset, i.e. the set of all function symbols that are the root of the left-hand side of a rule.
    * @example The defined symbols in rule set `{ f(x) -> g(x - 1) [x > 0], h(x) -> return(x) }` are `f` and `h` */
   val definedSymbols: Set[FunctionSymbol] = rules.flatMap( r => r.rootFunc )
+  
+  /** The set of all constructors in the proofstate */
+  val constructors: Set[FunctionSymbol] = (functionSymbols -- definedSymbols).filter(!_.isTheory)
 
-  def getVars(): Set[Var] = equations.flatMap(_.vars) ++ rules.flatMap(_.vars)
+  val vars: Set[Var] = equations.flatMap(_.vars) ++ rules.flatMap(_.vars)
 
   /** Check if the ProofState has reached a terminal state, i.e. the set of equations is empty */
   def isFinished: Boolean = equations.isEmpty
@@ -44,7 +50,11 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], flag: Boolean)
   def replaceEquationWith(oldEquation: Equation, newEquation: Equation): ProofState =
     ProofState(equations - oldEquation + newEquation, rules, flag)
 
+  /** Add the given rule to the `rules` set. */
   def addRule(rule: Rule): ProofState = ProofState(equations, rules + rule, flag)
+
+  /** If the given parameter is of the form `Some(r)`, then return the current proofstate with the rule `r`, otherwise return the current proofstate. */
+  def maybeAddRule(rule: Option[Rule]): ProofState = rule.map(r => return this.addRule(r)).getOrElse(return this)
 
   /** Simplify all equation constraints */
   def simplifyAll(): ProofState = this.copy(equations = equations.map(_.simplifyCons()))
@@ -53,34 +63,6 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], flag: Boolean)
   def simplifyEquation(equation: Equation): ProofState = {
     assert(equations.contains(equation))
     this.copy(equations = equations - equation + equation.simplifyCons())
-  }
-
-  // *************************************************** TACTICS *************************************************** //
-
-  def trySimplification(): Option[ProofState] = {
-    SIMPLIFICATION.trySimplification(this).map( (oldEquation, newEquation) => 
-        this.replaceEquationWith(oldEquation, newEquation) )
-  }
-
-  def tryExpansion(): Option[ProofState] = {
-    EXPANSION.tryExpansion(this).map( (oldEquation, newEquations, maybeRule) =>
-      val newPfSt = this.removeEquation(oldEquation).addEquations(newEquations)
-      maybeRule match {
-        case None => newPfSt
-        case Some(rule) => newPfSt.addRule(rule)
-      } )
-  }
-
-  def tryEqDeletion(): Option[ProofState] = {
-    EQ_DELETION.tryEqDeletion(this)
-  }
-
-  def tryDeletion(): Option[ProofState] = {
-    DELETION.tryDeletion(this)
-  }
-
-  def tryConstructor(): Option[ProofState] = {
-    CONSTRUCTOR.tryConstructor(this)
   }
 
   override def toString: String = toPrintString(false)
