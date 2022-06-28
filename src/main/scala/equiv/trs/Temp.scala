@@ -2,6 +2,7 @@ package equiv.trs
 import equiv.trs.Term.{App, Var}
 import equiv.utils.TermUtils.constraintTrue
 import equiv.ri.Equation
+import equiv.trs.System
 
 object Temp {
   /** f : Int => Int */

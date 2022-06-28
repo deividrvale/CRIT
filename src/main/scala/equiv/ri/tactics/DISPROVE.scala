@@ -8,12 +8,17 @@ import equiv.utils.TermUtils
 
 object DISPROVE {
   /** @return `Some(false)` if the current proofstate can be disproven, `None` otherwise. */
-  def tryDisprove(pfSt: ProofState): Option[Boolean] = pfSt.getFlag match {
-    case false => None
-    case true => pfSt.equations.view.flatMap( equation =>
-      val s = equation.left; val t = equation.right; val phi = equation.getConstrainsConjunctAsTerm 
-      if disProveCase1(s, t, phi) || disProveCase2(s, t, phi, pfSt) || disProveCase3(s, t, phi, pfSt) then Some(false) else None
-      ).headOption
+  def tryDisprove(pfSt: ProofState): Option[Boolean] = {
+    if (pfSt.getFlag) {
+      pfSt.equations.view.flatMap(equation => tryDisproveOnEquation(equation, pfSt)).headOption
+    } else {
+      None
+    }
+  }
+
+  def tryDisproveOnEquation(equation: Equation, pfSt: ProofState): Option[Boolean] = {
+    val s = equation.left; val t = equation.right; val phi = equation.getConstrainsConjunctAsTerm
+    if disProveCase1(s, t, phi) || disProveCase2(s, t, phi, pfSt) || disProveCase3(s, t, phi, pfSt) then Some(false) else None
   }
 
   def disProveCase1(s: Term, t: Term, phi: Term): Boolean = {

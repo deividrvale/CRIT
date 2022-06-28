@@ -15,6 +15,8 @@ object ProofState {
 }
 
 case class ProofState(equations: Set[Equation], rules: Set[Rule], private val flag: Boolean) {
+  var isFalse = false
+
   /** The set of all function symbols occurring in the proofstate */
   val functionSymbols: Set[FunctionSymbol] = rules.flatMap( _.functionSymbols )
 
