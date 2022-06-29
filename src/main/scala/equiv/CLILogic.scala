@@ -3,15 +3,25 @@ package equiv
 import equiv.ri.Equation.Side
 import equiv.ri.{Equation, ProofState}
 import equiv.ri.tactics.{COMPLETENESS, CONSTRUCTOR, DELETION, DISPROVE, EQ_DELETION, EXPANSION, GENERALIZATION, POSTULATE, SIMPLIFICATION}
+import equiv.trs.Rule
 
 import scala.io.StdIn.readLine
 import scala.collection.immutable.ListMap
 
 
 class CLILogic(var pfSt: ProofState) {
-  var forceQuit = false
-  val autoId = "-1"
-  val quitId = "q"
+  var forceQuit: Boolean = false
+  val autoId: String = "-1"
+  val quitId: String = "q"
+
+  val leftValues: List[String] = List("0", "l", "left", "le", "lef", "links")
+  val rightValues: List[String] = List("1", "r", "right", "ri", "rig", "righ", "rechts")
+  val autoValues: List[String] = List("2", "a", "au", "aut", "auto")
+  assert(leftValues.intersect(rightValues).isEmpty)
+  val noValues: List[String] = List("0", "n", "no", "nee")
+  val yesValues: List[String] = List("1", "y", "ye", "yes", "ja")
+  assert(noValues.intersect(yesValues).isEmpty)
+
 
   val inferenceRuleNrNameActions: ListMap[String, (String, () => Unit)] = ListMap (
     autoId -> ("AUTO", () => println("Not implemented yet.")),
@@ -54,6 +64,67 @@ class CLILogic(var pfSt: ProofState) {
         else "unknown"}.")
   }
 
+  /** Prompt the user to choose an equation from the current proofstate.
+   * @return `Some(Equation)` if an equation was selected or `None` if the 'auto' option was selected. */
+  def chooseEquation(): Option[Equation] = {
+    val eqsAndIndices = pfSt.equations.zipWithIndex.map((eq, id) => (id.toString, eq)).toList
+    val eqsAndIndicesMap = eqsAndIndices.toMap
+    println(s"$autoId: Auto-choose")
+    eqsAndIndices.foreach((nr, eq) => println(s" $nr: ${eq.toPrintString()}"))
+    println(s"$quitId: Return")
+    print("Please choose an equation: ")
+    var input = readLine().trim.toLowerCase
+    while
+      !(eqsAndIndicesMap.contains(input) || input == autoId || input == quitId)
+    do {
+      print("Equation id not recognized. Enter a valid id: ")
+      input = readLine().trim.toLowerCase
+    }
+    println()
+    if input == autoId then
+      println("Auto not supported yet")
+      None // TODO
+    else if input == quitId then
+      None
+    else
+      Some(eqsAndIndicesMap(input))
+  }
+
+  /** Prompt the user to choose a side of an equation.
+   * @return `Some(Side.Left)` or `Some(Side.Right)` or None if the 'auto' option was selected */
+  def chooseSide(): Option[Side] = {
+    print("Choose side (l/r/auto): ")
+    var input = readLine().trim.toLowerCase
+    while
+      !(leftValues.contains(input) || rightValues.contains(input) || autoValues.contains(input) || input == quitId)
+    do {
+      print("Side not recognized. Enter a valid side (l/r/auto): ")
+      input = readLine().trim.toLowerCase
+    }
+    println()
+    if input == quitId then None
+    else if leftValues.contains(input) then Some(Side.Left)
+    else if rightValues.contains(input) then Some(Side.Right)
+    else { println("Auto not implemented yet."); None }
+  }
+
+  /** Prompt the user to choose whether to add the given rule to the hypotheses set or not.
+   * @return `Some(true)` if the user chose ''yes'', `Some(false)` if the user chose ''no'', `None` if the user chose ''quit'' or ''auto'' */
+  def chooseAddRule(rule: Rule): Option[Boolean] = {
+    println(s"Rule generated: ${rule.toPrintString()}")
+    print("Do you want to add this rule? (y/n/a): ")
+    var input = readLine().trim.toLowerCase
+    while
+      !(yesValues.contains(input) || noValues.contains(input) || autoValues.contains(input) || input == quitId)
+    do
+      print("Answer not recognized. Please enter a valid answer (y/n/a): ")
+      input = readLine().trim.toLowerCase
+    if input == quitId then None
+    else if noValues.contains(input) then Some(false)
+    else if yesValues.contains(input) then Some(true)
+    else { println("Auto not implemented yet.") ; None }
+  }
+
   def simplify_calc(): Unit = {
   }
 
@@ -92,6 +163,17 @@ class CLILogic(var pfSt: ProofState) {
   }
 
   def expansion(): Unit = {
+    chooseEquation()
+      .map( eq => chooseSide()
+        .map( side => EXPANSION.tryExpansionOnEquationSide(eq, side, pfSt.rules)
+          .map( (eqs, maybeRule) => {
+            pfSt = pfSt.removeEquation(eq).addEquations(eqs)
+            maybeRule.map( rule =>
+              chooseAddRule().map( b => if b then pfSt = pfSt.addRule(rule) )
+            ).getOrElse( println("No suitable rule found (not terminating).") )
+          })
+        )
+      )
   }
 
   def postulate(): Unit = {
@@ -113,51 +195,4 @@ class CLILogic(var pfSt: ProofState) {
         .getOrElse( println("DISPROVE failed") ))
   }
 
-  /** Prompt the user to choose an equation from the current proofstate.
-   * @return `Some(Equation)` if an equation was selected or `None` if the 'auto' option was selected. */
-  def chooseEquation(): Option[Equation] = {
-    val eqsAndIndices = pfSt.equations.zipWithIndex.map((eq, id) => (id.toString, eq)).toList
-    val eqsAndIndicesMap = eqsAndIndices.toMap
-    println(s"$autoId: Auto-choose")
-    eqsAndIndices.foreach((nr, eq) => println(s" $nr: ${eq.toPrintString()}"))
-    println(s"$quitId: Return")
-    print("Please choose an equation: ")
-    var input = readLine().trim.toLowerCase
-    while
-      !(eqsAndIndicesMap.contains(input) || input == autoId || input == quitId)
-    do {
-      print("Equation id not recognized. Enter a valid id: ")
-      input = readLine().trim.toLowerCase
-    }
-    println()
-    if input == autoId then
-      println("Auto not supported yet")
-      None // TODO
-    else if input == quitId then
-      None
-    else
-      Some(eqsAndIndicesMap(input))
-  }
-
-  /** Prompt the user to choose a side of an equation.
-   * @return `Some(Side.Left)` or `Some(Side.Right)` or None if the 'auto' option was selected */
-  def chooseSide(): Option[Side] = {
-    val leftValues = List("0", "l", "left", "le", "lef")
-    val rightValues = List("1", "r", "right", "ri", "rig", "righ")
-    val autoValues = List("2", "a", "au", "aut", "auto")
-    assert(leftValues.intersect(rightValues).isEmpty)
-    print("Choose side (l/r/auto): ")
-    var input = readLine().trim.toLowerCase
-    while
-      !(leftValues.contains(input) || rightValues.contains(input) || autoValues.contains(input) || input == quitId)
-    do {
-      print("Side not recognized. Enter a valid side (l/r/auto): ")
-      input = readLine().trim.toLowerCase
-    }
-    println()
-    if input == quitId then None
-    else if leftValues.contains(input) then Some(Side.Left)
-    else if rightValues.contains(input) then Some(Side.Right)
-    else { println("Auto not implemented yet."); None }
-  }
 }
