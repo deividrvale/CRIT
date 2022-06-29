@@ -133,6 +133,7 @@ class CLILogic(var pfSt: ProofState) {
   }
 
   def simplify_calc(): Unit = {
+    println("ERROR: Not implemented yet")
   }
 
   def deletion(): Unit = {
@@ -185,9 +186,11 @@ class CLILogic(var pfSt: ProofState) {
   }
 
   def postulate(): Unit = {
+    println("ERROR: Not implemented yet")
   }
 
   def generalize(): Unit = {
+    println("ERROR: Not implemented yet")
   }
 
   def completeness(): Unit = {
