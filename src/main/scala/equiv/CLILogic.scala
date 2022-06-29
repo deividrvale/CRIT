@@ -51,7 +51,7 @@ class CLILogic(var pfSt: ProofState) {
 
       print(s"${Console.UNDERLINED}Choose action id${Console.RESET}: ")
       var input = readLine().trim.toLowerCase
-      while !(actions.contains(input))
+      while !actions.contains(input)
       do {
         print("Action id not recognized. Enter a valid action id: ")
         input = readLine().toLowerCase
@@ -67,31 +67,39 @@ class CLILogic(var pfSt: ProofState) {
       else "unknown"}.")
   }
 
-  /** Prompt the user to choose an equation from the current proofstate.
-   * @return `Some(Equation)` if an equation was selected or `None` if the 'auto' option was selected. */
   def chooseEquation(): Option[Equation] = {
-    val eqsAndIndices = pfSt.equations.toSeq.zipWithIndex.map((eq, id) => (id.toString, eq))
-    val eqsAndIndicesMap = eqsAndIndices.toMap
+    chooseFromSet(pfSt.equations, "equation", _.toPrintString())
+  }
+
+  def chooseRule() : Option[Rule] = {
+    chooseFromSet(pfSt.rules, "rule", _.toPrintString())
+  }
+
+  /** Prompt the user to choose an element from the current proofstate.
+   * @return `Some(T)` if an element of type `T` was selected or `None` if ''quit'' was selected. */
+  def chooseFromSet[T](set: Set[T], name: String, toPrintString: T => String): Option[T] = {
+    val setElementsAndIndices = set.toSeq.zipWithIndex.map((elem, id) => (id.toString, elem))
+    val setElementsAndIndicesMap = setElementsAndIndices.toMap
     println(s"$autoId: Auto-choose")
-    eqsAndIndices.foreach((nr, eq) => println(s" $nr: ${eq.toPrintString()}"))
+    setElementsAndIndices.foreach((id, elem) => println(s" $id: ${toPrintString(elem)}"))
     println(s" $quitId: Return")
-    print(s"${Console.UNDERLINED}Please choose an equation${Console.RESET}: ")
+    print(s"${Console.UNDERLINED}Please choose a${if "aeiou".contains(name(0)) then "n" else ""} $name${Console.RESET}: ")
     var input = readLine().trim.toLowerCase
     while
-      !(eqsAndIndicesMap.contains(input) || input == autoId || input == quitId)
+      !(setElementsAndIndicesMap.contains(input) || input == autoId || input == quitId)
     do {
-      print("Equation id not recognized. Enter a valid id: ")
+      print(s"${name.capitalize} id not recognized. Enter a valid id: ")
       input = readLine().trim.toLowerCase
     }
     print(stringAfterCorrectUserInput)
-    println(s"Equation ${eqsAndIndicesMap(input)}.")
+    println(s"${name.capitalize} ${toPrintString(setElementsAndIndicesMap(input))}.")
     if input == autoId then
       println("Auto not supported yet")
       None // TODO
     else if input == quitId then
       None
     else
-      Some(eqsAndIndicesMap(input))
+      Some(setElementsAndIndicesMap(input))
   }
 
   /** Prompt the user to choose a side of an equation.
@@ -108,8 +116,8 @@ class CLILogic(var pfSt: ProofState) {
     }
     print(stringAfterCorrectUserInput)
     if input == quitId then None
-    else if leftValues.contains(input) then Some(Side.Left)
-    else if rightValues.contains(input) then Some(Side.Right)
+    else if leftValues.contains(input) then { println("Left") ; Some(Side.Left) }
+    else if rightValues.contains(input) then { println("Right") ; Some(Side.Right) }
     else { println("Auto not implemented yet."); None }
   }
 
@@ -118,12 +126,12 @@ class CLILogic(var pfSt: ProofState) {
   def chooseAddRule(rule: Rule): Option[Boolean] = {
     println(s"Rule generated: ${rule.toPrintString()}")
     println(s" $quitId: Return")
-    print(s"${Console.UNDERLINED}Do you want to add this rule? (y/n/a)${Console.RESET}: ")
+    print(s"${Console.UNDERLINED}Do you want to add this rule? (y/n/auto)${Console.RESET}: ")
     var input = readLine().trim.toLowerCase
     while
       !(yesValues.contains(input) || noValues.contains(input) || autoValues.contains(input) || input == quitId)
     do
-      print("Answer not recognized. Please enter a valid answer (y/n/a): ")
+      print("Answer not recognized. Please enter a valid answer (y/n/auto): ")
       input = readLine().trim.toLowerCase
     print(stringAfterCorrectUserInput)
     if input == quitId then None
@@ -163,9 +171,11 @@ class CLILogic(var pfSt: ProofState) {
   def simplification(): Unit = {
     chooseEquation()
       .map( eq => chooseSide()
-        .map( side => SIMPLIFICATION.trySimplificationOnEquationSide(eq, side, pfSt.rules)
+        .map( side => chooseRule().map( rule =>
+          SIMPLIFICATION.trySimplificationOnEquationSideWithRule(eq, side, rule)
             .map( newEq => pfSt = pfSt.replaceEquationWith(eq, newEq) )
             .getOrElse( println("SIMPLIFICATION failed") )
+          )
         )
       )
   }
@@ -195,7 +205,7 @@ class CLILogic(var pfSt: ProofState) {
 
   def completeness(): Unit = {
     COMPLETENESS.tryCompleteness(pfSt)
-      .map( newPfst => pfSt = newPfst )
+      .map(newPfSt => pfSt = newPfSt )
       .getOrElse( println("COMPLETENESS failed") )
   }
 
