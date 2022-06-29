@@ -8,7 +8,7 @@ object CONSTRUCTOR {
   def tryConstructor(pfSt: ProofState): Option[ProofState] = {
     pfSt.equations
       .view
-      .flatMap(e1 => tryConstructorOnEquation(e1).map(e2 => { println(s"CONSTRUCTOR on $e1.") ; pfSt.removeEquation(e1).addEquations(e2) } ))
+      .flatMap(e1 => tryConstructorOnEquation(e1).map(e2 => { println(s"CONSTRUCTOR on $e1 gives ${e2.map(_.toPrintString())}.") ; pfSt.removeEquation(e1).addEquations(e2) } ))
       .headOption
   }
 

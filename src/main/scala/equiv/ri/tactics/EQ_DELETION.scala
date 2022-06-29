@@ -23,9 +23,11 @@ object EQ_DELETION {
 
   def tryEqDeletionOnEquation(equation: Equation, pfSt: ProofState): Option[Equation] = {
     val constraints = getEqualities(equation.left, equation.right, equation.constraintVars, pfSt.definedSymbols)
-    if constraints.isEmpty then None else
-      println(s"EQ-DELETION on ${equation.toPrintString()}.")
-      Some( equation.copy(constraints = equation.constraints + Constraint(TermUtils.not(ConstrainedObject.foldTerms(constraints)))) )
+    if constraints.isEmpty then None else {
+      val newEquation = equation.copy(constraints = equation.constraints + Constraint(TermUtils.not(ConstrainedObject.foldTerms(constraints))))
+      println(s"EQ-DELETION on ${equation.toPrintString()} gives ${newEquation.toPrintString()}.")
+      Some(newEquation)
+    }
   }
 
   def getEqualities(term1: Term, term2: Term, constrainedVars: Set[Var], definedSymbols: Set[FunctionSymbol]): Set[Term] = {

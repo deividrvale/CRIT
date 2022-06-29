@@ -9,6 +9,6 @@ object COMPLETENESS {
 
   /** If there exists a derivation sequence `(E, H, COMPLETE) |-* (E', H', INCOMPLETE)`, where `E'` is a subseteq of `E`, then we may deduce `|- (E', H', COMPLETE)` */
   def tryCompleteness(pfSt: ProofState): Option[ProofState] = {
-    lastCompleteProofStateEquations.map( eqs => if pfSt.equations.subsetOf(eqs) then pfSt.setFlag(true) else return None )
+    lastCompleteProofStateEquations.map( eqs => if pfSt.equations.subsetOf(eqs) then { println("COMPLETENESS on proofstate") ; pfSt.setFlag(true) } else return None )
   }
 }

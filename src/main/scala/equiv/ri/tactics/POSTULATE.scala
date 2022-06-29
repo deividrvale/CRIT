@@ -4,6 +4,7 @@ import equiv.ri.{ProofState, Equation}
 
 object POSTULATE {
   def doPostulate(pfSt: ProofState, equations: Set[Equation]): ProofState = {
+    println(s"POSTULATE equations ${equations.map(_.toPrintString())}.")
     pfSt.addEquations(equations).setFlag(false)
   }
 }

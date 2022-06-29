@@ -10,6 +10,8 @@ import scala.collection.immutable.ListMap
 
 
 class CLILogic(var pfSt: ProofState) {
+  val stringAfterCorrectUserInput: String = "\n" * 5
+
   var forceQuit: Boolean = false
   val autoId: String = "-1"
   val quitId: String = "q"
@@ -22,8 +24,7 @@ class CLILogic(var pfSt: ProofState) {
   val yesValues: List[String] = List("1", "y", "ye", "yes", "ja")
   assert(noValues.intersect(yesValues).isEmpty)
 
-
-  val inferenceRuleNrNameActions: ListMap[String, (String, () => Unit)] = ListMap (
+  val actions: ListMap[String, (String, () => Unit)] = ListMap (
     autoId -> ("AUTO", () => println("Not implemented yet.")),
     "0" -> ("Simplify with calc", () => simplify_calc()),
     "1" -> ("DELETION", () => deletion()),
@@ -46,33 +47,35 @@ class CLILogic(var pfSt: ProofState) {
     do {
       println(s"\n${pfSt.toPrintString()}\n")
 
-      inferenceRuleNrNameActions.foreach((nr, nameAction) => println(s" $nr: ${nameAction._1}"))
+      actions.foreach((nr, nameAction) => println(s" $nr: ${nameAction._1}"))
 
-      print("Choose action id: ")
+      print(s"${Console.UNDERLINED}Choose action id${Console.RESET}: ")
       var input = readLine().trim.toLowerCase
-      while !inferenceRuleNrNameActions.contains(input)
+      while !(actions.contains(input))
       do {
         print("Action id not recognized. Enter a valid action id: ")
         input = readLine().toLowerCase
       }
-      inferenceRuleNrNameActions(input)._2()
+      print(stringAfterCorrectUserInput)
+      println(actions(input)._1)
+      actions(input)._2()
     }
     println(s"Rewriting Induction terminated. Reason: " +
-        s"${if forceQuit then "force quit"
-        else if pfSt.isFinished then "proofstate is in terminal state"
-        else if pfSt.isFalse then "proofstate is disproven"
-        else "unknown"}.")
+      s"${if forceQuit then "force quit"
+      else if pfSt.isFinished then "proofstate is in terminal state"
+      else if pfSt.isFalse then "proofstate is disproven"
+      else "unknown"}.")
   }
 
   /** Prompt the user to choose an equation from the current proofstate.
    * @return `Some(Equation)` if an equation was selected or `None` if the 'auto' option was selected. */
   def chooseEquation(): Option[Equation] = {
-    val eqsAndIndices = pfSt.equations.zipWithIndex.map((eq, id) => (id.toString, eq)).toList
+    val eqsAndIndices = pfSt.equations.toSeq.zipWithIndex.map((eq, id) => (id.toString, eq))
     val eqsAndIndicesMap = eqsAndIndices.toMap
     println(s"$autoId: Auto-choose")
     eqsAndIndices.foreach((nr, eq) => println(s" $nr: ${eq.toPrintString()}"))
-    println(s"$quitId: Return")
-    print("Please choose an equation: ")
+    println(s" $quitId: Return")
+    print(s"${Console.UNDERLINED}Please choose an equation${Console.RESET}: ")
     var input = readLine().trim.toLowerCase
     while
       !(eqsAndIndicesMap.contains(input) || input == autoId || input == quitId)
@@ -80,7 +83,8 @@ class CLILogic(var pfSt: ProofState) {
       print("Equation id not recognized. Enter a valid id: ")
       input = readLine().trim.toLowerCase
     }
-    println()
+    print(stringAfterCorrectUserInput)
+    println(s"Equation ${eqsAndIndicesMap(input)}.")
     if input == autoId then
       println("Auto not supported yet")
       None // TODO
@@ -93,7 +97,8 @@ class CLILogic(var pfSt: ProofState) {
   /** Prompt the user to choose a side of an equation.
    * @return `Some(Side.Left)` or `Some(Side.Right)` or None if the 'auto' option was selected */
   def chooseSide(): Option[Side] = {
-    print("Choose side (l/r/auto): ")
+    println(s" $quitId: Return")
+    print(s"${Console.UNDERLINED}Choose side (l/r/auto)${Console.RESET}: ")
     var input = readLine().trim.toLowerCase
     while
       !(leftValues.contains(input) || rightValues.contains(input) || autoValues.contains(input) || input == quitId)
@@ -101,7 +106,7 @@ class CLILogic(var pfSt: ProofState) {
       print("Side not recognized. Enter a valid side (l/r/auto): ")
       input = readLine().trim.toLowerCase
     }
-    println()
+    print(stringAfterCorrectUserInput)
     if input == quitId then None
     else if leftValues.contains(input) then Some(Side.Left)
     else if rightValues.contains(input) then Some(Side.Right)
@@ -112,13 +117,15 @@ class CLILogic(var pfSt: ProofState) {
    * @return `Some(true)` if the user chose ''yes'', `Some(false)` if the user chose ''no'', `None` if the user chose ''quit'' or ''auto'' */
   def chooseAddRule(rule: Rule): Option[Boolean] = {
     println(s"Rule generated: ${rule.toPrintString()}")
-    print("Do you want to add this rule? (y/n/a): ")
+    println(s" $quitId: Return")
+    print(s"${Console.UNDERLINED}Do you want to add this rule? (y/n/a)${Console.RESET}: ")
     var input = readLine().trim.toLowerCase
     while
       !(yesValues.contains(input) || noValues.contains(input) || autoValues.contains(input) || input == quitId)
     do
       print("Answer not recognized. Please enter a valid answer (y/n/a): ")
       input = readLine().trim.toLowerCase
+    print(stringAfterCorrectUserInput)
     if input == quitId then None
     else if noValues.contains(input) then Some(false)
     else if yesValues.contains(input) then Some(true)
@@ -169,7 +176,8 @@ class CLILogic(var pfSt: ProofState) {
           .map( (eqs, maybeRule) => {
             pfSt = pfSt.removeEquation(eq).addEquations(eqs)
             maybeRule.map( rule =>
-              chooseAddRule().map( b => if b then pfSt = pfSt.addRule(rule) )
+              chooseAddRule(rule)
+                .map( addRule => if addRule then pfSt = pfSt.addRule(rule) )
             ).getOrElse( println("No suitable rule found (not terminating).") )
           })
         )

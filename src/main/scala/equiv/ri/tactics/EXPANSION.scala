@@ -20,20 +20,23 @@ object EXPANSION {
   }
 
   def tryExpansionOnEquation(equation: Equation, rules: Set[Rule]): Option[(Set[Equation], Option[Rule])] = {
-    List(Side.Left, Side.Right).view.flatMap{ side =>
+    List(Side.Left, Side.Right).view.flatMap( side =>
       tryExpansionOnEquationSide(equation, side, rules)
-    }.headOption
+    ).headOption
   }
 
   def tryExpansionOnEquationSide(equation: Equation, side: Side, rules: Set[Rule]): Option[(Set[Equation], Option[Rule])] = {
     tryExpansionOnTerm(equation.getSide(side), rules)
-      .map( terms =>
-        println(s"EXPANSION on $side side of ${equation.toPrintString()}.")
-        ( terms.map( (t, cons) => equation.replaceSide(side, t).addConstraints(cons) ), 
-          Rule(equation.getSide(side), equation.getOppositeSide(side), equation.constraints).getIfTerminating(rules) ) )
+      .map( terms => {
+        val eqs = terms.map( (t, cons) => equation.replaceSide(side, t).addConstraints(cons) )
+        val maybeRule = Rule(equation.getSide(side), equation.getOppositeSide(side), equation.constraints).getIfTerminating(rules)
+        println(s"EXPANSION on $side side of ${equation.toPrintString()} gives ${eqs.map(_.toPrintString())}.\n")
+        ( eqs, maybeRule )
+      }
+    )
   }
 
-  def tryExpansionOnTerm(term: Term, rules: Set[Rule]): Option[(Set[(Term, Set[Constraint])])] = {
+  def tryExpansionOnTerm(term: Term, rules: Set[Rule]): Option[Set[(Term, Set[Constraint])]] = {
     term match {
       case Var(_, _) => None
       case t@App(f, args) => tryExpansionOnSubTerm(t, rules) match {
@@ -45,7 +48,7 @@ object EXPANSION {
 
   def tryExpansionOnSubTerm(term: Term, rules: Set[Rule]): Option[Set[(Term, Set[Constraint])]] = {
     if !term.isBasic() then None else {
-      val applicableRuleSubstitutionPairs = rules.map(rule => term.instanceOf(rule.left).map((rule, _)) ).flatten
+      val applicableRuleSubstitutionPairs = rules.flatMap(rule => term.instanceOf(rule.left).map((rule, _)))
       if applicableRuleSubstitutionPairs.isEmpty then None else {
         Some(applicableRuleSubstitutionPairs.map((rule, sub) => (term.rewriteAtPos(List(), rule, sub), rule.substituteConstraints(sub))))
       }

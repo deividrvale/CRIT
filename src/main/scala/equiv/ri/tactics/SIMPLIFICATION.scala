@@ -27,18 +27,20 @@ object SIMPLIFICATION {
 
   /** For each rule, try the `trySimplificationOnEquationSideWithRule` method */
   def trySimplificationOnEquationSide(equation: Equation, side: Side, rules: Set[Rule]): Option[Equation] = {
-    rules.view.flatMap { rule => trySimplificationOnEquationSideWithRule(equation, side, rule) }.headOption
+    rules.view.flatMap( rule => trySimplificationOnEquationSideWithRule(equation, side, rule) ).headOption
   }
 
   /** For the given equation and side, try the `trySimplificationOnTermWithRule` method */
   def trySimplificationOnEquationSideWithRule(equation: Equation, side: Side, rule: Rule): Option[Equation] = {
     val term = equation.getSide(side)
     getFirstPossibleRewritePlaceData(term, equation, rule)
-      .map((_, position, substitution) =>
-        println(s"SIMPLIFICATION on $side side of ${equation.toPrintString()}.")
-        equation
+      .map((_, position, substitution) => {
+        val newEquation = equation
           .replaceSide(side,term.rewriteAtPos(position, rule, substitution))
-          .addConstraints(rule.constraints.map(_.applySubstitution(substitution))))
+          .addConstraints(rule.constraints.map(_.applySubstitution(substitution)))
+        println(s"SIMPLIFICATION on $side side of ${equation.toPrintString()} gives ${newEquation.toPrintString()}.")
+        newEquation
+      })
   }
 
   /** @return The first possible rewrite place: the subterm, position and substitution for the rule */

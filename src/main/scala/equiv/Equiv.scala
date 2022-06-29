@@ -36,7 +36,7 @@ object Equiv {
   }
 
   def parse(fileName: String): Unit = {
-    TRSParserTest.parseTRS(s"examples/$fileName.ctrs").map(
+    TRSParserTest.parseTRS(s"examples/$fileName.ctrs").foreach(
       system =>
         val equations: Set[Equation] = Set() // TODO get starting equation
         val pfSt: ProofState = ProofState(equations, system.rules, true)

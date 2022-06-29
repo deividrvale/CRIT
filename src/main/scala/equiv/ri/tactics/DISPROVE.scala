@@ -18,7 +18,7 @@ object DISPROVE {
 
   def tryDisproveOnEquation(equation: Equation, pfSt: ProofState): Option[Boolean] = {
     val s = equation.left; val t = equation.right; val phi = equation.getConstrainsConjunctAsTerm
-    if disProveCase1(s, t, phi) || disProveCase2(s, t, phi, pfSt) || disProveCase3(s, t, phi, pfSt) then Some(false) else None
+    if disProveCase1(s, t, phi) || disProveCase2(s, t, phi, pfSt) || disProveCase3(s, t, phi, pfSt) then { println("DISPROVE proofstate") ; Some(false) } else None
   }
 
   def disProveCase1(s: Term, t: Term, phi: Term): Boolean = {
