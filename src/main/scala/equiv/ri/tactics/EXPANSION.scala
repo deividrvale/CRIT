@@ -10,21 +10,32 @@ import equiv.trs.Constraint
 
 object EXPANSION {
 
+  /** Look for the first possible equation side that expansion can be performed on and do it.
+   * @return The new proofstate after expansion in a `Some`, or `None` if no expansion could be performed */
   def tryExpansion(pfSt: ProofState): Option[ProofState] = {
+    tryExpansion2(pfSt).map((newPfSt, maybeRule) => newPfSt.maybeAddRule(maybeRule))
+  }
+
+  /** Look for the first possible equation side that expansion can be performed on and do it. Do not yet add the rule.
+   * @return The new proofstate after expansion (without rule added), and maybe the rule in a `Some` , or `None` if no expansion could be performed */
+  def tryExpansion2(pfSt: ProofState): Option[(ProofState, Option[Rule])] = {
     pfSt.equations.view.flatMap { equation =>
       tryExpansionOnEquation(equation, pfSt.rules).map(
-        // (equations, maybeRule) => (equation, equations, maybeRule)
-        (newEquations, maybeRule) => pfSt.removeEquation(equation).addEquations(newEquations).maybeAddRule(maybeRule)
+        (newEquations, maybeRule) => (pfSt.removeEquation(equation).addEquations(newEquations), maybeRule)
       )
     }.headOption
   }
 
+  /** Look for the first possible place of the given equation (left than right) to to perform an expansion on and do it.
+   * @return A generated set of equations and optional rule in a `Some`, or `None` if no expansion could be performed */
   def tryExpansionOnEquation(equation: Equation, rules: Set[Rule]): Option[(Set[Equation], Option[Rule])] = {
     List(Side.Left, Side.Right).view.flatMap( side =>
       tryExpansionOnEquationSide(equation, side, rules)
     ).headOption
   }
 
+  /** Try to perform expansion on the given side of the given equation with the given ruleset.
+   * @return A generated set of equations and optional rule in a `Some`, or `None` if no expansion could be performed */
   def tryExpansionOnEquationSide(equation: Equation, side: Side, rules: Set[Rule]): Option[(Set[Equation], Option[Rule])] = {
     tryExpansionOnTerm(equation.getSide(side), rules)
       .map( terms => {
@@ -36,10 +47,12 @@ object EXPANSION {
     )
   }
 
+  /** Look for the first possible subterm to perform expansion on and do it.
+   * @return A generated set of reducts + constraints in a `Some`, or `None` if no expansion could be performed */
   def tryExpansionOnTerm(term: Term, rules: Set[Rule]): Option[Set[(Term, Set[Constraint])]] = {
     term match {
       case Var(_, _) => None
-      case t@App(f, args) => tryExpansionOnSubTerm(t, rules) match {
+      case t@App(_, args) => tryExpansionOnSubTerm(t, rules) match {
         case None => args.view.flatMap(tryExpansionOnTerm(_, rules)).headOption
         case Some(x) => Some(x)
       }

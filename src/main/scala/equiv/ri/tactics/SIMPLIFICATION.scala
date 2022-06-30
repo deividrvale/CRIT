@@ -4,7 +4,7 @@ import equiv.ri.{Equation, ProofState}
 import equiv.ri.Equation.Side
 import equiv.ri.tactics.SIMPLIFICATION
 import equiv.trs.{Constraint, Rule, Term}
-import equiv.trs.Term.{Position, Var}
+import equiv.trs.Term.{Position, Substitution, Var}
 import equiv.utils.{TermUtils, Z3}
 
 import scala.annotation.tailrec
@@ -35,22 +35,29 @@ object SIMPLIFICATION {
     val term = equation.getSide(side)
     getFirstPossibleRewritePlaceData(term, equation, rule)
       .map((_, position, substitution) => {
-        val newEquation = equation
-          .replaceSide(side,term.rewriteAtPos(position, rule, substitution))
-          .addConstraints(rule.constraints.map(_.applySubstitution(substitution)))
-        println(s"SIMPLIFICATION on $side side of ${equation.toPrintString()} gives ${newEquation.toPrintString()}.")
-        newEquation
+        doSimplificationOnEquationSideWithRuleAtPosition(equation, side, rule, position, substitution)
       })
+  }
+
+  def doSimplificationOnEquationSideWithRuleAtPosition(equation: Equation, side: Side, rule: Rule, position: Position, substitution: Substitution): Equation = {
+    val newEquation = equation.replaceSide(side, equation.getSide(side).rewriteAtPos(position, rule, substitution)).addConstraints(rule.constraints.map(_.applySubstitution(substitution)))
+    println(s"SIMPLIFICATION on $side side of ${equation.toPrintString()} gives ${newEquation.toPrintString()}.")
+    newEquation
   }
 
   /** @return The first possible rewrite place: the subterm, position and substitution for the rule */
   def getFirstPossibleRewritePlaceData(term: Term, equation: Equation, rule: Rule): Option[(Term, Position, Map[Var, Term])] = {
+    getAllPossibleRewritePlacesData(term, equation, rule).headOption
+  }
+
+  /** @return All possible places where we can rewrite $term with $rule. */
+  def getAllPossibleRewritePlacesData(term: Term, equation: Equation, rule: Rule): List[(Term, Position, Map[Var, Term])] = {
     term
       .findSubTerms(_.instanceOf(rule.left))
       .filter((_, _, s) => Z3.implies(
         equation.getConstrainsConjunctAsTerm,
-        rule.getConstrainsConjunctAsTerm.applySubstitution(s)))
-      .headOption
+        rule.getConstrainsConjunctAsTerm.applySubstitution(s))
+      )
   }
 
 }

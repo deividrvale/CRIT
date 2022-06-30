@@ -3,7 +3,9 @@ package equiv
 import equiv.ri.Equation.Side
 import equiv.ri.{Equation, ProofState}
 import equiv.ri.tactics.{COMPLETENESS, CONSTRUCTOR, DELETION, DISPROVE, EQ_DELETION, EXPANSION, GENERALIZATION, POSTULATE, SIMPLIFICATION}
-import equiv.trs.Rule
+import equiv.trs.{Rule, Term}
+import equiv.trs.Term.{Position, Substitution}
+import equiv.UserInput
 
 import scala.io.StdIn.readLine
 import scala.collection.immutable.ListMap
@@ -15,6 +17,8 @@ class CLILogic(var pfSt: ProofState) {
   var forceQuit: Boolean = false
   val autoId: String = "-1"
   val quitId: String = "q"
+
+  val c: Option[Int] = None
 
   val leftValues: List[String] = List("0", "l", "left", "le", "lef", "links")
   val rightValues: List[String] = List("1", "r", "right", "ri", "rig", "righ", "rechts")
@@ -67,17 +71,17 @@ class CLILogic(var pfSt: ProofState) {
       else "unknown"}.")
   }
 
-  def chooseEquation(): Option[Equation] = {
+  def chooseEquation(): UserInput[Equation] = {
     chooseFromSet(pfSt.equations, "equation", _.toPrintString())
   }
 
-  def chooseRule() : Option[Rule] = {
+  def chooseRule() : UserInput[Rule] = {
     chooseFromSet(pfSt.rules, "rule", _.toPrintString())
   }
 
   /** Prompt the user to choose an element from the current proofstate.
-   * @return `Some(T)` if an element of type `T` was selected or `None` if ''quit'' was selected. */
-  def chooseFromSet[T](set: Set[T], name: String, toPrintString: T => String): Option[T] = {
+   * @return `Input(T)` if an element of type `T` was selected or `None` if ''quit'' was selected. */
+  def chooseFromSet[T](set: Set[T], name: String, toPrintString: T => String): UserInput[T] = {
     val setElementsAndIndices = set.toSeq.zipWithIndex.map((elem, id) => (id.toString, elem))
     val setElementsAndIndicesMap = setElementsAndIndices.toMap
     println(s"$autoId: Auto-choose")
@@ -92,19 +96,14 @@ class CLILogic(var pfSt: ProofState) {
       input = readLine().trim.toLowerCase
     }
     print(stringAfterCorrectUserInput)
-    println(s"${name.capitalize} ${toPrintString(setElementsAndIndicesMap(input))}.")
-    if input == autoId then
-      println("Auto not supported yet")
-      None // TODO
-    else if input == quitId then
-      None
-    else
-      Some(setElementsAndIndicesMap(input))
+    if input == autoId then Auto
+    else if input == quitId then Return
+    else { println(s"${name.capitalize} ${toPrintString(setElementsAndIndicesMap(input))}.") ; Input(setElementsAndIndicesMap(input)) }
   }
 
   /** Prompt the user to choose a side of an equation.
-   * @return `Some(Side.Left)` or `Some(Side.Right)` or None if the 'auto' option was selected */
-  def chooseSide(): Option[Side] = {
+   * @return `Input(Side.Left)` or `Input(Side.Right)` or Empty if the 'auto' UserInput was selected */
+  def chooseSide(): UserInput[Side] = {
     println(s" $quitId: Return")
     print(s"${Console.UNDERLINED}Choose side (l/r/auto)${Console.RESET}: ")
     var input = readLine().trim.toLowerCase
@@ -115,84 +114,166 @@ class CLILogic(var pfSt: ProofState) {
       input = readLine().trim.toLowerCase
     }
     print(stringAfterCorrectUserInput)
-    if input == quitId then None
-    else if leftValues.contains(input) then { println("Left") ; Some(Side.Left) }
-    else if rightValues.contains(input) then { println("Right") ; Some(Side.Right) }
-    else { println("Auto not implemented yet."); None }
+    if input == quitId then Return
+    else if leftValues.contains(input) then { println("Left") ; Input(Side.Left) }
+    else if rightValues.contains(input) then { println("Right") ; Input(Side.Right) }
+    else Auto
+  }
+
+  /** Prompt the user to choose a subterm to apply a given rule to.
+   * @return `None` if there are no possible rewrite positions or the user selects `quitid`.
+   *         `Auto` if the user selected ''auto'',
+   *         otherwise `Input()` with the corresponding `Position` and `Substitution` */
+  def choosePosition(term: Term, equation: Equation, rule: Rule): UserInput[(Position, Substitution)] = {
+    val positionsAndIndices = SIMPLIFICATION.getAllPossibleRewritePlacesData(term, equation, rule).zipWithIndex.map((data, id) => (id.toString, data))
+    val positionsAndIndicesMap = positionsAndIndices.toMap
+    if positionsAndIndices.isEmpty then { println("No possible rewrite positions found.") ; return Return }
+    println(s"$autoId: Auto-choose")
+    positionsAndIndicesMap.foreach((id, data) => println(s" $id: ${data._1.toPrintString()}"))
+    println(s" $quitId: Return")
+    print(s"${Console.UNDERLINED}Please choose a subterm to apply the rule to${Console.RESET}: ")
+    var input = readLine().trim.toLowerCase
+    while
+      !(positionsAndIndicesMap.contains(input) || input == autoId || input == quitId)
+    do {
+      print(s"Subterm id not recognized. Enter a valid id: ")
+      input = readLine().trim.toLowerCase
+    }
+    print(stringAfterCorrectUserInput)
+    if input == autoId then Auto
+    else if input == quitId then Return
+    else {
+      val output = positionsAndIndicesMap(input)
+      println(s"Subterm ${output._1.toPrintString()}.")
+      Input((output._2, output._3))
+    }
   }
 
   /** Prompt the user to choose whether to add the given rule to the hypotheses set or not.
-   * @return `Some(true)` if the user chose ''yes'', `Some(false)` if the user chose ''no'', `None` if the user chose ''quit'' or ''auto'' */
-  def chooseAddRule(rule: Rule): Option[Boolean] = {
+   * @return `Input(true)` if the user chose ''yes'', `Input(false)` if the user chose ''no'', `None` if the user chose ''quit'' or ''auto'' */
+  def chooseAddRule(rule: Rule): UserInput[Boolean] = {
     println(s"Rule generated: ${rule.toPrintString()}")
     println(s" $quitId: Return")
     print(s"${Console.UNDERLINED}Do you want to add this rule? (y/n/auto)${Console.RESET}: ")
     var input = readLine().trim.toLowerCase
     while
       !(yesValues.contains(input) || noValues.contains(input) || autoValues.contains(input) || input == quitId)
-    do
+    do {
       print("Answer not recognized. Please enter a valid answer (y/n/auto): ")
       input = readLine().trim.toLowerCase
+    }
     print(stringAfterCorrectUserInput)
-    if input == quitId then None
-    else if noValues.contains(input) then Some(false)
-    else if yesValues.contains(input) then Some(true)
-    else { println("Auto not implemented yet.") ; None }
+    if input == quitId then Return
+    else if noValues.contains(input) then Input(false)
+    else if yesValues.contains(input) then Input(true)
+    else { println("Auto not implemented yet.") ; Auto } // TODO Check termination
   }
+
+  // ===================================================================================================================
+  // =========================================== INFERENCE RULES =======================================================
+  // ===================================================================================================================
+
 
   def simplify_calc(): Unit = {
     println("ERROR: Not implemented yet")
   }
 
   def deletion(): Unit = {
-    chooseEquation()
-      .foreach( eq => DELETION.deletable(eq)
-        .map( _ => pfSt = pfSt.removeEquation(eq) )
-        .getOrElse( println("DELETION failed") )
-      )
+    (chooseEquation() match {
+      case Input(eq) => DELETION.deletable(eq) match {
+        case Some(_) => Some(pfSt.removeEquation(eq))
+        case None => println("DELETION failed"); None
+      }
+      case Auto => DELETION.tryDeletion(pfSt)
+      case Return => None
+    }).foreach(newPfSt => pfSt = newPfSt)
   }
 
   def constructor(): Unit = {
-    chooseEquation()
-      .foreach( eq => CONSTRUCTOR.tryConstructorOnEquation(eq)
-        .map( eqs => pfSt = pfSt.removeEquation(eq).addEquations(eqs) )
-        .getOrElse(println("CONSTRUCTOR failed") )
-      )
+    (chooseEquation() match {
+      case Input(eq) => CONSTRUCTOR.tryConstructorOnEquation(eq) match {
+        case Some(eqs) => Some(pfSt.removeEquation(eq).addEquations(eqs) )
+        case None => println("CONSTRUCTOR failed"); None
+      }
+      case Auto => CONSTRUCTOR.tryConstructor(pfSt)
+      case Return => None
+    }).foreach( newPfSt => pfSt = newPfSt )
   }
 
   def eq_deletion(): Unit = {
-    chooseEquation()
-      .foreach( eq => EQ_DELETION.tryEqDeletionOnEquation(eq, pfSt)
-        .map( newEq => pfSt = pfSt.replaceEquationWith(eq, newEq) )
-        .getOrElse( println("EQ-DELETION failed") )
-      )
+    (chooseEquation() match {
+      case Input(eq) => EQ_DELETION.tryEqDeletionOnEquation(eq, pfSt) match {
+        case Some(newEq) => Some(pfSt.replaceEquationWith(eq, newEq))
+        case None => println("EQ-DELETION failed"); None
+      }
+      case Auto => EQ_DELETION.tryEqDeletion(pfSt)
+      case Return => None
+    }).foreach( newPfSt => pfSt = newPfSt )
   }
 
   def simplification(): Unit = {
-    chooseEquation()
-      .map( eq => chooseSide()
-        .map( side => chooseRule().map( rule =>
-          SIMPLIFICATION.trySimplificationOnEquationSideWithRule(eq, side, rule)
-            .map( newEq => pfSt = pfSt.replaceEquationWith(eq, newEq) )
-            .getOrElse( println("SIMPLIFICATION failed") )
-          )
-        )
-      )
+    (chooseEquation() match {
+      case Input(eq) => chooseSide() match {
+        case Input(side) => chooseRule() match {
+          case Input(rule) => choosePosition(eq.getSide(side), eq, rule) match {
+            case Input((pos, sub)) => Some(pfSt.replaceEquationWith(eq, SIMPLIFICATION.doSimplificationOnEquationSideWithRuleAtPosition(eq, side, rule, pos, sub)))
+            case Auto => SIMPLIFICATION.trySimplificationOnEquationSideWithRule(eq, side, rule).map(eq2 => pfSt.replaceEquationWith(eq, eq2))
+            case Return => None
+          }
+          case Auto => SIMPLIFICATION.trySimplificationOnEquationSide(eq, side, pfSt.rules).map(eq2 => pfSt.replaceEquationWith(eq, eq2))
+          case Return => None
+        }
+        case Auto => SIMPLIFICATION.trySimplificationOnEquation(eq, pfSt.rules).map(eq2 => pfSt.replaceEquationWith(eq, eq2))
+        case Return => None
+      }
+      case Auto => SIMPLIFICATION.trySimplification(pfSt)
+      case Return => None
+    }).foreach(newPfSt => pfSt = newPfSt )
   }
 
   def expansion(): Unit = {
-    chooseEquation()
-      .map( eq => chooseSide()
-        .map( side => EXPANSION.tryExpansionOnEquationSide(eq, side, pfSt.rules)
-          .map( (eqs, maybeRule) => {
-            pfSt = pfSt.removeEquation(eq).addEquations(eqs)
-            maybeRule.map( rule =>
-              chooseAddRule(rule)
-                .map( addRule => if addRule then pfSt = pfSt.addRule(rule) )
-            ).getOrElse( println("No suitable rule found (not terminating).") )
-          })
-        )
-      )
+    (chooseEquation() match {
+      case Input(eq) => chooseSide() match {
+        case Input(side) => EXPANSION.tryExpansionOnEquationSide(eq, side, pfSt.rules) match {
+          case Some((eqs, maybeRule)) => maybeRule match {
+            case Some(rule) => chooseAddRule(rule) match {
+              case Input(true) => Some(pfSt.removeEquation(eq).addEquations(eqs).addRule(rule))
+              case Input(false) => Some(pfSt.removeEquation(eq).addEquations(eqs))
+              case Auto => Some(pfSt.removeEquation(eq).addEquations(eqs))
+              case Return => None
+            }
+            case None => Some(pfSt.removeEquation(eq).addEquations(eqs))
+          }
+          case None => println("No suitable rule found (not terminating)."); None
+        }
+        case Auto => EXPANSION.tryExpansionOnEquation(eq, pfSt.rules) match {
+          case Some((eqs, maybeRule)) => maybeRule match {
+            case Some(rule) => chooseAddRule(rule) match {
+              case Input(true) => Some(pfSt.removeEquation(eq).addEquations(eqs).addRule(rule))
+              case Input(false) => Some(pfSt.removeEquation(eq).addEquations(eqs))
+              case Auto => Some(pfSt.removeEquation(eq).addEquations(eqs))
+              case Return => None
+            }
+            case None => Some(pfSt.removeEquation(eq).addEquations(eqs))
+          }
+          case None => None
+        }
+        case Return => None
+      }
+      case Auto => EXPANSION.tryExpansion2(pfSt) match {
+        case Some((newPfSt, maybeRule)) => maybeRule match {
+          case Some(rule) => chooseAddRule(rule) match {
+            case Input(true) => Some(newPfSt.addRule(rule))
+            case Input(false) => Some(newPfSt)
+            case Auto => Some(newPfSt)
+            case Return => None
+          }
+          case None => None
+        }
+        case None => None
+      }
+      case Return => None
+    }).foreach(newPfSt => pfSt = newPfSt)
   }
 
   def postulate(): Unit = {
@@ -210,10 +291,17 @@ class CLILogic(var pfSt: ProofState) {
   }
 
   def disprove(): Unit = {
-    chooseEquation()
-      .foreach( eq => DISPROVE.tryDisproveOnEquation(eq, pfSt)
-        .map( _ => pfSt.isFalse = true )
-        .getOrElse( println("DISPROVE failed") ))
+    chooseEquation() match {
+      case Input(eq) => DISPROVE.tryDisproveOnEquation(eq, pfSt) match {
+        case Some(_) => pfSt.isFalse = true
+        case None => println("DISPROVE failed")
+      }
+      case Auto => DISPROVE.tryDisprove(pfSt) match {
+        case Some(_) => pfSt.isFalse = true
+        case None => println("DISPROVE failed")
+      }
+      case Return =>
+    }
   }
 
 }
