@@ -5,18 +5,27 @@ import equiv.ri.Equation
 import equiv.trs.Term.App
 
 object CONSTRUCTOR {
+  /** Step-wise try to apply CONSTRUCTOR to every equation in the proofstate.
+   * @return [[Some]](proofstate) after the first successful CONSTRUCTOR, or [[None]] if CONSTRUCTOR could not be applied. */
   def tryConstructor(pfSt: ProofState): Option[ProofState] = {
-    pfSt.equations
-      .view
-      .flatMap(e1 => tryConstructorOnEquation(e1, pfSt).map(e2 => { println(s"CONSTRUCTOR on ${e1.toPrintString()} gives ${e2.map(_.toPrintString())}.") ; pfSt.removeEquation(e1).addEquations(e2) } ))
-      .headOption
+    pfSt.equations.view.flatMap(e1 => tryConstructorOnEquation(e1, pfSt)).headOption
   }
 
-  def tryConstructorOnEquation(equation: Equation, pfSt: ProofState): Option[Set[Equation]] = equation match {
-    case Equation(App(f1, args1), App(f2, args2), const) =>
-      if f1 == f2 && pfSt.constructors.contains(f1)
-      then Some(args1.zip(args2).map((t1, t2) => Equation(t1, t2, const)).toSet)
-      else None
-    case _ => None
+  /** Check if we can apply CONSTRUCTOR to the given equation, i.e. if the equation is of the form `f(s_1,...,s_n) ~~ f(t_1,...,t_n) [phi]`, where `f` is a constructor.
+   * @param equation The equation that is checked for application.
+   * @param pfSt The proofstate containing the equation.
+   * @param succeedDebug Whether to print on a successful application.
+   * @param failDebug Whether to print on a failed application.
+   * @return [[Some]](proofstate), where the proofstate does not contain the original equation, but equations `s_i ~~ t_i`, or [[None]] if CONSTRUCTOR could not be applied to the equation. */
+  def tryConstructorOnEquation(equation: Equation, pfSt: ProofState, succeedDebug: Boolean = true, failDebug: Boolean = false): Option[ProofState] = {
+    equation match {
+      case Equation(App(f1, args1), App(f2, args2), const) =>
+        if f1 == f2 && pfSt.constructors.contains(f1) then
+          val equations = args1.zip(args2).map((t1, t2) => Equation(t1, t2, const)).toSet
+          if (succeedDebug) { println(s"CONSTRUCTOR on ${equation.toPrintString()} gives ${equations.map(_.toPrintString())}.") }
+          return Some(pfSt.removeEquation(equation).addEquations( equations ))
+    }
+    if (failDebug) { println("CONSTRUCTOR failed") }
+    None
   }
 }

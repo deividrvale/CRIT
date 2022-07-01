@@ -14,10 +14,10 @@ object DELETION {
 
     /** Check if the given equation `s ~~ t [phi]` can be deleted, i.e. either `s = t` or `phi` is unsatisfiable.
      * If so, delete the equation from the given proofstate.
-     * @param equation The equation that is checked for deletion.
+     * @param equation The equation that is checked for application.
      * @param pfSt The proofstate containing the equation.
-     * @param succeedDebug Whether to print on a successful deletion.
-     * @param failDebug Whether to print on a failed deletion.
+     * @param succeedDebug Whether to print on a successful application.
+     * @param failDebug Whether to print on a failed application.
      * @return [[Some]](proofstate), where the proofstate has one equation less, or [[None]] if no equation could be deleted. */
     def tryDeletionOnEquation(equation: Equation, pfSt: ProofState, succeedDebug: Boolean = true, failDebug: Boolean = false): Option[ProofState] = {
       if equation.left == equation.right || !Z3.satisfiable(equation.getConstrainsConjunctAsTerm) then

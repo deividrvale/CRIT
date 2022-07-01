@@ -204,17 +204,12 @@ class CLILogic(var pfSt: ProofState) {
   }
 
   def constructor(): Unit = {
-    (chooseEquation() match {
-      case Input(eq) => CONSTRUCTOR.tryConstructorOnEquation(eq, pfSt) match {
-        case Some(eqs) => Some(pfSt.removeEquation(eq).addEquations(eqs) )
-        case None => println("CONSTRUCTOR failed"); None
-      }
-      case Auto => CONSTRUCTOR.tryConstructor(pfSt) match {
-        case None => println("CONSTRUCTOR failed"); None
-        case x => x
-      }
-      case Return => None
-    }).foreach( newPfSt => pfSt = newPfSt )
+    handleUserInput(
+      name = "CONSTRUCTOR",
+      input = chooseEquation(),
+      onInput = eq => CONSTRUCTOR.tryConstructorOnEquation(eq, pfSt),
+      onAuto = () => CONSTRUCTOR.tryConstructor(pfSt)
+    ).foreach(pfSt = _)
   }
 
   def eq_deletion(): Unit = {
