@@ -103,14 +103,17 @@ class CLILogic(var pfSt: ProofState) {
 
   /** Prompt the user to choose a side of an equation.
    * @return `Input(Side.Left)` or `Input(Side.Right)` or Empty if the 'auto' UserInput was selected */
-  def chooseSide(): UserInput[Side] = {
+  def chooseSide(equation: Equation): UserInput[Side] = {
+    println(s"$autoId: Auto-choose")
+    println(s"l: ${equation.getSide(Side.Left).toPrintString()}")
+    println(s"r: ${equation.getSide(Side.Right).toPrintString()}")
     println(s" $quitId: Return")
-    print(s"${Console.UNDERLINED}Choose side (l/r/auto)${Console.RESET}: ")
+    print(s"${Console.UNDERLINED}Choose side${Console.RESET}: ")
     var input = readLine().trim.toLowerCase
     while
       !(leftValues.contains(input) || rightValues.contains(input) || autoValues.contains(input) || input == quitId)
     do {
-      print("Side not recognized. Enter a valid side (l/r/auto): ")
+      print("Side not recognized. Enter a valid side: ")
       input = readLine().trim.toLowerCase
     }
     print(stringAfterCorrectUserInput)
@@ -222,7 +225,7 @@ class CLILogic(var pfSt: ProofState) {
 
   def simplification(): Unit = {
     (chooseEquation() match {
-      case Input(eq) => chooseSide() match {
+      case Input(eq) => chooseSide(eq) match {
         case Input(side) => chooseRule() match {
           case Input(rule) => choosePosition(eq.getSide(side), eq, rule) match {
             case Input((pos, sub)) => Some(pfSt.replaceEquationWith(eq, SIMPLIFICATION.doSimplificationOnEquationSideWithRuleAtPosition(eq, side, rule, pos, sub)))
@@ -242,7 +245,7 @@ class CLILogic(var pfSt: ProofState) {
 
   def expansion(): Unit = {
     (chooseEquation() match {
-      case Input(eq) => chooseSide() match {
+      case Input(eq) => chooseSide(eq) match {
         case Input(side) => EXPANSION.tryExpansionOnEquationSide(eq, side, pfSt.rules, pfSt) match {
           case Some((eqs, maybeRule)) => maybeRule match {
             case Some(rule) => chooseAddRule(rule) match {
