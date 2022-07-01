@@ -5,7 +5,8 @@ import equiv.ri.{Equation, ProofState}
 import equiv.ri.tactics.{COMPLETENESS, CONSTRUCTOR, DELETION, DISPROVE, EQ_DELETION, EXPANSION, GENERALIZATION, POSTULATE, SIMPLIFICATION}
 import equiv.trs.{Rule, Term}
 import equiv.trs.Term.{Position, Substitution}
-import equiv.UserInput
+import equiv.utils.{Auto, Input, Return, UserInput}
+import equiv.utils.OptionExtension.printOnNone
 
 import scala.io.StdIn.readLine
 import scala.collection.immutable.ListMap
@@ -181,10 +182,10 @@ class CLILogic(var pfSt: ProofState) {
    * @param onInput Function to execute on the user input, if there is [[Input]]
    * @param onAuto Function to execute if the user selected [[Auto]]
    * @return A new proofstate */
-  def handleUserInput[T](input: UserInput[T], onInput: T => Option[ProofState], onAuto: Option[ProofState]): Option[ProofState] = {
+  def handleUserInput[T](name: String, input: UserInput[T], onInput: T => Option[ProofState], onAuto: () => Option[ProofState]): Option[ProofState] = {
     input match {
-      case Input(x) => onInput(x)
-      case Auto => onAuto
+      case Input(x) => onInput(x).printOnNone(s"$name failed")
+      case Auto => onAuto().printOnNone(s"$name failed")
       case Return => None
     }
   }
@@ -195,9 +196,10 @@ class CLILogic(var pfSt: ProofState) {
 
   def deletion(): Unit = {
     handleUserInput(
+      name = "DELETION",
       input   = chooseEquation(),
       onInput = eq => DELETION.tryDeletionOnEquation(eq, pfSt),
-      onAuto  = DELETION.tryDeletion(pfSt)
+      onAuto  = () => DELETION.tryDeletion(pfSt)
     ).foreach(pfSt = _)
   }
 

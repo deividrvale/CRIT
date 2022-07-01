@@ -1,4 +1,6 @@
-package equiv
+package equiv.utils
+
+import equiv.utils.UserInput
 
 abstract class UserInput[+A] { }
 
