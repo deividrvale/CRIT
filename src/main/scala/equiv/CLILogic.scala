@@ -184,18 +184,24 @@ class CLILogic(var pfSt: ProofState) {
         case Some(_) => Some(pfSt.removeEquation(eq))
         case None => println("DELETION failed"); None
       }
-      case Auto => DELETION.tryDeletion(pfSt)
+      case Auto => DELETION.tryDeletion(pfSt) match {
+        case None => println("DELETION failed"); None
+        case x => x
+      }
       case Return => None
     }).foreach(newPfSt => pfSt = newPfSt)
   }
 
   def constructor(): Unit = {
     (chooseEquation() match {
-      case Input(eq) => CONSTRUCTOR.tryConstructorOnEquation(eq) match {
+      case Input(eq) => CONSTRUCTOR.tryConstructorOnEquation(eq, pfSt) match {
         case Some(eqs) => Some(pfSt.removeEquation(eq).addEquations(eqs) )
         case None => println("CONSTRUCTOR failed"); None
       }
-      case Auto => CONSTRUCTOR.tryConstructor(pfSt)
+      case Auto => CONSTRUCTOR.tryConstructor(pfSt) match {
+        case None => println("CONSTRUCTOR failed"); None
+        case x => x
+      }
       case Return => None
     }).foreach( newPfSt => pfSt = newPfSt )
   }
@@ -206,7 +212,10 @@ class CLILogic(var pfSt: ProofState) {
         case Some(newEq) => Some(pfSt.replaceEquationWith(eq, newEq))
         case None => println("EQ-DELETION failed"); None
       }
-      case Auto => EQ_DELETION.tryEqDeletion(pfSt)
+      case Auto => EQ_DELETION.tryEqDeletion(pfSt) match {
+        case None => println("EQ-DELETION failed"); None
+        case x => x
+      }
       case Return => None
     }).foreach( newPfSt => pfSt = newPfSt )
   }
@@ -234,7 +243,7 @@ class CLILogic(var pfSt: ProofState) {
   def expansion(): Unit = {
     (chooseEquation() match {
       case Input(eq) => chooseSide() match {
-        case Input(side) => EXPANSION.tryExpansionOnEquationSide(eq, side, pfSt.rules) match {
+        case Input(side) => EXPANSION.tryExpansionOnEquationSide(eq, side, pfSt.rules, pfSt) match {
           case Some((eqs, maybeRule)) => maybeRule match {
             case Some(rule) => chooseAddRule(rule) match {
               case Input(true) => Some(pfSt.removeEquation(eq).addEquations(eqs).addRule(rule))
@@ -246,7 +255,7 @@ class CLILogic(var pfSt: ProofState) {
           }
           case None => println("No suitable rule found (not terminating)."); None
         }
-        case Auto => EXPANSION.tryExpansionOnEquation(eq, pfSt.rules) match {
+        case Auto => EXPANSION.tryExpansionOnEquation(eq, pfSt.rules, pfSt) match {
           case Some((eqs, maybeRule)) => maybeRule match {
             case Some(rule) => chooseAddRule(rule) match {
               case Input(true) => Some(pfSt.removeEquation(eq).addEquations(eqs).addRule(rule))

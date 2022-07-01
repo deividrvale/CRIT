@@ -1,5 +1,6 @@
 package equiv.trs
 
+import equiv.ri.ProofState
 import equiv.trs.Term.{App, Position, Substitution, Var}
 import equiv.utils.{MapUtils, PrintUtils}
 
@@ -11,7 +12,15 @@ trait Term {
   def isTheory: Boolean
 
   /** TODO Check if this term is basic, i.e. its root is a defined symbol and all its arguments are constructor terms */
-  def isBasic(): Boolean = true
+  def isBasic(pfSt: ProofState): Boolean = this match {
+    case Var(_, _) => false
+    case App(f, args) => pfSt.definedSymbols.contains(f) && args.forall(_.isConstructorTerm(pfSt))
+  }
+
+  def isConstructorTerm(pfSt: ProofState): Boolean = this match {
+    case Var(_, _) => true
+    case App(f, args) => pfSt.constructors.contains(f) && args.forall(_.isConstructorTerm(pfSt))
+  }
 
   /** @return A set of variables that occur in the given term */
   def vars: Set[Var] = this match {
