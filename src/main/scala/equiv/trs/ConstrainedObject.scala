@@ -5,7 +5,6 @@ import equiv.utils.{TermUtils, Z3}
 
 import javax.swing.SpringLayout.Constraints
 import equiv.trs.Term.Var
-import scala.collection.immutable.Stream.Cons
 import scala.collection.immutable.LazyList.cons
 
 object ConstrainedObject {
@@ -21,23 +20,27 @@ object ConstrainedObject {
     removeImpliedConstraints(constraints_2) + constraint_1
   }
 
+  /** 'Fold' the given set of constraints into a single term with conjunctions. */
   def foldConstraints(constraints: Set[Constraint]): Term = {
     foldTerms(constraints.map(_.term))
   }
 
+  /** 'Fold' the given set of terms into a single term with conjunctions. */
   def foldTerms(constraints: Set[Term]): Term = {
     if constraints.size > 1 then
       constraints.tail.foldLeft(constraints.head)((c1, c2) => TermUtils.and(c1, c2))
-    else if !constraints.isEmpty then
+    else if constraints.nonEmpty then
       constraints.head
     else
       TermUtils.boolTrue
   }
 
+  /** 'Fold' the given set of constraints into a single constraint with conjunctions. */
   def constraintSetToConjunct(constraints: Set[Constraint]): Constraint = {
     Constraint(foldConstraints(constraints))
   }
 
+  /** 'Fold' the given set of terms into a single constraint with conjunctions. */
   def termSetToConstraintConjunct(constraints: Set[Term]): Constraint = {
     Constraint(foldTerms(constraints))
   }

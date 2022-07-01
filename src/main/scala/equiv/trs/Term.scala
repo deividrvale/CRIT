@@ -113,7 +113,10 @@ trait Term {
   def rewriteAtPos(position: Position, rule: Rule, substitution: Substitution): Term =
     substituteAtPos(position, rule.right.applySubstitution(substitution))
 
-  def isEqDeletable(constraintVars: Set[Var]) : Boolean
+  def isEqDeletable(constraintVars: Set[Var]) : Boolean = this match {
+    case v@Var(_, _) => constraintVars.contains(v)
+    case App(f, args) => f.isTheory && args.forall(_.isEqDeletable(constraintVars))
+  }
 
   def toStringApplicative : String = this match {
     case App(f,args) => if(args.isEmpty) s"${f.name}" else s"(${f.name} ${args.map(_.toStringApplicative).mkString(" ")})"
@@ -131,8 +134,6 @@ object Term {
     override def rootFunc: Option[FunctionSymbol] = None
 
     override def isTheory: Boolean = sort.isTheory
-
-    override def isEqDeletable(constraintVars: Set[Var]): Boolean = constraintVars.contains(this)
 
     override def toString: String = toPrintString(false)
 
@@ -157,10 +158,6 @@ object Term {
     override def rootFunc: Option[FunctionSymbol] = Some(fun)
 
     override def isTheory: Boolean = fun.isTheory && args.forall(_.isTheory)
-
-    override def isEqDeletable(constraintVars: Set[Var]): Boolean = {
-      fun.isTheory && args.forall(_.isEqDeletable(constraintVars))
-    }
 
     val sort: Sort = if(fun.typing.output == Sort.Any) sortsArgsAny.head else fun.typing.output
 

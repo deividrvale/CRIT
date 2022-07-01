@@ -17,19 +17,21 @@ class CLILogic(var pfSt: ProofState) {
 
   var forceQuit: Boolean = false
   val autoId: String = "-1"
-  val quitId: String = "q"
+  val returnId: String = "q"
 
   val c: Option[Int] = None
 
+  val autoValues: List[String] = List("-1", "a", "au", "aut", "auto")
+  val returnValues: List[String] = List("q", "r", "quit", "return", "ret", "exit", "e")
   val leftValues: List[String] = List("0", "l", "left", "le", "lef", "links")
   val rightValues: List[String] = List("1", "r", "right", "ri", "rig", "righ", "rechts")
-  val autoValues: List[String] = List("2", "a", "au", "aut", "auto")
   assert(leftValues.intersect(rightValues).isEmpty)
   val noValues: List[String] = List("0", "n", "no", "nee")
   val yesValues: List[String] = List("1", "y", "ye", "yes", "ja")
   assert(noValues.intersect(yesValues).isEmpty)
 
   val actions: ListMap[String, (String, () => Unit)] = ListMap (
+    returnId -> ("QUIT", () => forceQuit = true),
     autoId -> ("AUTO", () => println("Not implemented yet.")),
     "0" -> ("Simplify with calc", () => simplify_calc()),
     "1" -> ("DELETION", () => deletion()),
@@ -41,7 +43,6 @@ class CLILogic(var pfSt: ProofState) {
     "7" -> ("GENERALIZE", () => generalize()),
     "8" -> ("COMPLETENESS", () => completeness()),
     "9" -> ("DISPROVE", () => disprove()),
-    quitId -> ("QUIT", () => forceQuit = true),
   )
 
   def RI(): Unit = {
@@ -52,16 +53,15 @@ class CLILogic(var pfSt: ProofState) {
     do {
       println(s"\n${pfSt.toPrintString()}\n")
 
-      actions.foreach((nr, nameAction) => println(s" $nr: ${nameAction._1}"))
+      printOptions(actions.toList.map((nr, nameAction) => (nr, nameAction._1)).drop(2))
 
       print(s"${Console.UNDERLINED}Choose action id${Console.RESET}: ")
-      var input = readLine().trim.toLowerCase
-      while !actions.contains(input)
-      do {
-        print("Action id not recognized. Enter a valid action id: ")
-        input = readLine().toLowerCase
+      var input = loopForCorrectInput(List(actions.keys.toSeq))
+      input = handleDefaultUserInput(input, () => Input(input)) match {
+        case Return => returnId
+        case Auto => autoId
+        case Input(id) => id
       }
-      print(stringAfterCorrectUserInput)
       println(actions(input)._1)
       actions(input)._2()
     }
@@ -85,21 +85,12 @@ class CLILogic(var pfSt: ProofState) {
   def chooseFromSet[T](set: Set[T], name: String, toPrintString: T => String): UserInput[T] = {
     val setElementsAndIndices = set.toSeq.zipWithIndex.map((elem, id) => (id.toString, elem))
     val setElementsAndIndicesMap = setElementsAndIndices.toMap
-    println(s"$autoId: Auto-choose")
-    setElementsAndIndices.foreach((id, elem) => println(s" $id: ${toPrintString(elem)}"))
-    println(s" $quitId: Return")
+    printOptions(setElementsAndIndices.map((id, elem) => (id, toPrintString(elem))))
     print(s"${Console.UNDERLINED}Please choose a${if "aeiou".contains(name(0)) then "n" else ""} $name${Console.RESET}: ")
-    var input = readLine().trim.toLowerCase
-    while
-      !(setElementsAndIndicesMap.contains(input) || input == autoId || input == quitId)
-    do {
-      print(s"${name.capitalize} id not recognized. Enter a valid id: ")
-      input = readLine().trim.toLowerCase
-    }
-    print(stringAfterCorrectUserInput)
-    if input == autoId then Auto
-    else if input == quitId then Return
-    else { println(s"${name.capitalize} ${toPrintString(setElementsAndIndicesMap(input))}.") ; Input(setElementsAndIndicesMap(input)) }
+    val input = loopForCorrectInput(List(setElementsAndIndicesMap.keys.toSeq))
+    handleDefaultUserInput(input, { () =>
+      println(s"${name.capitalize} ${toPrintString(setElementsAndIndicesMap(input))}.") ; Input(setElementsAndIndicesMap(input))
+    })
   }
 
   /** Prompt the user to choose a side of an equation.
@@ -108,69 +99,71 @@ class CLILogic(var pfSt: ProofState) {
     println(s"$autoId: Auto-choose")
     println(s"l: ${equation.getSide(Side.Left).toPrintString()}")
     println(s"r: ${equation.getSide(Side.Right).toPrintString()}")
-    println(s" $quitId: Return")
+    println(s" $returnId: Return")
     print(s"${Console.UNDERLINED}Choose side${Console.RESET}: ")
-    var input = readLine().trim.toLowerCase
-    while
-      !(leftValues.contains(input) || rightValues.contains(input) || autoValues.contains(input) || input == quitId)
-    do {
-      print("Side not recognized. Enter a valid side: ")
-      input = readLine().trim.toLowerCase
-    }
-    print(stringAfterCorrectUserInput)
-    if input == quitId then Return
-    else if leftValues.contains(input) then { println("Left") ; Input(Side.Left) }
-    else if rightValues.contains(input) then { println("Right") ; Input(Side.Right) }
-    else Auto
+    val input = loopForCorrectInput(List(leftValues, rightValues))
+    handleDefaultUserInput(input, { () =>
+      if leftValues.contains(input) then { println("Left") ; Input(Side.Left) }
+      else { println("Right") ; Input(Side.Right) }
+    })
   }
 
   /** Prompt the user to choose a subterm to apply a given rule to.
    * @return `None` if there are no possible rewrite positions or the user selects `quitid`.
    *         `Auto` if the user selected ''auto'',
    *         otherwise `Input()` with the corresponding `Position` and `Substitution` */
-  def choosePosition(term: Term, equation: Equation, rule: Rule): UserInput[(Position, Substitution)] = {
+  def chooseSubterm(term: Term, equation: Equation, rule: Rule): UserInput[(Position, Substitution)] = {
     val positionsAndIndices = SIMPLIFICATION.getAllPossibleRewritePlacesData(term, equation, rule).zipWithIndex.map((data, id) => (id.toString, data))
     val positionsAndIndicesMap = positionsAndIndices.toMap
     if positionsAndIndices.isEmpty then { println("No possible rewrite positions found.") ; return Return }
-    println(s"$autoId: Auto-choose")
-    positionsAndIndicesMap.foreach((id, data) => println(s" $id: ${data._1.toPrintString()}"))
-    println(s" $quitId: Return")
+    printOptions(positionsAndIndicesMap.map((id, data) => (id, data._1.toPrintString())))
     print(s"${Console.UNDERLINED}Please choose a subterm to apply the rule to${Console.RESET}: ")
-    var input = readLine().trim.toLowerCase
-    while
-      !(positionsAndIndicesMap.contains(input) || input == autoId || input == quitId)
-    do {
-      print(s"Subterm id not recognized. Enter a valid id: ")
-      input = readLine().trim.toLowerCase
-    }
-    print(stringAfterCorrectUserInput)
-    if input == autoId then Auto
-    else if input == quitId then Return
-    else {
+    val input = loopForCorrectInput(List(positionsAndIndicesMap.keys.toSeq))
+    handleDefaultUserInput(input, { () =>
       val output = positionsAndIndicesMap(input)
       println(s"Subterm ${output._1.toPrintString()}.")
       Input((output._2, output._3))
-    }
+    })
   }
 
   /** Prompt the user to choose whether to add the given rule to the hypotheses set or not.
    * @return `Input(true)` if the user chose ''yes'', `Input(false)` if the user chose ''no'', `None` if the user chose ''quit'' or ''auto'' */
   def chooseAddRule(rule: Rule): UserInput[Boolean] = {
     println(s"Rule generated: ${rule.toPrintString()}")
-    println(s" $quitId: Return")
-    print(s"${Console.UNDERLINED}Do you want to add this rule? (y/n/auto)${Console.RESET}: ")
+    printOptions(Seq(("y", "Yes"), ("n", "No")))
+    print(s"${Console.UNDERLINED}Do you want to add this rule?${Console.RESET}: ")
+    val input = loopForCorrectInput(List(yesValues, noValues))
+    handleDefaultUserInput(input, { () =>
+      if noValues.contains(input) then Input(false)
+      else Input(true)
+    })
+  }
+
+  /** Handle the default cases of user input string: if it is a return value, return [[Return]], if it is an auto value, return [[Auto]], otherwise execute a given function. */
+  def handleDefaultUserInput[T](input: String, getContent: () => UserInput[T]): UserInput[T] = {
+    if returnValues.contains(input) then Return
+    else if autoValues.contains(input) then Auto
+    else getContent()
+  }
+
+  /** Print a given list of options for the user to choose from, along with the default options. */
+  def printOptions(options: Iterable[(String, String)]): Unit = {
+    println(s" $returnId: Return")
+    println(s"$autoId: Auto-choose")
+    options.foreach((id, data) => println(s" $id: $data"))
+  }
+
+  /** Read the user's input until the value is in one of the given lists or the `autoValues` or `quitValues` list */
+  def loopForCorrectInput(correctInputs: Iterable[Seq[String]]): String = {
     var input = readLine().trim.toLowerCase
     while
-      !(yesValues.contains(input) || noValues.contains(input) || autoValues.contains(input) || input == quitId)
+      !(correctInputs.exists(_.contains(input)) || autoValues.contains(input) || returnValues.contains(input))
     do {
-      print("Answer not recognized. Please enter a valid answer (y/n/auto): ")
+      print("Input not recognized. Please enter a valid input: ")
       input = readLine().trim.toLowerCase
     }
     print(stringAfterCorrectUserInput)
-    if input == quitId then Return
-    else if noValues.contains(input) then Input(false)
-    else if yesValues.contains(input) then Input(true)
-    else { println("Auto not implemented yet.") ; Auto } // TODO Check termination
+    input
   }
 
   // ===================================================================================================================
@@ -213,24 +206,19 @@ class CLILogic(var pfSt: ProofState) {
   }
 
   def eq_deletion(): Unit = {
-    (chooseEquation() match {
-      case Input(eq) => EQ_DELETION.tryEqDeletionOnEquation(eq, pfSt) match {
-        case Some(newEq) => Some(pfSt.replaceEquationWith(eq, newEq))
-        case None => println("EQ-DELETION failed"); None
-      }
-      case Auto => EQ_DELETION.tryEqDeletion(pfSt) match {
-        case None => println("EQ-DELETION failed"); None
-        case x => x
-      }
-      case Return => None
-    }).foreach( newPfSt => pfSt = newPfSt )
+    handleUserInput(
+      name = "EQ-DELETION",
+      input = chooseEquation(),
+      onInput = ???,
+      onAuto = () => EQ_DELETION.tryEqDeletion(pfSt)
+    ).foreach(pfSt = _)
   }
 
   def simplification(): Unit = {
     (chooseEquation() match {
       case Input(eq) => chooseSide(eq) match {
         case Input(side) => chooseRule() match {
-          case Input(rule) => choosePosition(eq.getSide(side), eq, rule) match {
+          case Input(rule) => chooseSubterm(eq.getSide(side), eq, rule) match {
             case Input((pos, sub)) => Some(pfSt.replaceEquationWith(eq, SIMPLIFICATION.doSimplificationOnEquationSideWithRuleAtPosition(eq, side, rule, pos, sub)))
             case Auto => SIMPLIFICATION.trySimplificationOnEquationSideWithRule(eq, side, rule).map(eq2 => pfSt.replaceEquationWith(eq, eq2))
             case Return => None
