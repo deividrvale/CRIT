@@ -176,23 +176,29 @@ class CLILogic(var pfSt: ProofState) {
   // =========================================== INFERENCE RULES =======================================================
   // ===================================================================================================================
 
+  /** Ancillary method to handle [[UserInput]].
+   * @param input The user input to handle.
+   * @param onInput Function to execute on the user input, if there is [[Input]]
+   * @param onAuto Function to execute if the user selected [[Auto]]
+   * @return A new proofstate */
+  def handleUserInput[T](input: UserInput[T], onInput: T => Option[ProofState], onAuto: Option[ProofState]): Option[ProofState] = {
+    input match {
+      case Input(x) => onInput(x)
+      case Auto => onAuto
+      case Return => None
+    }
+  }
 
   def simplify_calc(): Unit = {
     println("ERROR: Not implemented yet")
   }
 
   def deletion(): Unit = {
-    (chooseEquation() match {
-      case Input(eq) => DELETION.deletable(eq) match {
-        case Some(_) => Some(pfSt.removeEquation(eq))
-        case None => println("DELETION failed"); None
-      }
-      case Auto => DELETION.tryDeletion(pfSt) match {
-        case None => println("DELETION failed"); None
-        case x => x
-      }
-      case Return => None
-    }).foreach(newPfSt => pfSt = newPfSt)
+    handleUserInput(
+      input   = chooseEquation(),
+      onInput = eq => DELETION.tryDeletionOnEquation(eq, pfSt),
+      onAuto  = DELETION.tryDeletion(pfSt)
+    ).foreach(pfSt = _)
   }
 
   def constructor(): Unit = {

@@ -5,18 +5,26 @@ import equiv.utils.Z3
 import equiv.ri.Equation
 
 object DELETION {
-    /** @return The given proofstate, without the equations that can be deleted, 
-    i.e. equations with equal left and right hand terms and equations with unsatisfiable constraints,
-    or None if there are no equations to be deleted */
+    /** Step-wise try to delete equations in the given proofstate.
+     * After the first possible deletable equation, return the proofstate with this equation removed.
+     * @return [[Some]](proofstate), where the proofstate has one equation less, or [[None]] if no equation could be deleted. */
     def tryDeletion(pfSt: ProofState): Option[ProofState] = {
-        pfSt.equations.view.flatMap( e => deletable(e) ).headOption.map( equation => pfSt.copy(equations = pfSt.equations - equation) )
+      pfSt.equations.view.flatMap(tryDeletionOnEquation(_, pfSt)).headOption
     }
 
-    def deletable(equation: Equation): Option[Equation] = {
-        if equation.left == equation.right || !Z3.satisfiable(equation.getConstrainsConjunctAsTerm) then
-            println(s"DELETION on ${equation.toPrintString()}.")
-            Some(equation)
-        else 
-            None
+    /** Check if the given equation `s ~~ t [phi]` can be deleted, i.e. either `s = t` or `phi` is unsatisfiable.
+     * If so, delete the equation from the given proofstate.
+     * @param equation The equation that is checked for deletion.
+     * @param pfSt The proofstate containing the equation.
+     * @param succeedDebug Whether to print on a successful deletion.
+     * @param failDebug Whether to print on a failed deletion.
+     * @return [[Some]](proofstate), where the proofstate has one equation less, or [[None]] if no equation could be deleted. */
+    def tryDeletionOnEquation(equation: Equation, pfSt: ProofState, succeedDebug: Boolean = true, failDebug: Boolean = false): Option[ProofState] = {
+      if equation.left == equation.right || !Z3.satisfiable(equation.getConstrainsConjunctAsTerm) then
+        if (succeedDebug) { println(s"DELETION on ${equation.toPrintString()}") }
+        Some(pfSt.removeEquation(equation))
+      else
+        if (failDebug) { println("DELETION failed") }
+        None
     }
 }
