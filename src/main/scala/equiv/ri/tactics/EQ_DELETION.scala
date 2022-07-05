@@ -45,26 +45,6 @@ object EQ_DELETION {
     doEqDeletionOnEquationSubtermPairs(equation, subtermPairs, pfSt, succeedDebug, failDebug)
   }
 
-  /** Recursively try to get a pair of subterms: one from `leftTerm`, one from `rightTerm`, at the same position, as long as they are eq-deletable.
-   * @param leftTerm The [[Term]] corresponding initially to the [[Left]] side of the equation.
-   * @param rightTerm The [[Term]] corresponding initially to the [[Right]] side of the equation.
-   * @param position The [[Position]] to get the subterms from in both [[Term]]s
-   * @param constraintVars The set of variables in the constraint of the equation.
-   * @return [[Some]] pair of terms if EQ-DELETION is possible here, otherwise [[None]] */
-  def tryToGetSubtermPairAtPosition(leftTerm: Term, rightTerm: Term, position: Position, constraintVars: Set[Var]): Option[(Term, Term)] = {
-    position match {
-      case List() =>
-        if leftTerm.isEqDeletable(constraintVars) && rightTerm.isEqDeletable(constraintVars) then
-          return Some((leftTerm, rightTerm))
-      case x::xs => (leftTerm, rightTerm) match {
-        case (App(f1, args1), App(f2, args2)) =>
-          if f1 == f2 then
-            return tryToGetSubtermPairAtPosition(args1(x), args2(x), xs, constraintVars)
-      }
-    }
-    None
-  }
-
   /** Given an equation and a set of subterm pairs from both sides of the equation, apply EQ-DELETION,
    * i.e. add the negation of the conjunction of the equalities of all subterm-pairs to the constraint of the given equation.
    * @example For set of pairs { (s_1, t_1), ..., (s_n, t_n) } the constraint \neg ( s_1 = t_1 /\ ... /\ s_n = t_n ) is added.
@@ -93,8 +73,30 @@ object EQ_DELETION {
       case (App(f1, args1), App(f2, args2)) =>
         if f1 == f2 then
           return args1.zip(args2).flatMap( (t1, t2) => getOuterMostTermPairs(t1, t2, constraintVars) ).toSet
+      case _ =>
     }
     Set()
+  }
+
+  /** Recursively try to get a pair of subterms: one from `leftTerm`, one from `rightTerm`, at the same position, as long as they are eq-deletable.
+   * @param leftTerm The [[Term]] corresponding initially to the [[Left]] side of the equation.
+   * @param rightTerm The [[Term]] corresponding initially to the [[Right]] side of the equation.
+   * @param position The [[Position]] to get the subterms from in both [[Term]]s
+   * @param constraintVars The set of variables in the constraint of the equation.
+   * @return [[Some]] pair of terms if EQ-DELETION is possible here, otherwise [[None]] */
+  def tryToGetSubtermPairAtPosition(leftTerm: Term, rightTerm: Term, position: Position, constraintVars: Set[Var]): Option[(Term, Term)] = {
+    position match {
+      case List() =>
+        if leftTerm.isEqDeletable(constraintVars) && rightTerm.isEqDeletable(constraintVars) then
+          return Some((leftTerm, rightTerm))
+      case x::xs => (leftTerm, rightTerm) match {
+        case (App(f1, args1), App(f2, args2)) =>
+          if f1 == f2 then
+            return tryToGetSubtermPairAtPosition(args1(x), args2(x), xs, constraintVars)
+        case _ =>
+      }
+    }
+    None
   }
 
   /** Get the subterm pairs and position of every pair of subterms that is subject to EQ-DELETION

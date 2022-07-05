@@ -213,10 +213,10 @@ class CLILogic(var pfSt: ProofState) {
    * @param onInput Function to execute on the user input, if there is [[Input]]
    * @param onAuto Function to execute if the user selected [[Auto]]
    * @return A new proofstate */
-  def handleUserInput[T](name: String, input: UserInput[T], onInput: T => Option[ProofState], onAuto: () => Option[ProofState], doPrint: Boolean = true): Option[ProofState] = {
+  def handleUserInput[T](input: UserInput[T], onInput: T => Option[ProofState], onAuto: () => Option[ProofState]): Option[ProofState] = {
     input match {
-      case Input(x) => onInput(x).printOnNone(s"Custom $name failed", doPrint)
-      case Auto => onAuto().printOnNone(s"Automatic $name failed", doPrint)
+      case Input(x) => onInput(x)
+      case Auto => onAuto()
       case Return => None
     }
   }
@@ -227,37 +227,31 @@ class CLILogic(var pfSt: ProofState) {
 
   def deletion(): Unit = {
     handleUserInput(
-      name = "DELETION",
       input   = chooseEquation(),
       onInput = eq => DELETION.tryDeletionOnEquation(eq, pfSt),
       onAuto  = () => DELETION.tryDeletion(pfSt)
-    ).foreach(pfSt = _)
+    ).printOnNone(s"${DELETION.name} failed.").foreach(pfSt = _)
   }
 
   def constructor(): Unit = {
     handleUserInput(
-      name = "CONSTRUCTOR",
       input = chooseEquation(),
       onInput = eq => CONSTRUCTOR.tryConstructorOnEquation(eq, pfSt),
       onAuto = () => CONSTRUCTOR.tryConstructor(pfSt)
-    ).foreach(pfSt = _)
+    ).printOnNone(s"${CONSTRUCTOR.name} failed.").foreach(pfSt = _)
   }
 
   def eq_deletion(): Unit = {
-    val name = "EQ-DELETION"
     handleUserInput(
-      name = name,
       input = chooseEquation(),
+      onAuto = () => EQ_DELETION.tryEqDeletion(pfSt),
       onInput = eq =>
         handleUserInput(
-          name = name,
           input = chooseSubtermPairs(eq),
           onInput = positions => EQ_DELETION.tryEqDeletionOnEquationOnPositions(eq, positions, pfSt),
-          onAuto = () => EQ_DELETION.tryEqDeletionOnEquation(eq, pfSt),
-          doPrint = false
+          onAuto = () => EQ_DELETION.tryEqDeletionOnEquation(eq, pfSt)
         ),
-      onAuto = () => EQ_DELETION.tryEqDeletion(pfSt)
-    ).foreach(pfSt = _)
+    ).printOnNone(s"${EQ_DELETION.name} failed.").foreach(pfSt = _)
   }
 
   def simplification(): Unit = {
