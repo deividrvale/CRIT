@@ -255,23 +255,30 @@ class CLILogic(var pfSt: ProofState) {
   }
 
   def simplification(): Unit = {
-    (chooseEquation() match {
-      case Input(eq) => chooseSide(eq) match {
-        case Input(side) => chooseRule() match {
-          case Input(rule) => chooseSubtermRedex(eq.getSide(side), eq, rule) match {
-            case Input((pos, sub)) => Some(pfSt.replaceEquationWith(eq, SIMPLIFICATION.doSimplificationOnEquationSideWithRuleAtPosition(eq, side, rule, pos, sub)))
-            case Auto => SIMPLIFICATION.trySimplificationOnEquationSideWithRule(eq, side, rule).map(eq2 => pfSt.replaceEquationWith(eq, eq2))
-            case Return => None
-          }
-          case Auto => SIMPLIFICATION.trySimplificationOnEquationSide(eq, side, pfSt.rules).map(eq2 => pfSt.replaceEquationWith(eq, eq2))
-          case Return => None
-        }
-        case Auto => SIMPLIFICATION.trySimplificationOnEquation(eq, pfSt.rules).map(eq2 => pfSt.replaceEquationWith(eq, eq2))
-        case Return => None
-      }
-      case Auto => SIMPLIFICATION.trySimplification(pfSt)
-      case Return => None
-    }).foreach(newPfSt => pfSt = newPfSt )
+    handleUserInput(
+      // Choose equation
+      input = chooseEquation(),
+      onAuto = () => SIMPLIFICATION.trySimplification(pfSt),
+      onInput = eq =>
+        // Choose equation side
+        handleUserInput(
+          input = chooseSide(eq),
+          onAuto = () => SIMPLIFICATION.trySimplificationOnEquation(eq, pfSt),
+          onInput = side =>
+            // Choose rule
+            handleUserInput(
+              input = chooseRule(),
+              onAuto = () => SIMPLIFICATION.trySimplificationOnEquationSide(eq, side, pfSt),
+              onInput = rule =>
+                // Choose position
+                handleUserInput(
+                  input = chooseSubtermRedex(eq.getSide(side), eq, rule),
+                  onAuto = () => SIMPLIFICATION.trySimplificationOnEquationSideWithRule(eq, side, rule, pfSt),
+                  onInput = (pos, sub) => Some(SIMPLIFICATION.doSimplificationOnEquationSideWithRuleAtPosition(eq, side, rule, pos, sub, pfSt))
+                )
+            )
+        )
+    ).printOnNone(s"${SIMPLIFICATION.name} failed.").foreach(pfSt = _)
   }
 
   def expansion(): Unit = {
