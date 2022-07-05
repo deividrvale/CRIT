@@ -9,6 +9,7 @@ import equiv.trs.Constraint
 
 
 object EXPANSION {
+  val name = "EXPANSION"
 
   /** Look for the first possible equation side that expansion can be performed on and do it.
    * @return The new proofstate after expansion in a `Some`, or `None` if no expansion could be performed */
@@ -41,7 +42,7 @@ object EXPANSION {
       .map( terms => {
         val eqs = terms.map( (t, cons) => equation.replaceSide(side, t).addConstraints(cons) )
         val maybeRule = Rule(equation.getSide(side), equation.getOppositeSide(side), equation.constraints).getIfTerminating(rules)
-        println(s"EXPANSION on $side side of ${equation.toPrintString()} gives ${eqs.map(_.toPrintString())}.\n")
+        println(s"$name on $side side of ${equation.toPrintString()} gives ${eqs.map(_.toPrintString())}.\n")
         ( eqs, maybeRule )
       }
     )

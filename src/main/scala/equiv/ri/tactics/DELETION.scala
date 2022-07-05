@@ -5,6 +5,8 @@ import equiv.utils.Z3
 import equiv.ri.Equation
 
 object DELETION {
+    val name = "DELETION"
+
     /** Step-wise try to delete equations in the given proofstate.
      * After the first possible deletable equation, return the proofstate with this equation removed.
      * @return [[Some]](proofstate), where the proofstate has one equation less, or [[None]] if no equation could be deleted. */
@@ -21,10 +23,10 @@ object DELETION {
      * @return [[Some]](proofstate), where the proofstate has one equation less, or [[None]] if no equation could be deleted. */
     def tryDeletionOnEquation(equation: Equation, pfSt: ProofState, succeedDebug: Boolean = true, failDebug: Boolean = false): Option[ProofState] = {
       if equation.left == equation.right || !Z3.satisfiable(equation.getConstrainsConjunctAsTerm) then
-        if (succeedDebug) { println(s"DELETION on ${equation.toPrintString()}") }
+        if (succeedDebug) { println(s"$name on ${equation.toPrintString()}") }
         Some(pfSt.removeEquation(equation))
       else
-        if (failDebug) { println("DELETION failed") }
+        if (failDebug) { println(s"$name failed") }
         None
     }
 }

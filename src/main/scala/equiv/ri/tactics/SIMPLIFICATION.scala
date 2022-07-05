@@ -10,6 +10,8 @@ import equiv.utils.{TermUtils, Z3}
 import scala.annotation.tailrec
 
 object SIMPLIFICATION {
+  val name = "SIMPLIFICATION"
+
   /** For each equation, try the `trySimplificationOnEquation` method */
   def trySimplification(pfSt: ProofState): Option[ProofState] = {
     pfSt.equations

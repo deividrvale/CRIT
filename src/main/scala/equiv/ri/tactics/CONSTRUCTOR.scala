@@ -5,6 +5,7 @@ import equiv.ri.Equation
 import equiv.trs.Term.App
 
 object CONSTRUCTOR {
+  val name = "CONSTRUCTOR"
   /** Step-wise try to apply CONSTRUCTOR to every equation in the proofstate.
    * @return [[Some]](proofstate) after the first successful CONSTRUCTOR, or [[None]] if CONSTRUCTOR could not be applied. */
   def tryConstructor(pfSt: ProofState): Option[ProofState] = {
@@ -22,10 +23,10 @@ object CONSTRUCTOR {
       case Equation(App(f1, args1), App(f2, args2), const) =>
         if f1 == f2 && pfSt.constructors.contains(f1) then
           val equations = args1.zip(args2).map((t1, t2) => Equation(t1, t2, const)).toSet
-          if (succeedDebug) { println(s"CONSTRUCTOR on ${equation.toPrintString()} gives ${equations.map(_.toPrintString())}.") }
+          if (succeedDebug) { println(s"$name on ${equation.toPrintString()} gives ${equations.map(_.toPrintString())}.") }
           return Some(pfSt.removeEquation(equation).addEquations( equations ))
     }
-    if (failDebug) { println("CONSTRUCTOR failed") }
+    if (failDebug) { println(s"$name failed") }
     None
   }
 }

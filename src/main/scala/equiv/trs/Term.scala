@@ -4,6 +4,8 @@ import equiv.ri.ProofState
 import equiv.trs.Term.{App, Position, Substitution, Var}
 import equiv.utils.{MapUtils, PrintUtils}
 
+import scala.annotation.tailrec
+
 trait Term {
   def sort: Sort
 

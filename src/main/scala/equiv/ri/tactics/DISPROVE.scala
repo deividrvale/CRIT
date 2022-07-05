@@ -7,6 +7,8 @@ import equiv.utils.Z3
 import equiv.utils.TermUtils
 
 object DISPROVE {
+  val name = "DISPROVE"
+
   /** @return `Some(false)` if the current proofstate can be disproven, `None` otherwise. */
   def tryDisprove(pfSt: ProofState): Option[Boolean] = {
     if (pfSt.getFlag) {
@@ -38,10 +40,10 @@ object DISPROVE {
   
   def disProveCase3(s: Term, t: Term, phi: Term, pfSt: ProofState): Boolean = {
     s match { 
-      case (v_s@Var(_, _)) => 
+      case v_s@Var(_, _) =>
         !phi.vars.contains(v_s) // s \in ( V \ Var(phi) ),
         && Z3.satisfiable(phi) // phi is satisfiable,
-        && pfSt.constructors.filter(_.typing.output == s.sort).size > 1 &&  // at least two different constructors have output sort i (same sort as s),
+        && pfSt.constructors.count(_.typing.output == s.sort) > 1 &&  // at least two different constructors have output sort i (same sort as s),
         // and either 
         (t match {
           case v_t@Var(_,_) => v_s != v_t // t is a variable distinct from s 
