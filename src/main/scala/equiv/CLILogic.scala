@@ -6,7 +6,7 @@ import equiv.ri.tactics.{COMPLETENESS, CONSTRUCTOR, DELETION, DISPROVE, EQ_DELET
 import equiv.trs.{Rule, Term}
 import equiv.trs.Term.{Position, Substitution}
 import equiv.utils.{Auto, Input, Return, TermUtils, UserInput}
-import equiv.utils.OptionExtension.printOnNone
+import equiv.utils.OptionExtension.printFailureOnNone
 
 import scala.io.StdIn.readLine
 import scala.collection.immutable.ListMap
@@ -248,7 +248,7 @@ class CLILogic(var pfSt: ProofState) {
       input   = chooseEquation(),
       onInput = eq => DELETION.tryDeletionOnEquation(eq, pfSt),
       onAuto  = () => DELETION.tryDeletion(pfSt)
-    ).printOnNone(s"${DELETION.name} failed.").foreach(pfSt = _)
+    ).printFailureOnNone(DELETION.name).foreach(pfSt = _)
   }
 
   def constructor(): Unit = {
@@ -256,7 +256,7 @@ class CLILogic(var pfSt: ProofState) {
       input = chooseEquation(),
       onInput = eq => CONSTRUCTOR.tryConstructorOnEquation(eq, pfSt),
       onAuto = () => CONSTRUCTOR.tryConstructor(pfSt)
-    ).printOnNone(s"${CONSTRUCTOR.name} failed.").foreach(pfSt = _)
+    ).printFailureOnNone(CONSTRUCTOR.name).foreach(pfSt = _)
   }
 
   def eq_deletion(): Unit = {
@@ -269,7 +269,7 @@ class CLILogic(var pfSt: ProofState) {
           onInput = positions => EQ_DELETION.tryEqDeletionOnEquationOnPositions(eq, positions, pfSt),
           onAuto = () => EQ_DELETION.tryEqDeletionOnEquation(eq, pfSt)
         ),
-    ).printOnNone(s"${EQ_DELETION.name} failed.").foreach(pfSt = _)
+    ).printFailureOnNone(EQ_DELETION.name).foreach(pfSt = _)
   }
 
   def simplification(): Unit = {
@@ -296,7 +296,7 @@ class CLILogic(var pfSt: ProofState) {
                 )
             )
         )
-    ).printOnNone(s"${SIMPLIFICATION.name} failed.").foreach(pfSt = _)
+    ).printFailureOnNone(SIMPLIFICATION.name).foreach(pfSt = _)
   }
 
   def expansion(): Unit = {
@@ -325,7 +325,7 @@ class CLILogic(var pfSt: ProofState) {
               onInput = position => EXPANSION.tryExpansionOnEquationSideSubterm(position, eq, side, pfSt, handleChooseRule)
             )
         )
-    ).printOnNone(s"${EXPANSION.name} failed.").foreach(pfSt = _)
+    ).printFailureOnNone(EXPANSION.name).foreach(pfSt = _)
   }
 
   def postulate(): Unit = {
@@ -338,7 +338,7 @@ class CLILogic(var pfSt: ProofState) {
 
   def completeness(): Unit = {
     COMPLETENESS.tryCompleteness(pfSt)
-      .printOnNone(s"${COMPLETENESS.name} failed.")
+      .printFailureOnNone(COMPLETENESS.name)
       .foreach(pfSt = _)
   }
 
@@ -347,7 +347,7 @@ class CLILogic(var pfSt: ProofState) {
       input = chooseEquation(),
       onAuto = () => DISPROVE.tryDisprove(pfSt),
       onInput = eq => DISPROVE.tryDisproveOnEquation(eq, pfSt)
-    ).printOnNone(s"${DISPROVE.name} failed.").foreach(pfSt.isFalse = _)
+    ).printFailureOnNone(DISPROVE.name).foreach(pfSt.isFalse = _)
   }
 
 }
