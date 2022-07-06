@@ -23,10 +23,10 @@ object DELETION {
      * @return [[Some]](proofstate), where the proofstate has one equation less, or [[None]] if no equation could be deleted. */
     def tryDeletionOnEquation(equation: Equation, pfSt: ProofState, succeedDebug: Boolean = true, failDebug: Boolean = false): Option[ProofState] = {
       if equation.left == equation.right || !Z3.satisfiable(equation.getConstrainsConjunctAsTerm) then
-        if (succeedDebug) { println(s"$name on ${equation.toPrintString()}") }
+        if (succeedDebug) { println(s"$name on ${equation.toPrintString()}.") }
         Some(pfSt.removeEquation(equation))
       else
-        if (failDebug) { println(s"$name failed") }
+        if (failDebug) { println(s"$name failed.") }
         None
     }
 }

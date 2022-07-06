@@ -46,16 +46,15 @@ class CLILogic(var pfSt: ProofState) {
   )
 
   def RI(): Unit = {
-    println(s"Starting Rewriting Induction with proofstate")
+    println(s"Starting Rewriting Induction with proofstate.")
 
     while
       !pfSt.isFinished && !forceQuit
     do {
       println(s"\n${pfSt.toPrintString()}\n")
 
+      println(s"${Console.UNDERLINED}Choose action id${Console.RESET}: ")
       printOptions(actions.toList.map((nr, nameAction) => (nr, nameAction._1)).drop(2))
-
-      print(s"${Console.UNDERLINED}Choose action id${Console.RESET}: ")
       var input = loopForCorrectInput(List(actions.keys.toList))
       input = handleDefaultUserInput(input, () => Input(input)) match {
         case Return => returnId
@@ -85,8 +84,8 @@ class CLILogic(var pfSt: ProofState) {
   def chooseFromSet[T](set: Set[T], name: String, toPrintString: T => String): UserInput[T] = {
     val setElementsAndIndices = set.toSeq.zipWithIndex.map((elem, id) => (id.toString, elem))
     val setElementsAndIndicesMap = setElementsAndIndices.toMap
+    println(s"${Console.UNDERLINED}Choose a${if "aeiou".contains(name(0)) then "n" else ""} $name${Console.RESET}: ")
     printOptions(setElementsAndIndices.map((id, elem) => (id, toPrintString(elem))))
-    print(s"${Console.UNDERLINED}Choose a${if "aeiou".contains(name(0)) then "n" else ""} $name${Console.RESET}: ")
     val input = loopForCorrectInput(List(setElementsAndIndicesMap.keys.toList))
     handleDefaultUserInput(input, { () =>
       println(s"${name.capitalize} ${toPrintString(setElementsAndIndicesMap(input))}.") ; Input(setElementsAndIndicesMap(input))
@@ -96,8 +95,8 @@ class CLILogic(var pfSt: ProofState) {
   /** Prompt the user to choose a side of an equation.
    * @return `Input(Side.Left)` or `Input(Side.Right)` or Empty if the 'auto' UserInput was selected */
   def chooseSide(equation: Equation): UserInput[Side] = {
+    println(s"${Console.UNDERLINED}Choose a side${Console.RESET}: ")
     printOptions(List(("l", s"${equation.getSide(Side.Left).toPrintString()}"), ("r", s"${equation.getSide(Side.Right).toPrintString()}")))
-    print(s"${Console.UNDERLINED}Choose a side${Console.RESET}: ")
     val input = loopForCorrectInput(List(leftValues, rightValues))
     handleDefaultUserInput(input, { () =>
       if leftValues.contains(input) then { println("Left") ; Input(Side.Left) }
@@ -110,8 +109,8 @@ class CLILogic(var pfSt: ProofState) {
   def chooseSubterm(term: Term): UserInput[Position] = {
     val subtermsAndPositionsAndIndices = term.findSubTermsBool(_ => true).zipWithIndex.map((data, id) => (id.toString, data)) // TODO Get only expandable subterms
     val subtermsAndPositionsAndIndicesMap = subtermsAndPositionsAndIndices.toMap
+    println(s"${Console.UNDERLINED}Choose a subterm${Console.RESET}: ")
     printOptions(subtermsAndPositionsAndIndices.map( (id, data) => (id, s"${data._1.toPrintString()}") ))
-    print(s"${Console.UNDERLINED}Choose a subterm${Console.RESET}: ")
     val input = loopForCorrectInput(List(subtermsAndPositionsAndIndicesMap.keys.toList))
     handleDefaultUserInput(input, { () =>
       Input(subtermsAndPositionsAndIndicesMap(input)._2)
@@ -126,8 +125,8 @@ class CLILogic(var pfSt: ProofState) {
     val positionsAndIndices = SIMPLIFICATION.getAllPossibleRewritePlacesData(term, equation, rule).zipWithIndex.map((data, id) => (id.toString, data))
     val positionsAndIndicesMap = positionsAndIndices.toMap
     if positionsAndIndices.isEmpty then { println("No possible rewrite positions found.") ; return Return }
+    println(s"${Console.UNDERLINED}Choose a subterm${Console.RESET}: ")
     printOptions(positionsAndIndicesMap.map((id, data) => (id, data._1.toPrintString())))
-    print(s"${Console.UNDERLINED}Choose a subterm${Console.RESET}: ")
     val input = loopForCorrectInput(List(positionsAndIndicesMap.keys.toList))
     handleDefaultUserInput(input, { () =>
       val output = positionsAndIndicesMap(input)
@@ -149,8 +148,8 @@ class CLILogic(var pfSt: ProofState) {
     while
       yesValues.contains(yesNo) && positionsAndPairsAndIndices.nonEmpty
     do {
-      printOptions(positionsAndPairsAndIndicesMap.map((id, data) => (id, s"${data._2._1.toPrintString()}  and  ${data._2._2.toPrintString()}")))
-      print(s"${Console.UNDERLINED}Choose a subterm pair${Console.RESET}: ")
+      println(s"${Console.UNDERLINED}Choose a subterm pair${Console.RESET}: ")
+      printOptions(positionsAndPairsAndIndicesMap.map((id, data) => (id, s"${data._2._1.toPrintString()}  and  ${data._2._2.toPrintString()}.")))
       val input = loopForCorrectInput(List(positionsAndPairsAndIndicesMap.keys.toList))
       handleDefaultUserInput(input, () => Input(input)) match {
         case Return => return Return
@@ -163,8 +162,8 @@ class CLILogic(var pfSt: ProofState) {
           positionsAndPairsAndIndicesMap = positionsAndPairsAndIndices.toMap
       }
       // Ask the user if they want to choose another subterm pair
+      println(s"${Console.UNDERLINED}Do you want to select another subterm?${Console.RESET}:")
       printOptions(Seq(("y", "Yes"), ("n", "No")), false, false)
-      print(s"${Console.UNDERLINED}Do you want to select another subterm?${Console.RESET}:")
       yesNo = loopForCorrectInput(List(yesValues, noValues), allowAuto = false, allowReturn = false)
     }
     if positionsAndPairsAndIndices.isEmpty then println("No possible subterms.")
@@ -174,9 +173,9 @@ class CLILogic(var pfSt: ProofState) {
   /** Prompt the user to choose whether to add the given rule to the hypotheses set or not.
    * @return `Input(true)` if the user chose ''yes'', `Input(false)` if the user chose ''no'', `None` if the user chose ''quit'' or ''auto'' */
   def chooseAddRule(rule: Rule): UserInput[Boolean] = {
-    println(s"Rule generated: ${rule.toPrintString()}")
+    println(s"Rule generated: ${rule.toPrintString()}.")
+    println(s"${Console.UNDERLINED}Do you want to add this rule?${Console.RESET}: ")
     printOptions(Seq(("y", "Yes"), ("n", "No")), false, false)
-    print(s"${Console.UNDERLINED}Do you want to add this rule?${Console.RESET}: ")
     val input = loopForCorrectInput(List(yesValues, noValues), false, false)
     handleDefaultUserInput(input, { () =>
       if noValues.contains(input) then Input(false)
@@ -330,16 +329,16 @@ class CLILogic(var pfSt: ProofState) {
   }
 
   def postulate(): Unit = {
-    println("ERROR: Not implemented yet")
+    println("ERROR: Not implemented yet.")
   }
 
   def generalize(): Unit = {
-    println("ERROR: Not implemented yet")
+    println("ERROR: Not implemented yet.")
   }
 
   def completeness(): Unit = {
     COMPLETENESS.tryCompleteness(pfSt)
-      .printOnNone(s"${COMPLETENESS.name} failed")
+      .printOnNone(s"${COMPLETENESS.name} failed.")
       .foreach(pfSt = _)
   }
 

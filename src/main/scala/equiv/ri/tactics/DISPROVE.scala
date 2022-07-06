@@ -28,7 +28,7 @@ object DISPROVE {
    * @return [[Some]]`(false)` if DISPROVE could be applied, [[None]] otherwise. */
   def tryDisproveOnEquation(equation: Equation, pfSt: ProofState): Option[Boolean] = {
     val s = equation.left; val t = equation.right; val phi = equation.getConstrainsConjunctAsTerm
-    if disproveCase1(s, t, phi) || disproveCase2(s, t, phi, pfSt) || disproveCase3(s, t, phi, pfSt) then { println("DISPROVE proofstate") ; Some(false) } else None
+    if disproveCase1(s, t, phi) || disproveCase2(s, t, phi, pfSt) || disproveCase3(s, t, phi, pfSt) then { println("DISPROVE proofstate.") ; Some(false) } else None
   }
 
   /** Case 1 where we can disprove an equation:

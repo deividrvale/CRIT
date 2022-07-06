@@ -26,7 +26,7 @@ object CONSTRUCTOR {
           if (succeedDebug) { println(s"$name on ${equation.toPrintString()} gives ${equations.map(_.toPrintString())}.") }
           return Some(pfSt.removeEquation(equation).addEquations( equations ))
     }
-    if (failDebug) { println(s"$name failed") }
+    if (failDebug) { println(s"$name failed.") }
     None
   }
 }
