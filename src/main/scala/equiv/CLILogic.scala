@@ -339,8 +339,8 @@ class CLILogic(var pfSt: ProofState) {
 
   def completeness(): Unit = {
     COMPLETENESS.tryCompleteness(pfSt)
-      .map(newPfSt => pfSt = newPfSt )
-      .getOrElse( println("COMPLETENESS failed") )
+      .printOnNone("COMPLETENESS failed")
+      .foreach(pfSt = _)
   }
 
   def disprove(): Unit = {
