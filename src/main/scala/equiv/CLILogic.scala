@@ -65,16 +65,20 @@ class CLILogic(var pfSt: ProofState) {
       actions(input)._2()
     }
     println(s"Rewriting Induction terminated. Reason: " +
-      s"${if forceQuit then "force quit"
-      else if pfSt.isFinished then "proofstate is in terminal state"
-      else if pfSt.isFalse then "proofstate is disproven"
-      else "unknown"}.")
+      s"${if forceQuit then s"${Console.RED}force quit"
+      else if pfSt.isFinished then s"${Console.GREEN}no more equations"
+      else if pfSt.isFalse then s"${Console.RED}proofstate is disproven"
+      else "unknown"}${Console.RESET}.")
   }
 
+  /** Prompt the user to choose an equation from the current proofstate.
+   * @return `Input(Equation)` if an equation was selected or `None` if ''quit'' was selected. */
   def chooseEquation(): UserInput[Equation] = {
     chooseFromSet(pfSt.equations, "equation", _.toPrintString())
   }
 
+  /** Prompt the user to choose a rule from the current proofstate.
+   * @return `Input(Rule)` if a rule was selected or `None` if ''quit'' was selected. */
   def chooseRule() : UserInput[Rule] = {
     chooseFromSet(pfSt.rules, "rule", _.toPrintString())
   }

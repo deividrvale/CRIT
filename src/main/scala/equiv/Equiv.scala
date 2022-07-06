@@ -33,7 +33,7 @@ object Equiv {
 
     val pfSt = ProofState(Set(equation), sumRecRules, true)
 
-    equiv.CLILogic(newPfSt).RI()
+    equiv.CLILogic(pfSt).RI()
   }
 
   def parse(fileName: String): Unit = {
