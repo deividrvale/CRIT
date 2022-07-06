@@ -227,7 +227,7 @@ class CLILogic(var pfSt: ProofState) {
    * @param onInput Function to execute on the user input, if there is [[Input]]
    * @param onAuto Function to execute if the user selected [[Auto]]
    * @return A new proofstate */
-  def handleUserInput[T](input: UserInput[T], onInput: T => Option[ProofState], onAuto: () => Option[ProofState]): Option[ProofState] = {
+  def handleUserInput[T1, T2](input: UserInput[T1], onInput: T1 => Option[T2], onAuto: () => Option[T2]): Option[T2] = {
     input match {
       case Input(x) => onInput(x)
       case Auto => onAuto()
@@ -339,22 +339,16 @@ class CLILogic(var pfSt: ProofState) {
 
   def completeness(): Unit = {
     COMPLETENESS.tryCompleteness(pfSt)
-      .printOnNone("COMPLETENESS failed")
+      .printOnNone(s"${COMPLETENESS.name} failed")
       .foreach(pfSt = _)
   }
 
   def disprove(): Unit = {
-    chooseEquation() match {
-      case Input(eq) => DISPROVE.tryDisproveOnEquation(eq, pfSt) match {
-        case Some(_) => pfSt.isFalse = true
-        case None => println("DISPROVE failed")
-      }
-      case Auto => DISPROVE.tryDisprove(pfSt) match {
-        case Some(_) => pfSt.isFalse = true
-        case None => println("DISPROVE failed")
-      }
-      case Return =>
-    }
+    handleUserInput(
+      input = chooseEquation(),
+      onAuto = () => DISPROVE.tryDisprove(pfSt),
+      onInput = eq => DISPROVE.tryDisproveOnEquation(eq, pfSt)
+    ).printOnNone(s"${DISPROVE.name} failed.").foreach(pfSt.isFalse = _)
   }
 
 }
