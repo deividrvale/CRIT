@@ -13,7 +13,7 @@ object ConstrainedObject {
     val constraint_1 = constraints.head
     val constraints_2 = constraints - constraint_1
     for (constraint_2 <- constraints) {
-      // If there exists another constraint that implies the given constraint, remove it
+      // If there exists another constraint that implies the current constraint, remove it
       if constraint_2 != constraint_1 && Z3.implies(constraint_2.term, constraint_1.term) then
         return removeImpliedConstraints(constraints_2)
     }

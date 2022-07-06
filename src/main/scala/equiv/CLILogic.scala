@@ -236,7 +236,12 @@ class CLILogic(var pfSt: ProofState) {
   }
 
   def simplify_calc(): Unit = {
-    println("ERROR: Not implemented yet")
+    println("Removing redundant constraints...")
+    val newEquations = pfSt.equations.map(_.simplifyCons())
+    if newEquations == pfSt.equations then
+      println("No redundant equations found.")
+    else
+      pfSt = pfSt.copy(equations = newEquations)
   }
 
   def deletion(): Unit = {
