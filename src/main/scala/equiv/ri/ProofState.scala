@@ -24,8 +24,8 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], private val fl
    * @example The defined symbols in rule set `{ f(x) -> g(x - 1) [x > 0], h(x) -> return(x) }` are `f` and `h` */
   val definedSymbols: Set[FunctionSymbol] = rules.flatMap( r => r.rootFunc )
   
-  /** The set of all constructors in the proofstate */
-  val constructors: Set[FunctionSymbol] = (functionSymbols -- definedSymbols).filter(!_.isTheory)
+  /** The set of all constructors in the proofstate: function symbols that are non-theory or values. */
+  val constructors: Set[FunctionSymbol] = functionSymbols.filter(_.isConstructor(definedSymbols))
 
   val vars: Set[Var] = equations.flatMap(_.vars) ++ rules.flatMap(_.vars)
 

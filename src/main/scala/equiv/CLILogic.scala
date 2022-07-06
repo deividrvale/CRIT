@@ -96,15 +96,25 @@ class CLILogic(var pfSt: ProofState) {
   /** Prompt the user to choose a side of an equation.
    * @return `Input(Side.Left)` or `Input(Side.Right)` or Empty if the 'auto' UserInput was selected */
   def chooseSide(equation: Equation): UserInput[Side] = {
-    println(s"$autoId: Auto-choose")
-    println(s"l: ${equation.getSide(Side.Left).toPrintString()}")
-    println(s"r: ${equation.getSide(Side.Right).toPrintString()}")
-    println(s" $returnId: Return")
+    printOptions(List(("l", s"${equation.getSide(Side.Left).toPrintString()}"), ("r", s"${equation.getSide(Side.Right).toPrintString()}")))
     print(s"${Console.UNDERLINED}Choose a side${Console.RESET}: ")
     val input = loopForCorrectInput(List(leftValues, rightValues))
     handleDefaultUserInput(input, { () =>
       if leftValues.contains(input) then { println("Left") ; Input(Side.Left) }
       else { println("Right") ; Input(Side.Right) }
+    })
+  }
+
+  /** Prompt the user to choose a subterm of the given term.
+   * @return The position of the subterm. */
+  def chooseSubterm(term: Term): UserInput[Position] = {
+    val subtermsAndPositionsAndIndices = term.findSubTermsBool(_ => true).zipWithIndex.map((data, id) => (id.toString, data)) // TODO Get only expandable subterms
+    val subtermsAndPositionsAndIndicesMap = subtermsAndPositionsAndIndices.toMap
+    printOptions(subtermsAndPositionsAndIndices.map( (id, data) => (id, s"${data._1.toPrintString()}") ))
+    print(s"${Console.UNDERLINED}Choose a subterm${Console.RESET}: ")
+    val input = loopForCorrectInput(List(subtermsAndPositionsAndIndicesMap.keys.toList))
+    handleDefaultUserInput(input, { () =>
+      Input(subtermsAndPositionsAndIndicesMap(input)._2)
     })
   }
 
@@ -165,14 +175,18 @@ class CLILogic(var pfSt: ProofState) {
    * @return `Input(true)` if the user chose ''yes'', `Input(false)` if the user chose ''no'', `None` if the user chose ''quit'' or ''auto'' */
   def chooseAddRule(rule: Rule): UserInput[Boolean] = {
     println(s"Rule generated: ${rule.toPrintString()}")
-    printOptions(Seq(("y", "Yes"), ("n", "No")))
+    printOptions(Seq(("y", "Yes"), ("n", "No")), false, false)
     print(s"${Console.UNDERLINED}Do you want to add this rule?${Console.RESET}: ")
-    val input = loopForCorrectInput(List(yesValues, noValues))
+    val input = loopForCorrectInput(List(yesValues, noValues), false, false)
     handleDefaultUserInput(input, { () =>
       if noValues.contains(input) then Input(false)
       else Input(true)
     })
   }
+
+  // ===================================================================================================================
+  // ================================================ HELPER FUNCTIONS =================================================
+  // ===================================================================================================================
 
   /** Handle the default cases of user input string: if it is a return value, return [[Return]], if it is an auto value, return [[Auto]], otherwise execute a given function. */
   def handleDefaultUserInput[T](input: String, getContent: () => UserInput[T]): UserInput[T] = {
@@ -282,48 +296,32 @@ class CLILogic(var pfSt: ProofState) {
   }
 
   def expansion(): Unit = {
-    (chooseEquation() match {
-      case Input(eq) => chooseSide(eq) match {
-        case Input(side) => EXPANSION.tryExpansionOnEquationSide(eq, side, pfSt.rules, pfSt) match {
-          case Some((eqs, maybeRule)) => maybeRule match {
-            case Some(rule) => chooseAddRule(rule) match {
-              case Input(true) => Some(pfSt.removeEquation(eq).addEquations(eqs).addRule(rule))
-              case Input(false) => Some(pfSt.removeEquation(eq).addEquations(eqs))
-              case Auto => Some(pfSt.removeEquation(eq).addEquations(eqs))
-              case Return => None
-            }
-            case None => Some(pfSt.removeEquation(eq).addEquations(eqs))
-          }
-          case None => println("No suitable rule found (not terminating)."); None
-        }
-        case Auto => EXPANSION.tryExpansionOnEquation(eq, pfSt.rules, pfSt) match {
-          case Some((eqs, maybeRule)) => maybeRule match {
-            case Some(rule) => chooseAddRule(rule) match {
-              case Input(true) => Some(pfSt.removeEquation(eq).addEquations(eqs).addRule(rule))
-              case Input(false) => Some(pfSt.removeEquation(eq).addEquations(eqs))
-              case Auto => Some(pfSt.removeEquation(eq).addEquations(eqs))
-              case Return => None
-            }
-            case None => Some(pfSt.removeEquation(eq).addEquations(eqs))
-          }
-          case None => None
-        }
-        case Return => None
+    def handleChooseRule(rule: Rule): Boolean = {
+      chooseAddRule(rule) match {
+        case Return => false
+        case Auto => false
+        case Input(b) => b
       }
-      case Auto => EXPANSION.tryExpansion2(pfSt) match {
-        case Some((newPfSt, maybeRule)) => maybeRule match {
-          case Some(rule) => chooseAddRule(rule) match {
-            case Input(true) => Some(newPfSt.addRule(rule))
-            case Input(false) => Some(newPfSt)
-            case Auto => Some(newPfSt)
-            case Return => None
-          }
-          case None => None
-        }
-        case None => None
-      }
-      case Return => None
-    }).foreach(newPfSt => pfSt = newPfSt)
+    }
+
+    handleUserInput(
+      // Choose equation
+      input = chooseEquation(),
+      onAuto = () => EXPANSION.tryExpansion(pfSt, handleChooseRule),
+      onInput = eq =>
+        // Choose side
+        handleUserInput(
+          input = chooseSide(eq),
+          onAuto = () => EXPANSION.tryExpansionOnEquation(eq, pfSt, handleChooseRule),
+          onInput = side =>
+            handleUserInput(
+              // Choose subterm (position)
+              input = chooseSubterm(eq.getSide(side)),
+              onAuto = () => EXPANSION.tryExpansionOnEquationSide(List(), eq, side, pfSt, handleChooseRule),
+              onInput = position => EXPANSION.tryExpansionOnEquationSideSubterm(position, eq, side, pfSt, handleChooseRule)
+            )
+        )
+    ).printOnNone(s"${EXPANSION.name} failed.").foreach(pfSt = _)
   }
 
   def postulate(): Unit = {

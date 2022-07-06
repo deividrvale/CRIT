@@ -4,69 +4,78 @@ import equiv.ri.{Equation, ProofState}
 import equiv.trs.Rule
 import equiv.ri.Equation.Side
 import equiv.trs.Term
-import equiv.trs.Term.{Var, App}
+import equiv.trs.Term.{App, Position, Var}
 import equiv.trs.Constraint
+import equiv.utils.OptionExtension.getOnNone
 
 
 object EXPANSION {
   val name = "EXPANSION"
 
-  /** Look for the first possible equation side that expansion can be performed on and do it.
-   * @return The new proofstate after expansion in a `Some`, or `None` if no expansion could be performed */
-  def tryExpansion(pfSt: ProofState): Option[ProofState] = {
-    tryExpansion2(pfSt).map((newPfSt, maybeRule) => newPfSt.maybeAddRule(maybeRule))
+  /** Try to apply EXPANSION on the first possible equation, side and subterm we find.
+   * @param pfSt The current [[ProofState]] to try to apply EXPANSION on.
+   * @param addRule Function that decides whether a generated [[Rule]] to the hypotheses set.
+   * @return [[Some]](proofstate) after application of EXPANSION, or [[None]] if no SIMPLIFICATION was possible. */
+  def tryExpansion(pfSt: ProofState, addRule: Rule => Boolean): Option[ProofState] = {
+    pfSt.equations.view.flatMap( eq => tryExpansionOnEquation(eq, pfSt, addRule) ).headOption
   }
 
-  /** Look for the first possible equation side that expansion can be performed on and do it. Do not yet add the rule.
-   * @return The new proofstate after expansion (without rule added), and maybe the rule in a `Some` , or `None` if no expansion could be performed */
-  def tryExpansion2(pfSt: ProofState): Option[(ProofState, Option[Rule])] = {
-    pfSt.equations.view.flatMap { equation =>
-      tryExpansionOnEquation(equation, pfSt.rules, pfSt).map(
-        (newEquations, maybeRule) => (pfSt.removeEquation(equation).addEquations(newEquations), maybeRule)
-      )
-    }.headOption
+  /** Try to apply EXPANSION on the first possible side (of the given equation) and subterm we find.
+   * @param equation The [[Equation]] to try to apply expansion on.
+   * @param pfSt The current [[ProofState]] to try to apply EXPANSION on.
+   * @param addRule Function that decides whether a generated [[Rule]] to the hypotheses set.
+   * @return [[Some]](proofstate) after application of EXPANSION, or [[None]] if no SIMPLIFICATION was possible. */
+  def tryExpansionOnEquation(equation: Equation, pfSt: ProofState, addRule: Rule => Boolean): Option[ProofState] = {
+    List(Side.Left, Side.Right).view.flatMap( side => tryExpansionOnEquationSide(List(), equation, side, pfSt, addRule) ).headOption
   }
 
-  /** Look for the first possible place of the given equation (left than right) to to perform an expansion on and do it.
-   * @return A generated set of equations and optional rule in a `Some`, or `None` if no expansion could be performed */
-  def tryExpansionOnEquation(equation: Equation, rules: Set[Rule], pfSt: ProofState): Option[(Set[Equation], Option[Rule])] = {
-    List(Side.Left, Side.Right).view.flatMap( side =>
-      tryExpansionOnEquationSide(equation, side, rules, pfSt)
-    ).headOption
-  }
-
-  /** Try to perform expansion on the given side of the given equation with the given ruleset.
-   * @return A generated set of equations and optional rule in a `Some`, or `None` if no expansion could be performed */
-  def tryExpansionOnEquationSide(equation: Equation, side: Side, rules: Set[Rule], pfSt: ProofState): Option[(Set[Equation], Option[Rule])] = {
-    tryExpansionOnTerm(equation.getSide(side), rules, pfSt)
-      .map( terms => {
-        val eqs = terms.map( (t, cons) => equation.replaceSide(side, t).addConstraints(cons) )
-        val maybeRule = Rule(equation.getSide(side), equation.getOppositeSide(side), equation.constraints).getIfTerminating(rules)
-        println(s"$name on $side side of ${equation.toPrintString()} gives ${eqs.map(_.toPrintString())}.\n")
-        ( eqs, maybeRule )
-      }
-    )
-  }
-
-  /** Look for the first possible subterm to perform expansion on and do it.
-   * @return A generated set of reducts + constraints in a `Some`, or `None` if no expansion could be performed */
-  def tryExpansionOnTerm(term: Term, rules: Set[Rule], pfSt: ProofState): Option[Set[(Term, Set[Constraint])]] = {
-    term match {
+  /** Try to apply EXPANSION on the first possible subterm of ```equation.getSide(side).subTermAt(position)}}}``` we find.
+   * @param position The [[Position]] of the subterm to try EXPANSION on. Should initially be ```List()``` (the empty list).
+   * @param equation The [[Equation]] to try to apply EXPANSION on.
+   * @param pfSt The current [[ProofState]] to try to apply EXPANSION on.
+   * @param addRule Function that decides whether a generated [[Rule]] to the hypotheses set.
+   * @return [[Some]](proofstate) after application of EXPANSION, or [[None]] if no SIMPLIFICATION was possible. */
+  def tryExpansionOnEquationSide(position: Position = List(), equation: Equation, side: Side, pfSt: ProofState, addRule: Rule => Boolean): Option[ProofState] = {
+    equation.getSide(side).subTermAt(position) match {
       case Var(_, _) => None
-      case t@App(_, args) => tryExpansionOnSubTerm(t, rules, pfSt) match {
-        case None => args.view.flatMap(tryExpansionOnTerm(_, rules, pfSt)).headOption
-        case Some(x) => Some(x)
-      }
+      case App(_, args) => tryExpansionOnEquationSideSubterm(position, equation, side, pfSt, addRule).getOnNone(
+        args.indices.view.flatMap(id => tryExpansionOnEquationSide(position :+ id, equation, side, pfSt, addRule) ).headOption
+      )
     }
   }
 
-  def tryExpansionOnSubTerm(term: Term, rules: Set[Rule], pfSt: ProofState, debug: Boolean = false): Option[Set[(Term, Set[Constraint])]] = {
-    if !term.isBasic(pfSt) then { if debug then println(s"${term.toPrintString()} is not basic") ; None } else {
-      val applicableRuleSubstitutionPairs = rules.flatMap(rule => term.instanceOf(rule.left).map((rule, _)))
-      if applicableRuleSubstitutionPairs.isEmpty then None else {
-        Some(applicableRuleSubstitutionPairs.map((rule, sub) => (term.rewriteAtPos(List(), rule, sub), rule.substituteConstraints(sub))))
-      }
-    }
+  /** Try to apply EXPANSION on the first possible subterm we find.
+   * @param position The [[Position]] of the subterm to try EXPANSION on.
+   * @param equation The [[Equation]] to try to apply EXPANSION on.
+   * @param pfSt The current [[ProofState]] to try to apply EXPANSION on.
+   * @param addRule Function that decides whether a generated [[Rule]] to the hypotheses set.
+   * @return [[Some]](proofstate) after application of EXPANSION, or [[None]] if no SIMPLIFICATION was possible. */
+  def tryExpansionOnEquationSideSubterm(position: Position, equation: Equation, side: Side, pfSt: ProofState, addRule: Rule => Boolean): Option[ProofState] = {
+    val subterm = equation.getSide(side).subTermAt(position)
+    if subterm.isBasic(pfSt.definedSymbols) then {
+      val applicableRuleSubstitutionPairs = pfSt.rules.flatMap( rule => subterm.instanceOf(rule.left).map((rule, _)) )
+      if applicableRuleSubstitutionPairs.nonEmpty then {
+        // Expd logic
+        val rHSsAndConstraintsPairs = applicableRuleSubstitutionPairs.map( (rule, sub) => (subterm.rewriteAtPos(List(), rule, sub), rule.substituteConstraints(sub)) )
+        val equations = rHSsAndConstraintsPairs.map((rhs, cons) => equation.replaceSide(side, rhs).addConstraints(cons))
+        println(s"$name on $side side of ${equation.toPrintString()} gives ${equations.map(_.toPrintString())}.")
+        var newPfSt = pfSt.removeEquation(equation).addEquations(equations)
+        // Rule logic
+        val rule = Rule(equation.getSide(side), equation.getOppositeSide(side), equation.constraints)
+        if addRule(rule) then newPfSt = newPfSt.addRule(rule)
+        // Return
+        return Some(newPfSt)
+      } else { println("No applicable rules.") }
+    } else { println("Not basic.") }
+    None
   }
 
+  // TODO
+  def getExpandableEquations(pfSt: ProofState): Set[Equation] = ???
+
+  // TODO
+  def getExpandableEquationSides(equation: Equation, pfSt: ProofState): Set[Side] = ???
+
+  // TODO
+  def getExpandableSubterms(term: Term, pfSt: ProofState): Set[Position] = ???
 }

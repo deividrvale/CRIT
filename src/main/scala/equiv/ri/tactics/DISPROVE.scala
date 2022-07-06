@@ -32,7 +32,7 @@ object DISPROVE {
   def disProveCase2(s: Term, t: Term, phi: Term, pfSt: ProofState): Boolean = {
     (s, t) match { 
       case (App(f, _), App(g, _)) =>  // s = f(\vec{s}) and t = g(\vec{t})
-        pfSt.constructors.contains(f) && pfSt.constructors.contains(g) && f != g // with f, g distinct constructors
+        f.isConstructor(pfSt.definedSymbols) && g.isConstructor(pfSt.definedSymbols) && f != g // with f, g distinct constructors
         && Z3.satisfiable(phi) // and phi satisfiable
       case _ => false 
     }
@@ -47,7 +47,7 @@ object DISPROVE {
         // and either 
         (t match {
           case v_t@Var(_,_) => v_s != v_t // t is a variable distinct from s 
-          case App(g, _) => pfSt.constructors.contains(g) // or t has the form g(\vec{t}) with g \in Cons
+          case App(g, _) => g.isConstructor(pfSt.definedSymbols) // or t has the form g(\vec{t}) with g \in Cons
         })
       case _ => false 
     }

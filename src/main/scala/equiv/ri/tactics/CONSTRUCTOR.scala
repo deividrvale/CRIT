@@ -21,7 +21,7 @@ object CONSTRUCTOR {
   def tryConstructorOnEquation(equation: Equation, pfSt: ProofState, succeedDebug: Boolean = true, failDebug: Boolean = false): Option[ProofState] = {
     equation match {
       case Equation(App(f1, args1), App(f2, args2), const) =>
-        if f1 == f2 && pfSt.constructors.contains(f1) then
+        if f1 == f2 && f1.isConstructor(pfSt.definedSymbols) then
           val equations = args1.zip(args2).map((t1, t2) => Equation(t1, t2, const)).toSet
           if (succeedDebug) { println(s"$name on ${equation.toPrintString()} gives ${equations.map(_.toPrintString())}.") }
           return Some(pfSt.removeEquation(equation).addEquations( equations ))

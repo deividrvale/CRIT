@@ -13,15 +13,16 @@ trait Term {
 
   def isTheory: Boolean
 
-  /** TODO Check if this term is basic, i.e. its root is a defined symbol and all its arguments are constructor terms */
-  def isBasic(pfSt: ProofState): Boolean = this match {
+  /** Check if this term is basic, i.e. its root is a defined symbol and all its arguments are constructor terms */
+  def isBasic(definedSymbols: Set[FunctionSymbol]): Boolean = this match {
     case Var(_, _) => false
-    case App(f, args) => pfSt.definedSymbols.contains(f) && args.forall(_.isConstructorTerm(pfSt))
+    case App(f, args) => definedSymbols.contains(f) && args.forall(_.isConstructorTerm(definedSymbols))
   }
 
-  def isConstructorTerm(pfSt: ProofState): Boolean = this match {
+  /** Check if a term is a constructor term, i.e. it is in Terms(Cons, V), where Cons is the set of constructors. */
+  def isConstructorTerm(definedSymbols: Set[FunctionSymbol]): Boolean = this match {
     case Var(_, _) => true
-    case App(f, args) => pfSt.constructors.contains(f) && args.forall(_.isConstructorTerm(pfSt))
+    case App(f, args) => f.isConstructor(definedSymbols) && args.forall(_.isConstructorTerm(definedSymbols))
   }
 
   /** @return A set of variables that occur in the given term */

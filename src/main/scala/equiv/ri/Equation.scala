@@ -43,9 +43,6 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
   def addConstraints(newConstraints: Set[Constraint]): Equation =
     this.copy(constraints = constraints ++ newConstraints)
 
-//  def addConstraints(newConstraints: Set[Term]): Equation =
-//    this.copy(constraints = constraints ++ newConstraints.map(Constraint.apply))
-
   def withConstraint(newConstraints: Set[Constraint]): Equation =
     this.copy(constraints = newConstraints)
 
@@ -73,7 +70,7 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
     while(funcNames.contains(freshName)) {
       freshName = new Random().nextString(4)
     }
-    FunctionSymbol(freshName, Typing(List(left.sort, right.sort), left.sort), false, Some(equiv.trs.Infix(equiv.trs.InfixKind.Left, 0)))
+    FunctionSymbol(freshName, Typing(List(left.sort, right.sort), left.sort), isTheory = false, isValue = false, Some(equiv.trs.Infix(equiv.trs.InfixKind.Left, 0)))
   }
 
   override def toString: String = toPrintString(false)
