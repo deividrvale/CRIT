@@ -80,7 +80,7 @@ class CLILogic(var pfSt: ProofState) {
   /** Prompt the user to choose a rule from the current proofstate.
    * @return `Input(Rule)` if a rule was selected or `None` if ''quit'' was selected. */
   def chooseRule() : UserInput[Rule] = {
-    chooseFromSet(pfSt.rules, "rule", _.toPrintString())
+    chooseFromSet(pfSt.rules ++ pfSt.hypotheses, "rule", _.toPrintString())
   }
 
   /** Prompt the user to choose an element from the current proofstate.

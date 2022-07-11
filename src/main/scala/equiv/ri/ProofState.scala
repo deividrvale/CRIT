@@ -13,8 +13,8 @@ import equiv.ri.tactics.COMPLETENESS
 object ProofState {
 
 }
-//, hypotheses: Set[Rule] = Set()
-case class ProofState(equations: Set[Equation], rules: Set[Rule], private val flag: Boolean) {
+
+case class ProofState(equations: Set[Equation], rules: Set[Rule], hypotheses: Set[Rule] = Set(), private val flag: Boolean) {
   var isFalse = false
 
   /** The set of all function symbols occurring in the proofstate */
@@ -37,25 +37,29 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], private val fl
 
   /** Change the value of the flag: `true` corresponds to `COMPLETE`, `false` corresponds to `INCOMPLETE` 
     * Also change the `COMPLETENESS.lastcompleteProofStateEquations` value to the current proofstate's equations if the flag is changed from true (COMPLETE) to false (INCOMPLETE) */
-  def setFlag(newFlag: Boolean): ProofState = { if flag && !newFlag then COMPLETENESS.lastCompleteProofStateEquations = Some(equations) ; ProofState(equations, rules, newFlag) }
+  def setFlag(newFlag: Boolean): ProofState = { if flag && !newFlag then
+    COMPLETENESS.lastCompleteProofStateEquations = Some(equations) ; ProofState(equations, rules, hypotheses, newFlag) }
 
   /** Remove the given equation from the set of equations */
-  def removeEquation(equation: Equation): ProofState = ProofState(equations - equation, rules, flag)
+  def removeEquation(equation: Equation): ProofState = ProofState(equations - equation, rules, hypotheses, flag)
 
   /** Add a single equation to the proofstate */
-  def addEquation(equation: Equation): ProofState = ProofState(equations + equation, rules, flag)
+  def addEquation(equation: Equation): ProofState = ProofState(equations + equation, rules, hypotheses, flag)
 
   /** Add a set of equations to the proofstate */
-  def addEquations(newEquations: Set[Equation]): ProofState = ProofState(equations ++ newEquations, rules, flag)
+  def addEquations(newEquations: Set[Equation]): ProofState = ProofState(equations ++ newEquations, rules, hypotheses, flag)
 
   /** Remove an equation from the equations set and add a new one
    * @param oldEquation Equation to be removed
    * @param newEquation Equation to be added */
   def replaceEquationWith(oldEquation: Equation, newEquation: Equation): ProofState =
-    ProofState(equations - oldEquation + newEquation, rules, flag)
+    ProofState(equations - oldEquation + newEquation, rules, hypotheses, flag)
 
   /** Add the given rule to the `rules` set. */
-  def addRule(rule: Rule): ProofState = ProofState(equations, rules + rule, flag)
+  def addRule(rule: Rule): ProofState = ProofState(equations, rules + rule, hypotheses, flag)
+
+  /** Add the given rule to the `hypotheses` set. */
+  def addHypothesis(rule: Rule): ProofState = ProofState(equations, rules, hypotheses + rule, flag)
 
   /** If the given parameter is of the form `Some(r)`, then return the current proofstate with the rule `r`, otherwise return the current proofstate. */
   def maybeAddRule(rule: Option[Rule]): ProofState = rule.map(r => return this.addRule(r)).getOrElse(return this)
@@ -72,6 +76,9 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], private val fl
   override def toString: String = toPrintString(false)
 
   def toPrintString(colours: Boolean = true): String =
-    s"( E     = { ${equations.map(_.toPrintString(colours)).mkString("", ", ", "") } }, \n  R + H = { ${rules.map(_.toPrintString(colours)).mkString(sep= ", ")} },\n  flag = $flag )"
+    s"( E = { ${equations.map(_.toPrintString(colours)).mkString(sep= ",\n        ") } }, \n  " +
+      s"R = { ${rules.map(_.toPrintString(colours)).mkString(sep= ",\n        ")} },\n  " +
+      s"H = { ${hypotheses.map(_.toPrintString(colours)).mkString(sep=",\n        ")} },\n " +
+      s"flag = $flag )"
 
 }

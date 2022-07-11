@@ -35,7 +35,7 @@ object SIMPLIFICATION {
    * @param pfSt The [[ProofState]] to apply SIMPLIFICATION on.
    * @return [[Some]](proofstate) after application of SIMPLIFICATION, or [[None]] if no SIMPLIFICATION was possible. */
   def trySimplificationOnEquationSide(equation: Equation, side: Side, pfSt: ProofState): Option[ProofState] = {
-    pfSt.rules.view.flatMap( rule => trySimplificationOnEquationSideWithRule(equation, side, rule, pfSt) ).headOption
+    (pfSt.hypotheses ++ pfSt.rules).view.flatMap( rule => trySimplificationOnEquationSideWithRule(equation, side, rule, pfSt) ).headOption
   }
 
   /** Try to apply SIMPLIFICATION on the given equation side with the given rule for the first subterm we find.

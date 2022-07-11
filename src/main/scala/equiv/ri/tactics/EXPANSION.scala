@@ -62,7 +62,7 @@ object EXPANSION {
         var newPfSt = pfSt.removeEquation(equation).addEquations(equations)
         // Rule logic
         val rule = Rule(equation.getSide(side), equation.getOppositeSide(side), equation.constraints)
-        if addRule(rule) then newPfSt = newPfSt.addRule(rule)
+        if addRule(rule) then newPfSt = newPfSt.addHypothesis(rule)
         // Return
         return Some(newPfSt)
       } else { println("No applicable rules.") }

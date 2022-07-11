@@ -29,9 +29,9 @@ object Equiv {
     val eq4: Equation = Equation(termReturnZero, termFx, Set(consXLEZero, consXEqZero))
     val delEq1: Equation = Equation(termFy, termFy, Set())
     val delEq2: Equation = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 1), consVarIntInt("y", "<", 1)))
-    val newPfSt: ProofState = ProofState(Set(eq1, eq2, eq3, eq4, delEq1, delEq2), Set(rho1, rho2), true)
+    val newPfSt: ProofState = ProofState(Set(eq1, eq2, eq3, eq4, delEq1, delEq2), Set(rho1, rho2), Set(), true)
 
-    val pfSt = ProofState(Set(equation), sumRecRules, true)
+    val pfSt = ProofState(Set(equation), sumRecRules, Set(), true)
 
     equiv.CLILogic(pfSt).RI()
   }
@@ -40,7 +40,7 @@ object Equiv {
     TRSParserTest.parseTRS(s"examples/$fileName.ctrs").foreach(
       system =>
         val equations: Set[Equation] = Set() // TODO get starting equation
-        val pfSt: ProofState = ProofState(equations, system.rules, true)
+        val pfSt: ProofState = ProofState(equations, system.rules, Set(), true)
     )
   }
 
