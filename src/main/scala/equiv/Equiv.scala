@@ -3,6 +3,7 @@ package equiv
 import equiv.ri.{Equation, ProofState}
 import equiv.trs.Temp.*
 
+import java.awt.Frame // usable for GUI
 
 object Equiv {
   def main(args: Array[String]): Unit = {    
