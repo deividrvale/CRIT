@@ -13,7 +13,7 @@ import equiv.ri.tactics.COMPLETENESS
 object ProofState {
 
 }
-
+//, hypotheses: Set[Rule] = Set()
 case class ProofState(equations: Set[Equation], rules: Set[Rule], private val flag: Boolean) {
   var isFalse = false
 
@@ -72,6 +72,6 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], private val fl
   override def toString: String = toPrintString(false)
 
   def toPrintString(colours: Boolean = true): String =
-    s"( E = { ${equations.map(_.toPrintString(colours)).mkString("", ", ", "") } }, \n  H = { ${rules.map(_.toPrintString(colours)).mkString(sep= ", ")} },\n  flag = $flag )"
+    s"( E     = { ${equations.map(_.toPrintString(colours)).mkString("", ", ", "") } }, \n  R + H = { ${rules.map(_.toPrintString(colours)).mkString(sep= ", ")} },\n  flag = $flag )"
 
 }

@@ -99,6 +99,7 @@ class CLILogic(var pfSt: ProofState) {
   /** Prompt the user to choose a side of an equation.
    * @return `Input(Side.Left)` or `Input(Side.Right)` or Empty if the 'auto' UserInput was selected */
   def chooseSide(equation: Equation): UserInput[Side] = {
+    println(s"Equation ${equation.toPrintString()}")
     println(s"${Console.UNDERLINED}Choose a side${Console.RESET}: ")
     printOptions(List(("l", s"${equation.getSide(Side.Left).toPrintString()}"), ("r", s"${equation.getSide(Side.Right).toPrintString()}")))
     val input = loopForCorrectInput(List(leftValues, rightValues))
@@ -113,6 +114,7 @@ class CLILogic(var pfSt: ProofState) {
   def chooseSubterm(term: Term): UserInput[Position] = {
     val subtermsAndPositionsAndIndices = term.findSubTermsBool(_ => true).zipWithIndex.map((data, id) => (id.toString, data)) // TODO Get only expandable subterms
     val subtermsAndPositionsAndIndicesMap = subtermsAndPositionsAndIndices.toMap
+    println(s"Term ${term.toPrintString()}")
     println(s"${Console.UNDERLINED}Choose a subterm${Console.RESET}: ")
     printOptions(subtermsAndPositionsAndIndices.map( (id, data) => (id, s"${data._1.toPrintString()}") ))
     val input = loopForCorrectInput(List(subtermsAndPositionsAndIndicesMap.keys.toList))
@@ -129,6 +131,7 @@ class CLILogic(var pfSt: ProofState) {
     val positionsAndIndices = SIMPLIFICATION.getAllPossibleRewritePlacesData(term, equation, rule).zipWithIndex.map((data, id) => (id.toString, data))
     val positionsAndIndicesMap = positionsAndIndices.toMap
     if positionsAndIndices.isEmpty then { println("No possible rewrite positions found.") ; return Return }
+    println(s"Term ${term.toPrintString()}")
     println(s"${Console.UNDERLINED}Choose a subterm${Console.RESET}: ")
     printOptions(positionsAndIndicesMap.map((id, data) => (id, data._1.toPrintString())))
     val input = loopForCorrectInput(List(positionsAndIndicesMap.keys.toList))
@@ -152,8 +155,9 @@ class CLILogic(var pfSt: ProofState) {
     while
       yesValues.contains(yesNo) && positionsAndPairsAndIndices.nonEmpty
     do {
+      println(s"Equation ${equation.toPrintString()}")
       println(s"${Console.UNDERLINED}Choose a subterm pair${Console.RESET}: ")
-      printOptions(positionsAndPairsAndIndicesMap.map((id, data) => (id, s"${data._2._1.toPrintString()}  and  ${data._2._2.toPrintString()}.")))
+      printOptions(positionsAndPairsAndIndicesMap.map((id, data) => (id, s"${data._1}: ${data._2._1.toPrintString()}  and  ${data._2._2.toPrintString()}.")))
       val input = loopForCorrectInput(List(positionsAndPairsAndIndicesMap.keys.toList))
       handleDefaultUserInput(input, () => Input(input)) match {
         case Return => return Return

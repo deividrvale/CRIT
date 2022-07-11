@@ -42,7 +42,21 @@ object EQ_DELETION {
           if (failDebug) { println(s"$name failed") }
           return None
         } ) )
-    doEqDeletionOnEquationSubtermPairs(equation, subtermPairs, pfSt, succeedDebug, failDebug)
+    if areContextsEqual(equation.left, equation.right, List(), positions) then
+      doEqDeletionOnEquationSubtermPairs(equation, subtermPairs, pfSt, succeedDebug, failDebug)
+    else None
+  }
+
+  def areContextsEqual(leftTerm: Term, rightTerm: Term, currentPosition: Position, positions: Set[Position]): Boolean = {
+    if positions.contains(currentPosition) then
+      true
+    else
+      (leftTerm, rightTerm) match {
+        case (App(f1, args1), App(f2, args2)) =>
+          f1 == f2 && args1.zip(args2).zipWithIndex.foldRight(true)((a, b) => b && areContextsEqual(a._1._1, a._1._2, currentPosition :+ a._2, positions))
+        case (x@Var(_, _), y@Var(_, _)) => x == y
+        case _ => false
+    }
   }
 
   /** Given an equation and a set of subterm pairs from both sides of the equation, apply EQ-DELETION,
@@ -54,6 +68,7 @@ object EQ_DELETION {
    * @param succeedDebug Whether to print on a successful application.
    * @param failDebug Whether to print on a failed application.
    * @return [[Some]](proofstate) after EQ-DELETION, or [[None]] if the subtermPairs set was empty */
+  // TODO check equalities of contexts
   def doEqDeletionOnEquationSubtermPairs(equation: Equation, subtermPairs: Set[(Term, Term)], pfSt: ProofState, succeedDebug: Boolean = true, failDebug: Boolean = false): Option[ProofState] = {
     if subtermPairs.nonEmpty then
       val newEquation = equation.addConstraint( Constraint( TermUtils.not( ConstrainedObject.foldTerms(subtermPairs.map((t1, t2) => TermUtils.is(t1, t2)) ) ) ) )

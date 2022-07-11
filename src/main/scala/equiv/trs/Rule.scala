@@ -16,7 +16,7 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends C
 
   val functionSymbols: Set[FunctionSymbol] = left.functionSymbols ++ right.functionSymbols ++ constraints.flatMap(_.term.functionSymbols)
 
-  def rootFunc = left.rootFunc
+  def rootFunc: Option[FunctionSymbol] = left.rootFunc
 
   def substituteConstraints(substitution: Substitution): Set[Constraint] = {
     constraints.map(_.applySubstitution(substitution))

@@ -70,7 +70,7 @@ object DISPROVE {
           case v_t@Var(_,_) => v_s != v_t // t is a variable distinct from s 
           case App(g, _) => g.isConstructor(pfSt.definedSymbols) // or t has the form g(\vec{t}) with g ∈ Cons
         })
-      case _ => false 
+      case _ => false
     }
   }
 }
