@@ -1,4 +1,4 @@
-package equiv.ri.tactics
+package equiv.ri.inference_rules
 
 import equiv.ri.{ProofState, Equation}
 

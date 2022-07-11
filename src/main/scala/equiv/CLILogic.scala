@@ -2,7 +2,7 @@ package equiv
 
 import equiv.ri.Equation.Side
 import equiv.ri.{Equation, ProofState}
-import equiv.ri.tactics.{COMPLETENESS, CONSTRUCTOR, DELETION, DISPROVE, EQ_DELETION, EXPANSION, GENERALIZATION, POSTULATE, SIMPLIFICATION}
+import equiv.ri.inference_rules.{COMPLETENESS, CONSTRUCTOR, DELETION, DISPROVE, EQ_DELETION, EXPANSION, GENERALIZATION, POSTULATE, SIMPLIFICATION}
 import equiv.trs.{Rule, Term}
 import equiv.trs.Term.{Position, Substitution}
 import equiv.utils.{Auto, Input, Return, TermUtils, UserInput}
@@ -326,8 +326,8 @@ class CLILogic(var pfSt: ProofState) {
           input = chooseSide(eq),
           onAuto = () => EXPANSION.tryExpansionOnEquation(eq, pfSt, handleChooseRule),
           onInput = side =>
+            // Choose subterm (position)
             handleUserInput(
-              // Choose subterm (position)
               input = chooseSubterm(eq.getSide(side)),
               onAuto = () => EXPANSION.tryExpansionOnEquationSide(List(), eq, side, pfSt, handleChooseRule),
               onInput = position => EXPANSION.tryExpansionOnEquationSideSubterm(position, eq, side, pfSt, handleChooseRule)

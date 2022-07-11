@@ -1,8 +1,8 @@
-package equiv.ri.tactics
+package equiv.ri.inference_rules
 
 import equiv.ri.{Equation, ProofState}
 import equiv.ri.Equation.Side
-import equiv.ri.tactics.SIMPLIFICATION
+import equiv.ri.inference_rules.SIMPLIFICATION
 import equiv.trs.{Constraint, Rule, Term}
 import equiv.trs.Term.{Position, Substitution, Var}
 import equiv.utils.{TermUtils, Z3}

@@ -2,19 +2,19 @@ package equiv.ri
 
 import equiv.ri.Equation
 import equiv.ri.Equation.Side
-import equiv.ri.tactics.{EXPANSION, SIMPLIFICATION, DELETION, EQ_DELETION}
+import equiv.ri.inference_rules.{EXPANSION, SIMPLIFICATION, DELETION, EQ_DELETION}
 import equiv.trs.{Constraint, Rule, Term}
 import equiv.trs.Term.Position
 import equiv.trs.FunctionSymbol
 import equiv.trs.Term.Var
-import equiv.ri.tactics.CONSTRUCTOR
-import equiv.ri.tactics.COMPLETENESS
+import equiv.ri.inference_rules.CONSTRUCTOR
+import equiv.ri.inference_rules.COMPLETENESS
 
 object ProofState {
 
 }
 
-case class ProofState(equations: Set[Equation], rules: Set[Rule], hypotheses: Set[Rule] = Set(), private val flag: Boolean) {
+case class ProofState(equations: Set[Equation], rules: Set[Rule], hypotheses: Set[Rule] = Set(), private val flag: Boolean = true) {
   var isFalse = false
 
   /** The set of all function symbols occurring in the proofstate */
