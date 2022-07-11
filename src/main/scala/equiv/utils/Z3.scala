@@ -29,15 +29,10 @@ object Z3 {
   }
 
   /** @return Whether the first term implies the second */
-  def constraintImplication(term1: Term, term2: Term): Boolean = {
+  def implies(term1: Term, term2: Term): Boolean = {
     val formula = TermUtils.not(TermUtils.impl(term1, term2))
-    solve(formula) == SolverResult.Unsatisfiable
-  }
-
-  /** @return Whether the first term implies the second and the second does not imply the first */
-  def constraintStrictImplication(term1: Term, term2: Term): Boolean = {
-    val formula = TermUtils.not(TermUtils.and(TermUtils.impl(term1, term2), TermUtils.not(TermUtils.impl(term2, term1))))
-    solve(formula) == SolverResult.Unsatisfiable
+    try { solve(formula) == SolverResult.Unsatisfiable }
+    finally { return false }
   }
 
   /** @return Whether the first term implies the second and the second implies the first */
@@ -47,7 +42,7 @@ object Z3 {
   }
 
   /** Check if a term is satisfiable */
-  def isSatisfiable(term: Term): Boolean = {
+  def satisfiable(term: Term): Boolean = {
     solve(term) == SolverResult.Satisfiable
   }
 

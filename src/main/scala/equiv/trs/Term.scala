@@ -1,15 +1,29 @@
 package equiv.trs
 
+import equiv.ri.ProofState
 import equiv.trs.Term.{App, Position, Substitution, Var}
 import equiv.utils.{MapUtils, PrintUtils}
+
+import scala.annotation.tailrec
 
 trait Term {
   def sort: Sort
 
   def rootFunc: Option[FunctionSymbol]
 
-  /** TODO Check if this term is basic, i.e. its root is a defined symbol and all its arguments are constructor terms */
-  def isBasic(): Boolean = true
+  def isTheory: Boolean
+
+  /** Check if this term is basic, i.e. its root is a defined symbol and all its arguments are constructor terms */
+  def isBasic(definedSymbols: Set[FunctionSymbol]): Boolean = this match {
+    case Var(_, _) => false
+    case App(f, args) => definedSymbols.contains(f) && args.forall(_.isConstructorTerm(definedSymbols))
+  }
+
+  /** Check if a term is a constructor term, i.e. it is in Terms(Cons, V), where Cons is the set of constructors. */
+  def isConstructorTerm(definedSymbols: Set[FunctionSymbol]): Boolean = this match {
+    case Var(_, _) => true
+    case App(f, args) => f.isConstructor(definedSymbols) && args.forall(_.isConstructorTerm(definedSymbols))
+  }
 
   /** @return A set of variables that occur in the given term */
   def vars: Set[Var] = this match {
@@ -20,7 +34,7 @@ trait Term {
   /** @return A set of all occurring function symbols */
   def functionSymbols: Set[FunctionSymbol] = this match {
     case Var(_, _) => Set()
-    case App(f, args) => Set(f) ++ args.flatMap(t => t.functionSymbols)
+    case App(f, args) => Set(f) ++ args.flatMap(_.functionSymbols)
   }
 
   /** @return A set of the names of all occurring function symbols */
@@ -102,7 +116,10 @@ trait Term {
   def rewriteAtPos(position: Position, rule: Rule, substitution: Substitution): Term =
     substituteAtPos(position, rule.right.applySubstitution(substitution))
 
-  def isEqDeletable(constraintVars: Set[Var]) : Boolean
+  def isEqDeletable(constraintVars: Set[Var]) : Boolean = this match {
+    case v@Var(_, _) => constraintVars.contains(v)
+    case App(f, args) => f.isTheory && args.forall(_.isEqDeletable(constraintVars))
+  }
 
   def toStringApplicative : String = this match {
     case App(f,args) => if(args.isEmpty) s"${f.name}" else s"(${f.name} ${args.map(_.toStringApplicative).mkString(" ")})"
@@ -119,7 +136,7 @@ object Term {
   case class Var(name: String, sort: Sort) extends Term {
     override def rootFunc: Option[FunctionSymbol] = None
 
-    override def isEqDeletable(constraintVars: Set[Var]): Boolean = constraintVars.contains(this)
+    override def isTheory: Boolean = sort.isTheory
 
     override def toString: String = toPrintString(false)
 
@@ -143,9 +160,7 @@ object Term {
 
     override def rootFunc: Option[FunctionSymbol] = Some(fun)
 
-    override def isEqDeletable(constraintVars: Set[Var]): Boolean = {
-      fun.isTheory && args.forall(_.isEqDeletable(constraintVars))
-    }
+    override def isTheory: Boolean = fun.isTheory && args.forall(_.isTheory)
 
     val sort: Sort = if(fun.typing.output == Sort.Any) sortsArgsAny.head else fun.typing.output
 

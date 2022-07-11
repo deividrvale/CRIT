@@ -1,6 +1,6 @@
 package equiv.trs
 
-case class Sort(name: String) {
+case class Sort(name: String, isTheory: Boolean = true) {
   override def toString: String = toPrintString(false)
 
   def toPrintString(colours: Boolean = true): String = name

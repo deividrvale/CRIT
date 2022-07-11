@@ -21,7 +21,7 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
     usedSymbols.filter { s => signatureSymbols.contains(s._1) || s._2 > 0 }.foreach { case (symbol, arity) =>
       if (symbol2arity.contains(symbol)) {
         val (theArity, theory, variadic) = symbol2arity(symbol)
-        if (theArity != arity && !variadic) throw new RuntimeException(s"The symbol ${symbol} occurs with varying arities.")
+        if (theArity != arity && !variadic) throw new RuntimeException(s"The symbol $symbol occurs with varying arities.")
       } else {
         if (!symbol2arity.contains(symbol)) symbol2arity = symbol2arity.updated(symbol, (arity, false, false))
       }
@@ -110,7 +110,7 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
     }
 
     // set missing types to "result"
-    val default = Sort("result")
+    val default = Sort("result", false)
     symbol2arity.foreach { case (symbol, (arity, theory, variadic)) =>
       (0 until arity).foreach { i =>
         if (isSortAny(symbol, Some(i))) Sort.Any
@@ -144,7 +144,7 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
             case None => throw new RuntimeException(s"Failed to derive the output sort of $symbol.")
           }
 
-        FunctionSymbol(symbol, Typing(inputSorts, outputSort, isVariadic = variadic), theory, signature.left.find(_.name == symbol).flatMap(_.infix))
+        FunctionSymbol(symbol, Typing(inputSorts, outputSort, isVariadic = variadic), theory, false, signature.left.find(_.name == symbol).flatMap(_.infix))
       }.toSet),
       variables.map { case port@((rule, name), _) => (rule, name) -> class2sort(port2class(port)) }.toMap
     )

@@ -25,6 +25,8 @@ case class QuasiRule(left: QuasiTerm, right: QuasiTerm, constraint: Option[Quasi
     )
   }
 
+  /** Transform a `QuasiTerm` that represents a constraint into a set of `Constraint`s, split on the conjunction symbol: `/\`
+   * @author WFBrozius */
   private def splitQuasiTerm(quasiTerm: QuasiTerm, signature: Map[String, FunctionSymbol], variableSorts: Map[String, Sort]): Set[Constraint] = {
     quasiTerm match {
       case App(fun, args) => 
