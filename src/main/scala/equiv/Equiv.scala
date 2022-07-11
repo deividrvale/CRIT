@@ -1,18 +1,8 @@
 package equiv
 
 import equiv.ri.{Equation, ProofState}
-import equiv.trs.*
 import equiv.trs.Temp.*
-import equiv.trs.Term.Var
-import equiv.trs.Term
-import equiv.utils.TermUtils.*
-import equiv.utils.Z3
 
-import scala.io.StdIn.readLine
-import equiv.ri.inference_rules.{DELETION, EQ_DELETION, CONSTRUCTOR, POSTULATE, GENERALIZATION, SIMPLIFICATION}
-import equiv.ri.inference_rules.EXPANSION
-import equiv.ri.inference_rules.COMPLETENESS
-import equiv.ri.inference_rules.DISPROVE
 
 object Equiv {
   def main(args: Array[String]): Unit = {    
@@ -21,7 +11,7 @@ object Equiv {
   }
   
   def sample(): Unit = {
-    import Temp.SumUp.{sumRecRules, equation, equation2}
+    import equiv.trs.Temp.SumUp.{sumRecRules, equation, equation2}
 
     val eq1: Equation = Equation(termFx, termReturnX, Set(consXEqZero))
     val eq2: Equation = Equation(termFx, termReturnZero, Set(consXLEZero))
