@@ -65,8 +65,8 @@ object EXPANSION {
         if addRule(rule) then newPfSt = newPfSt.addHypothesis(rule)
         // Return
         return Some(newPfSt)
-      } else { println("No applicable rules.") }
-    } else { println("Not basic.") }
+      } // else { println("No applicable rules.") }
+    } // else { println("Not basic.") }
     None
   }
 
