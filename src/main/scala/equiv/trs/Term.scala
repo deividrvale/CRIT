@@ -116,6 +116,9 @@ trait Term {
   def rewriteAtPos(position: Position, rule: Rule, substitution: Substitution): Term =
     substituteAtPos(position, rule.right.applySubstitution(substitution))
 
+  /** Check if the term is subject to the EQ-DELETION rule, i.e. it is in `Terms(Σ_theory, Var(ϕ))`, where ϕ is the constraint of the equation subject to EQ-DELETION.
+   * @param constraintVars A set of variables (`Var(ϕ)`) from the constraint subject to the EQ-DELETION rule.
+   * @return [[true]] if the term is subject to the EQ-DELETION rule, [[false]] otherwise. */
   def isEqDeletable(constraintVars: Set[Var]) : Boolean = this match {
     case v@Var(_, _) => constraintVars.contains(v)
     case App(f, args) => f.isTheory && args.forall(_.isEqDeletable(constraintVars))
