@@ -71,7 +71,7 @@ object EQ_DELETION {
   // TODO check equalities of contexts
   def doEqDeletionOnEquationSubtermPairs(equation: Equation, subtermPairs: Set[(Term, Term)], pfSt: ProofState, succeedDebug: Boolean = true, failDebug: Boolean = false): Option[ProofState] = {
     if subtermPairs.nonEmpty then
-      val newEquation = equation.addConstraint( Constraint( TermUtils.not( ConstrainedObject.foldTerms(subtermPairs.map((t1, t2) => TermUtils.is(t1, t2)) ) ) ) )
+      val newEquation = equation.addConstraint( Constraint( TermUtils.not( ConstrainedObject.termSetToConjunctionTerm(subtermPairs.map((t1, t2) => TermUtils.is(t1, t2)) ) ) ) )
       if (succeedDebug) { println(s"$name on ${equation.toPrintString()} gives ${newEquation.toPrintString()}.") }
       Some(pfSt.replaceEquationWith(equation, newEquation))
     else
