@@ -145,5 +145,12 @@ class TRSParser(readFile: String => String) extends RegexParsers {
       case x: Error => Right(ParseError(x.toString()))
     }
   }
+
+  def parseTerm(input: String): Either[QuasiTerm,ParseError] = {
+    parseAll[QuasiTerm](term, input) match {
+      case Success(x, _) => Left(x)
+      case y => Right(ParseError(y.toString))
+    }
+  }
 }
 

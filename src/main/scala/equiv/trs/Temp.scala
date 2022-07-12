@@ -137,7 +137,7 @@ object Temp {
     )
 
     val eqT1: Equation = Equation(varInt("y1"), varInt("y2"), Set(Constraint(App(eql, List(varInt("y1"), one))), Constraint(App(eql, List(varInt("y2"), one)))))
-    val eqT2: Equation = Equation(App(add, List(one, one)), one, Set())
+    val eqT2: Equation = Equation(App(add, List(App(add, List(one, x)), one)), two, Set())
   }
 
   /** @return A function symbol of type [Int x Int] => Bool */

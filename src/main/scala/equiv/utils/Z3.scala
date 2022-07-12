@@ -1,6 +1,11 @@
 package equiv.utils
 
-import equiv.trs.{FunctionSymbol, Sort, Term, Typing}
+import equiv.trs.parsing.QuasiTerm.{App, InfixChain}
+import equiv.trs.*
+
+import equiv.trs.Temp.SumUp.equation
+import equiv.trs.parsing.{QuasiSystem, QuasiTerm, QuasiTheory, TRSParser}
+import equiv.trs.{FunctionSymbol, Sort, Term, Typing, parsing}
 
 import java.io.{File, PrintWriter}
 import sys.process.*
@@ -10,9 +15,20 @@ enum SolverResult:
 
 object Z3 {
   def main(args: Array[String]): Unit = {
-    def gt(x: Term, y: Term) = Term.App(FunctionSymbol(">", Typing(List(Sort.Int, Sort.Int), Sort.Bool)), List(x,y))
-    def lt(x: Term, y: Term) = Term.App(FunctionSymbol("<", Typing(List(Sort.Int, Sort.Int), Sort.Bool)), List(x,y))
-    def and(x: Term, y: Term) = Term.App(FunctionSymbol("and", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool)), List(x,y))
+    val equation = equiv.trs.Temp.SumUp.eqT2
+
+    simplify(equation.left)
+    println("========================================================")
+    simplify(equation.right)
+    println("========================================================")
+    simplify(equation.getConstrainsConjunctAsTerm)
+    println("========================================================")
+  }
+
+  def solveMain(): Unit = {
+    def gt(x: Term, y: Term) = Term.App(FunctionSymbol(">", Typing(List(Sort.Int, Sort.Int), Sort.Bool)), List(x, y))
+    def lt(x: Term, y: Term) = Term.App(FunctionSymbol("<", Typing(List(Sort.Int, Sort.Int), Sort.Bool)), List(x, y))
+    def and(x: Term, y: Term) = Term.App(FunctionSymbol("and", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool)), List(x, y))
     def impl(x: Term, y: Term) = Term.App(FunctionSymbol("=>", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool)), List(x, y))
     def variable(v: String) = Term.Var(v, Sort.Int)
     def int(x: Int) = Term.App(FunctionSymbol(x.toString, Typing(List.empty, Sort.Int)))
@@ -47,15 +63,28 @@ object Z3 {
   }
 
   /** TODO */
-  def simplify(formula: Term): Term = {
-    val variables: Set[Term.Var] = formula.vars
-    val output: Iterator[String] = query(
-      s"""${variables.map{ v => s"(declare-fun $v () Int)" }.mkString("\n")}
-         |
-         |(check-sat)"""
-    )
-    Term.Var("x", Sort.Int)
-    ???
+  def simplify(formula: Term): Option[Term] = {
+    val inputFile: File = File.createTempFile("input", ".smt2")
+    val q =
+      s"""|${formula.vars.map{ v => s"(declare-const $v ${v.sort})" }.mkString("\n")}
+          |${formula.functionSymbols.map(f => if !f.isTheory then s"(declare-fun $f ${f.typing.input.mkString("(", " ", ")")} ${f.typing.output})" else "").mkString(sep="\n")}
+          |(simplify ${formula.toStringApplicative})
+          |""".stripMargin
+    new PrintWriter(inputFile) {
+      write(q)
+      close()
+    }
+    val out: String = Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator.next()
+
+    println(out)
+
+    val parser: TRSParser = new TRSParser(_ => out)
+    val parseResult: Option[QuasiTerm] = parser.parseTerm(out) match {
+      case Left(x) => Some(x) //Some(x.toTerm(formula.functionSymbols.map(f => (f.name, f)).toMap, formula.vars.map(v => (v.name, v.sort)).toMap))
+      case Right(x) => println(x) ; None
+    }
+    println(parseResult)
+    Some(Term.Var("x", Sort.Bool))
   }
 
   def solve(formula: Term) : SolverResult = {

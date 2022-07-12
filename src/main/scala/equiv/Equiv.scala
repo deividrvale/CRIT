@@ -2,6 +2,7 @@ package equiv
 
 import equiv.ri.{Equation, ProofState}
 import equiv.trs.Temp.*
+import equiv.utils.Z3
 
 import java.awt.Frame // usable for GUI
 
