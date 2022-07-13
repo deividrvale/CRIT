@@ -34,6 +34,9 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
     case Side.Right => this.copy(right = term)
   }
 
+  def replaceAllConstraints(newConstraints: Set[Constraint]): Equation =
+    this.copy(constraints = newConstraints)
+
   def addConstraint(newConstraint: Constraint): Equation =
     this.copy(constraints = constraints + newConstraint)
 
@@ -45,9 +48,6 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
 
   def withConstraint(newConstraints: Set[Constraint]): Equation =
     this.copy(constraints = newConstraints)
-
-  /** TODO Get the pairwise set of equalities for the constructor arguments in the equation */
-  def getConstructorArguments: Set[Equation] = ???
 
   def simplifyCons(): Equation = this.copy(constraints = super.simplify())
 

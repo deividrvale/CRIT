@@ -1,6 +1,5 @@
 package equiv.trs
 import equiv.trs.Term.{App, Var}
-import equiv.utils.TermUtils.constraintTrue
 import equiv.ri.Equation
 import equiv.trs.System
 
@@ -78,15 +77,6 @@ object Temp {
   val consTermFxXGTZero: ConstrainedTerm = ConstrainedTerm(termFx, Set(consXGTZero))
 
   object Theory {
-    val add: FunctionSymbol = funcIntIntInt("+")
-    val mult: FunctionSymbol = funcIntIntInt("*")
-    val div: FunctionSymbol = funcIntIntInt("/")
-    val min: FunctionSymbol = funcIntIntInt("-")
-    val le: FunctionSymbol = funcIntIntBool("<=")
-    val ge: FunctionSymbol = funcIntIntBool(">=")
-    val lt: FunctionSymbol = funcIntIntBool("<")
-    val gt: FunctionSymbol = funcIntIntBool(">")
-    val eql: FunctionSymbol = funcIntIntBool("=")
     val zero: Term = valInt(0)
     val one: Term = valInt(1)
     val two: Term = valInt(2)
@@ -95,6 +85,7 @@ object Temp {
 
   object SumUp {
     import Theory.*
+    import equiv.utils.TheorySymbols.*
     val x: Term = varInt("x")
     val y: Term = varInt("y")
     val i: Term = varInt("i")
@@ -108,14 +99,16 @@ object Temp {
       Rule(App(u, List(x, i, z)), App(returnf, List(z)), Set(makeConsBin(i, gt, x)))
     )
 
+    val eqBla = Equation(termFx, termGy, Set(Constraint(App(and, List( App(and, List( App(eql, List(x, one)), App(gt, List(y, two)))), App(eql, List(x, y)))))))
+
     val equation: Equation = Equation(
       App(u, List(
         App(u, List(
-          x,
+          App(add, List(App(add, List(App(add, List(App(add, List(App(add, List(x, one)), one)), one)), one)), one)),
           x,
           App(returnf, List(x))
         )),
-        App(mult, List(x, two)),
+        App(mul, List(x, two)),
         zero
       )),
       App(u, List(
@@ -124,7 +117,7 @@ object Temp {
           y,
           App(returnf, List(y))
         )),
-        App(mult, List(y, two)),
+        App(mul, List(y, two)),
         zero
       )),
       Set(Constraint(App(eql, List(x, y))))
@@ -132,7 +125,7 @@ object Temp {
 
     val equation2: Equation = Equation(termGy, termFx, Set(
       Constraint(App(lt, List(x, y))),
-      Constraint(App(Theory.eql, List(App(mult, List(x, two)), four))),
+      Constraint(App(eql, List(App(mul, List(x, two)), four))),
       Constraint(App(gt, List(two, App(div, List(App(add, List(y, y)), two))))))
     )
 

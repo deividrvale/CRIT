@@ -1,7 +1,6 @@
 package equiv.trs
 
 import equiv.trs.Term.{App, Substitution}
-import equiv.utils.TermUtils
 import equiv.trs.Term.Var
 
 case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends ConstrainedObject(constraints) {

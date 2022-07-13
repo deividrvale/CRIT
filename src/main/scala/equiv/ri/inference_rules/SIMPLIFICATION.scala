@@ -5,7 +5,7 @@ import equiv.ri.Equation.Side
 import equiv.ri.inference_rules.SIMPLIFICATION
 import equiv.trs.{Constraint, Rule, Term}
 import equiv.trs.Term.{Position, Substitution, Var}
-import equiv.utils.{TermUtils, Z3}
+import equiv.utils.Z3
 
 import scala.annotation.tailrec
 

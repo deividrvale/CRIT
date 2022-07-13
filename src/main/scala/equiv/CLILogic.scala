@@ -5,7 +5,7 @@ import equiv.ri.{Equation, ProofState}
 import equiv.ri.inference_rules.{COMPLETENESS, CONSTRUCTOR, DELETION, DISPROVE, EQ_DELETION, EXPANSION, GENERALIZATION, POSTULATE, SIMPLIFICATION}
 import equiv.trs.{Rule, Term}
 import equiv.trs.Term.{Position, Substitution}
-import equiv.utils.{Auto, Input, Return, TermUtils, UserInput}
+import equiv.utils.{Auto, Input, Return, TermUtils, UserInput, Z3}
 import equiv.utils.OptionExtension.printFailureOnNone
 
 import scala.io.StdIn.readLine
@@ -249,6 +249,9 @@ class CLILogic(var pfSt: ProofState) {
       println("No redundant equations found.")
     else
       pfSt = pfSt.copy(equations = newEquations)
+
+    println("Trying to simplify with Z3...")
+    pfSt = pfSt.replaceAllEquationWith(pfSt.equations.map(Z3.simplifyEquation))
   }
 
   def deletion(): Unit = {

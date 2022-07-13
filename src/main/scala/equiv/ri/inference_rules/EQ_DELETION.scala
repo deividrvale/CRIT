@@ -1,15 +1,10 @@
 package equiv.ri.inference_rules
 
-import equiv.ri.ProofState
-import equiv.ri.Equation
-import equiv.utils.Z3
-import equiv.utils.TermUtils.{constraintFalse, constraintTrue, getFreshVar}
+import equiv.ri.{Equation, ProofState}
+import equiv.trs.{ConstrainedObject, Constraint, FunctionSymbol, Term}
 import equiv.trs.Term.{App, Position, Var}
-import equiv.trs.Term
-import equiv.trs.FunctionSymbol
-import equiv.trs.Constraint
-import equiv.utils.TermUtils
-import equiv.trs.ConstrainedObject
+import equiv.utils.TermUtils.getFreshVar
+import equiv.utils.{TermUtils, TheorySymbols, Z3}
 
 import scala.collection.immutable.LazyList.cons
 
@@ -71,7 +66,7 @@ object EQ_DELETION {
   // TODO check equalities of contexts
   def doEqDeletionOnEquationSubtermPairs(equation: Equation, subtermPairs: Set[(Term, Term)], pfSt: ProofState, succeedDebug: Boolean = true, failDebug: Boolean = false): Option[ProofState] = {
     if subtermPairs.nonEmpty then
-      val newEquation = equation.addConstraint( Constraint( TermUtils.not( ConstrainedObject.termSetToConjunctionTerm(subtermPairs.map((t1, t2) => TermUtils.is(t1, t2)) ) ) ) )
+      val newEquation = equation.addConstraint( Constraint( TheorySymbols.notX( ConstrainedObject.termSetToConjunctionTerm(subtermPairs.map((t1, t2) => TheorySymbols.eqXY(t1, t2)) ) ) ) )
       if (succeedDebug) { println(s"$name on ${equation.toPrintString()} gives ${newEquation.toPrintString()}.") }
       Some(pfSt.replaceEquationWith(equation, newEquation))
     else

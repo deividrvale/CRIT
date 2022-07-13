@@ -1,7 +1,7 @@
 package equiv.trs
 
 import equiv.ri.Simplify
-import equiv.utils.{TermUtils, Z3}
+import equiv.utils.{PrintUtils, TermUtils, TheorySymbols, Z3}
 
 import javax.swing.SpringLayout.Constraints
 import equiv.trs.Term.Var
@@ -17,11 +17,11 @@ object ConstrainedObject {
   /** 'Fold' the given set of terms into a single term with conjunctions. */
   def termSetToConjunctionTerm(constraints: Set[Term]): Term = {
     if constraints.size > 1 then
-      constraints.tail.foldLeft(constraints.head)((c1, c2) => TermUtils.and(c1, c2))
+      constraints.tail.foldLeft(constraints.head)((c1, c2) => TheorySymbols.andXY(c1, c2))
     else if constraints.nonEmpty then
       constraints.head
     else
-      TermUtils.boolTrue
+      TheorySymbols.boolTrue
   }
 
   /** 'Fold' the given set of constraints into a single constraint with conjunctions. */
@@ -59,5 +59,5 @@ trait ConstrainedObject(constraints: Set[Constraint]) {
   /** Prints the set of constraints as a conjunction, possibly with colours */
   def toPrintString(colours: Boolean = true): String =
     if constraints.isEmpty then "" else
-    s"[ ${constraints.map(_.term.toPrintString(colours)).mkString(sep = s" ${TermUtils.conjunctionSymbol} ")} ]"
+    s"[ ${constraints.map(_.term.toPrintString(colours)).mkString(sep = s" ${PrintUtils.functionSymbolPrintStrings(TheorySymbols.and.name)} ")} ]"
 }

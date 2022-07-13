@@ -37,29 +37,40 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], hypotheses: Se
 
   /** Change the value of the flag: `true` corresponds to `COMPLETE`, `false` corresponds to `INCOMPLETE` 
     * Also change the `COMPLETENESS.lastcompleteProofStateEquations` value to the current proofstate's equations if the flag is changed from true (COMPLETE) to false (INCOMPLETE) */
-  def setFlag(newFlag: Boolean): ProofState = { if flag && !newFlag then
-    COMPLETENESS.lastCompleteProofStateEquations = Some(equations) ; ProofState(equations, rules, hypotheses, newFlag) }
+  def setFlag(newFlag: Boolean): ProofState = {
+    if flag && !newFlag then
+      COMPLETENESS.lastCompleteProofStateEquations = Some(equations)
+    this.copy(flag= newFlag)
+  }
 
   /** Remove the given equation from the set of equations */
-  def removeEquation(equation: Equation): ProofState = ProofState(equations - equation, rules, hypotheses, flag)
+  def removeEquation(equation: Equation): ProofState =
+    this.copy(equations = equations - equation)
 
   /** Add a single equation to the proofstate */
-  def addEquation(equation: Equation): ProofState = ProofState(equations + equation, rules, hypotheses, flag)
+  def addEquation(equation: Equation): ProofState =
+    this.copy(equations = equations + equation)
 
   /** Add a set of equations to the proofstate */
-  def addEquations(newEquations: Set[Equation]): ProofState = ProofState(equations ++ newEquations, rules, hypotheses, flag)
+  def addEquations(newEquations: Set[Equation]): ProofState =
+    this.copy(equations = equations ++ newEquations)
 
   /** Remove an equation from the equations set and add a new one
    * @param oldEquation Equation to be removed
    * @param newEquation Equation to be added */
   def replaceEquationWith(oldEquation: Equation, newEquation: Equation): ProofState =
-    ProofState(equations - oldEquation + newEquation, rules, hypotheses, flag)
+    this.copy(equations = equations - oldEquation + newEquation)
+
+  def replaceAllEquationWith(newEquations: Set[Equation]): ProofState =
+    this.copy(equations = newEquations)
 
   /** Add the given rule to the `rules` set. */
-  def addRule(rule: Rule): ProofState = ProofState(equations, rules + rule, hypotheses, flag)
+  def addRule(rule: Rule): ProofState =
+    this.copy(rules = rules + rule)
 
   /** Add the given rule to the `hypotheses` set. */
-  def addHypothesis(rule: Rule): ProofState = ProofState(equations, rules, hypotheses + rule, flag)
+  def addHypothesis(rule: Rule): ProofState =
+    this.copy(hypotheses = hypotheses + rule)
 
   /** If the given parameter is of the form `Some(r)`, then return the current proofstate with the rule `r`, otherwise return the current proofstate. */
   def maybeAddRule(rule: Option[Rule]): ProofState = rule.map(r => return this.addRule(r)).getOrElse(return this)

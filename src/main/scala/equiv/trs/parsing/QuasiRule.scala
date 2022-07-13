@@ -1,7 +1,7 @@
 package equiv.trs.parsing
 
 import equiv.trs.{Constraint, FunctionSymbol, Rule, Sort}
-import equiv.utils.{MapUtils, TermUtils}
+import equiv.utils.MapUtils
 import equiv.trs.parsing.QuasiTerm.{App, InfixChain}
 
 case class QuasiRule(left: QuasiTerm, right: QuasiTerm, constraint: Option[QuasiTerm]) {
@@ -21,22 +21,8 @@ case class QuasiRule(left: QuasiTerm, right: QuasiTerm, constraint: Option[Quasi
     Rule(
       left.toTerm(signature, variableSorts),
       right.toTerm(signature, variableSorts),
-      constraint.map(splitQuasiTerm(_, signature, variableSorts)).getOrElse(Set())
+      constraint.map(t => Constraint(t.toTerm(signature, variableSorts)).split()).getOrElse(Set())
     )
-  }
-
-  /** Transform a `QuasiTerm` that represents a constraint into a set of `Constraint`s, split on the conjunction symbol: `/\`
-   * @author WFBrozius */
-  private def splitQuasiTerm(quasiTerm: QuasiTerm, signature: Map[String, FunctionSymbol], variableSorts: Map[String, Sort]): Set[Constraint] = {
-    quasiTerm match {
-      case App(fun, args) => 
-        if fun == TermUtils.conjunctionSymbol then 
-          return args.flatMap(splitQuasiTerm(_, signature, variableSorts)).toSet
-      case InfixChain(head, tail) => 
-        if tail.head._1 == TermUtils.conjunctionSymbol then
-          return (head :: tail.map(_._2)).flatMap(splitQuasiTerm(_, signature, variableSorts)).toSet
-    }
-    return Set(Constraint(quasiTerm.toTerm(signature, variableSorts)))
   }
 
   override def toString: String = {

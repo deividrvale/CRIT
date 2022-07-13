@@ -1,10 +1,9 @@
 package equiv.ri.inference_rules
 
-import equiv.ri.{ProofState, Equation}
+import equiv.ri.{Equation, ProofState}
 import equiv.trs.Term
-import equiv.trs.Term.{Var, App}
-import equiv.utils.Z3
-import equiv.utils.TermUtils
+import equiv.trs.Term.{App, Var}
+import equiv.utils.{TermUtils, TheorySymbols, Z3}
 
 /** To show that an equation is not an inductive theorem, we must derive ⊥ from a COMPLETE proof state. For this, we use DISPROVE.
  * There are 3 cases to consider, which are defined in the functions [[disproveCase1]], [[disproveCase2]] and [[disproveCase3]]. */
@@ -38,7 +37,7 @@ object DISPROVE {
   def disproveCase1(s: Term, t: Term, phi: Term): Boolean = {
     s.sort.isTheory // ι is a theory sort,
     && s.isTheory && t.isTheory // s, t ∈ Terms(Σ_theory, V),
-    && Z3.satisfiable(TermUtils.and(phi, TermUtils.notis(s, t))) // and ϕ ∧ s != t is satisfiable
+    && Z3.satisfiable(TheorySymbols.andXY(phi, TheorySymbols.notEqXY(s, t))) // and ϕ ∧ s != t is satisfiable
   }
 
   /** Case 2 where we can disprove an equation:
