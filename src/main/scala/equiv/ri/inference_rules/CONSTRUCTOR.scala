@@ -57,6 +57,7 @@ object CONSTRUCTOR {
   def getCONSTRUCTOREquations(pfSt: ProofState): List[Equation] = {
     pfSt.equations.filter {
       case Equation(App(f1, _), App(f2, _), _) => f1 == f2 && f1.isConstructor(pfSt.definedSymbols)
+      case _ => false
     }.toList
   }
 }

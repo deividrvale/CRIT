@@ -356,7 +356,7 @@ class CLILogic(var pfSt: ProofState) {
   def disprove(): Unit = {
     handleUserInput(
       input = chooseEquation(),
-      onAuto = () => DISPROVE.tryDisprove(pfSt),
+      onAuto = () => DISPROVE.oldTryDisprove(pfSt),
       onInput = eq => DISPROVE.tryDisproveOnEquation(eq, pfSt)
     ).printFailureOnNone(DISPROVE.name).foreach(pfSt.isFalse = _)
   }

@@ -91,7 +91,6 @@ object Z3 {
   }
 
   def solve(formula: Term): SolverResult = {
-    val variables: Set[Term.Var] = formula.vars
     val output: Iterator[String] = query(
       s"""${formula.vars.map { v => s"(declare-const $v ${v.sort})" }.mkString("\n")}
          |${formula.functionSymbols.map(f => if !f.isTheory then s"(declare-fun $f ${f.typing.input.mkString("(", " ", ")")} ${f.typing.output})" else "").mkString(sep = "\n")}

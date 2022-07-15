@@ -4,6 +4,7 @@ import equiv.ri.{Equation, ProofState}
 import equiv.trs.Term
 import equiv.trs.Term.{App, Var}
 import equiv.utils.{TermUtils, TheorySymbols, Z3}
+import equiv.utils.ListExtension.onNonEmpty
 
 /** To show that an equation is not an inductive theorem, we must derive ⊥ from a COMPLETE proof state. For this, we use DISPROVE.
  * There are 3 cases to consider, which are defined in the functions [[disproveCase1]], [[disproveCase2]] and [[disproveCase3]]. */
@@ -13,7 +14,7 @@ object DISPROVE {
   /** Try to apply DISPROVE on the first possible equation.
    * @param pfSt The [[ProofState]] to try to apply DISPROVE to.
    * @return [[Some]]`(false)` if DISPROVE could be applied, [[None]] otherwise. */
-  def tryDisprove(pfSt: ProofState): Option[Boolean] = {
+  def oldTryDisprove(pfSt: ProofState): Option[Boolean] = {
     if (pfSt.getFlag) {
       pfSt.equations.view.flatMap(equation => tryDisproveOnEquation(equation, pfSt)).headOption
     } else {
@@ -28,6 +29,21 @@ object DISPROVE {
   def tryDisproveOnEquation(equation: Equation, pfSt: ProofState): Option[Boolean] = {
     val s = equation.left; val t = equation.right; val phi = equation.getConstrainsConjunctAsTerm
     if disproveCase1(s, t, phi) || disproveCase2(s, t, phi, pfSt) || disproveCase3(s, t, phi, pfSt) then { println("DISPROVE proofstate.") ; Some(false) } else None
+  }
+
+  /** Try DISPROVE.
+   * @param pfSt The current [[ProofState]].
+   * @return [[Some]]([[false]]) if there is an [[Equation]] subject to DISPROVE, [[None]] otherwise. */
+  def tryDISPROVE(pfSt: ProofState): Option[Boolean] = {
+    getDISPROVEEquations(pfSt).onNonEmpty( _ => false )
+  }
+
+  /** @return A [[List]] of [[Equation]]s to which DISPROVE can be applied. */
+  def getDISPROVEEquations(pfSt: ProofState): List[Equation] = {
+    pfSt.equations.filter( equation =>
+      val s = equation.left; val t = equation.right; val phi = equation.getConstrainsConjunctAsTerm
+      disproveCase1(s, t, phi) || disproveCase2(s, t, phi, pfSt) || disproveCase3(s, t, phi, pfSt)
+    ).toList
   }
 
   /** Case 1 where we can disprove an equation:
@@ -62,7 +78,7 @@ object DISPROVE {
     s match { 
       case v_s@Var(_, _) =>
         !phi.vars.contains(v_s) // s ∈ ( V \ Var(ϕ) ),
-        && Z3.satisfiable(phi) //
+        && Z3.satisfiable(phi) // ϕ is satisfiable
         && pfSt.constructors.count(_.typing.output == s.sort) > 1 &&  // at least two different constructors have output sort ι (i.e. same sort as s),
         // and either 
         (t match {

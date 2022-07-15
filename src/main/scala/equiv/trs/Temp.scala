@@ -22,6 +22,8 @@ object Temp {
     val termFy: App = App(f, List(y))
     val termGx: App = App(g, List(x))
     val termGy: App = App(g, List(y))
+    def return1(term: Term): App = App(funcIntInt("return1", false), List(term))
+    def return2(term: Term): App = App(funcIntInt("return2", false), List(term))
 
     val rule1: Rule = Rule(termFx, App(f, List(App(min, List(x, one)))), Set(Constraint(App(gt, List(x, zero)))))
     val rule2: Rule = Rule(termFx, App(returnf, List(zero)), Set(Constraint(App(le, List(x, zero)))))
@@ -34,6 +36,11 @@ object Temp {
 
     val deletionEquation1: Equation = Equation(termFy, termFy, Set())
     val deletionEquation2: Equation = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 1), consVarIntInt("y", "<", 1)))
+
+    val disproveEquation1: Equation = Equation(one, zero, Set())
+    val disproveEquation2: Equation = Equation(return1(x), return2(x), Set(Constraint(App(le, List(x, two)))))
+    val disproveEquation3: Equation = Equation(x, return1(x), Set())
+    val disproveEquation4: Equation = Equation(x, y, Set())
   }
 
   object TestEquations {

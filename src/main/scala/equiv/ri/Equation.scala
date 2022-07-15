@@ -75,5 +75,5 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
 
   override def toString: String = toPrintString(false)
 
-  override def toPrintString(colours: Boolean = true): String = s"${left.toPrintString(colours)} ~~ ${right.toPrintString(colours)} ${super.toPrintString(colours)}"
+  override def toPrintString(colours: Boolean = true): String = s"${left.toPrintString(colours)} ~~ ${right.toPrintString(colours)}${if constraints.nonEmpty then " " else ""}${super.toPrintString(colours)}"
 }
