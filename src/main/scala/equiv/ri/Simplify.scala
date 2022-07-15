@@ -16,7 +16,8 @@ object Simplify {
     else
       val currentConstraint = remainingConstraints.head
       val remainingConstraints2 = remainingConstraints - currentConstraint
-      if Z3.implies(ConstrainedObject.constraintSetToConjunctionTerm(handledConstraints ++ remainingConstraints2), currentConstraint.term) then
+      val otherConstraintsConjunct = ConstrainedObject.constraintSetToConjunctionTerm(handledConstraints ++ remainingConstraints2)
+      if Z3.implies(otherConstraintsConjunct, currentConstraint.term) then
         removeImpliedConstraints(remainingConstraints2, handledConstraints)
       else
         removeImpliedConstraints(remainingConstraints2, handledConstraints + currentConstraint)

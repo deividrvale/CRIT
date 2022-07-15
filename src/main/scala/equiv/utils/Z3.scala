@@ -52,12 +52,7 @@ object Z3 {
   /** @return Whether the first term implies the second */
   def implies(term1: Term, term2: Term): Boolean = {
     val formula = TheorySymbols.notX(TheorySymbols.implXY(term1, term2))
-    try {
-      solve(formula) == SolverResult.Unsatisfiable
-    }
-    finally {
-      return false
-    }
+    solve(formula) == SolverResult.Unsatisfiable
   }
 
   /** @return Whether the first term implies the second and the second implies the first */
@@ -98,7 +93,8 @@ object Z3 {
   def solve(formula: Term): SolverResult = {
     val variables: Set[Term.Var] = formula.vars
     val output: Iterator[String] = query(
-      s"""${variables.map { v => s"(declare-fun $v () Int)" }.mkString("\n")}
+      s"""${formula.vars.map { v => s"(declare-const $v ${v.sort})" }.mkString("\n")}
+         |${formula.functionSymbols.map(f => if !f.isTheory then s"(declare-fun $f ${f.typing.input.mkString("(", " ", ")")} ${f.typing.output})" else "").mkString(sep = "\n")}
          |
          |(assert
          |   ${formula.toStringApplicative}
@@ -127,9 +123,9 @@ object Z3 {
       close()
     }
 
-    ////    For debugging:
-    //    println(inputFile.getAbsolutePath)
-    //    Thread.sleep(100000)
+//    For debugging:
+//    println(inputFile.getAbsolutePath)
+//    Thread.sleep(100000)
 
     Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator
   }

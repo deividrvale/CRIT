@@ -13,6 +13,8 @@ trait Term {
 
   def isTheory: Boolean
 
+  def isValue: Boolean
+
   /** Check if this term is basic, i.e. its root is a defined symbol and all its arguments are constructor terms */
   def isBasic(definedSymbols: Set[FunctionSymbol]): Boolean = this match {
     case Var(_, _) => false
@@ -86,6 +88,8 @@ trait Term {
   /** Searches all subterms that are instances of the given term. */
   def findSubTermInstances(other: Term): List[(Term, Position, Substitution)] = findSubTerms(t => t.instanceOf(other))
 
+//  def containsSubTerm(term: Term): Boolean = 
+  
   /** Substitute a subterm with `replacement` at the given `position`.
    * @param position Position of substitution as a list of Ints
    * @param replacement Term to substitute */
@@ -141,6 +145,8 @@ object Term {
 
     override def isTheory: Boolean = sort.isTheory
 
+    override def isValue: Boolean = false
+
     override def toString: String = toPrintString(false)
 
     override def toPrintString(colours: Boolean = true): String = {
@@ -164,6 +170,8 @@ object Term {
     override def rootFunc: Option[FunctionSymbol] = Some(fun)
 
     override def isTheory: Boolean = fun.isTheory && args.forall(_.isTheory)
+
+    override def isValue: Boolean = fun.isValue
 
     val sort: Sort = if(fun.typing.output == Sort.Any) sortsArgsAny.head else fun.typing.output
 

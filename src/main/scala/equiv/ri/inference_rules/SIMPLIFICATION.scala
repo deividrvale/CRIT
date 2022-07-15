@@ -62,18 +62,22 @@ object SIMPLIFICATION {
 
   /** Given a [[Term]] that is the left or right side of an equation, an [[Equation]] and a [[Rule]], get the first possible redex.
    * @return The first possible rewrite place: the subterm, position and substitution for the rule */
-  def getFirstPossibleRewritePlaceData(term: Term, equation: Equation, rule: Rule): Option[(Term, Position, Map[Var, Term])] = {
+  def getFirstPossibleRewritePlaceData(term: Term, equation: Equation, rule: Rule): Option[(Term, Position, Substitution)] = {
     getAllPossibleRewritePlacesData(term, equation, rule).headOption
   }
 
   /** Given a [[Term]] that is the left or right side of an equation, an [[Equation]] and a [[Rule]], get all possible redexes in the term.
    * @return All possible places where we can rewrite the given term with the given rule. */
-  def getAllPossibleRewritePlacesData(term: Term, equation: Equation, rule: Rule): List[(Term, Position, Map[Var, Term])] = {
+  def getAllPossibleRewritePlacesData(term: Term, equation: Equation, rule: Rule): List[(Term, Position, Substitution)] = {
     term
       .findSubTerms(_.instanceOf(rule.left))
-      .filter((_, _, s) => Z3.implies(
-        equation.getConstrainsConjunctAsTerm,
-        rule.getConstrainsConjunctAsTerm.applySubstitution(s))
+      .filter((_, _, s: Substitution) =>
+        val constraints = equation.getConstrainsConjunctAsTerm ;
+        // Check if substitution s respects constraint ϕ, i.e. s(x) is a value for all x ∈ Var (ϕ) and [[ϕγ]] = T.
+        s.forall { (x, sx) => !constraints.vars.contains(x) || sx.isValue } &&
+        Z3.implies(
+          constraints,
+          rule.getConstrainsConjunctAsTerm.applySubstitution(s))
       )
   }
 
