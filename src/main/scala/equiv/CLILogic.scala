@@ -258,7 +258,7 @@ class CLILogic(var pfSt: ProofState) {
     handleUserInput(
       input   = chooseEquation(),
       onInput = eq => DELETION.tryDeletionOnEquation(eq, pfSt),
-      onAuto  = () => DELETION.tryDeletion(pfSt)
+      onAuto  = () => DELETION.oldTryDeletion(pfSt)
     ).printFailureOnNone(DELETION.name).foreach(pfSt = _)
   }
 
@@ -266,7 +266,7 @@ class CLILogic(var pfSt: ProofState) {
     handleUserInput(
       input = chooseEquation(),
       onInput = eq => CONSTRUCTOR.tryConstructorOnEquation(eq, pfSt),
-      onAuto = () => CONSTRUCTOR.tryConstructor(pfSt)
+      onAuto = () => CONSTRUCTOR.oldTryConstructor(pfSt)
     ).printFailureOnNone(CONSTRUCTOR.name).foreach(pfSt = _)
   }
 

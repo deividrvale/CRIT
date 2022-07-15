@@ -2,106 +2,43 @@ package equiv.trs
 import equiv.trs.Term.{App, Var}
 import equiv.ri.Equation
 import equiv.trs.System
+import equiv.trs.Temp.SumUp.*
+import equiv.trs.Temp.Values.*
+import equiv.utils.TheorySymbols.*
 
 object Temp {
-  /** f : Int => Int */
-  val funcF: FunctionSymbol = FunctionSymbol("f", Typing(List(Sort.Int), Sort.Int))
-  /** g : Int => Int */
-  val funcG: FunctionSymbol = FunctionSymbol("g", Typing(List(Sort.Int), Sort.Int))
-  /** x : Int */
-  val varX: Term = Var("x", Sort.Int)
-  /** y : Int */
-  val varY: Term = Var("y", Sort.Int)
-  /** - : Int x Int => Int */
-  val minus: FunctionSymbol = FunctionSymbol("-", Typing(List(Sort.Int, Sort.Int), Sort.Int), isTheory = true, isValue = false, Some(Infix(InfixKind.Right, 1)))
-  /** 0 : Int */
-  val valZero: Term = App(FunctionSymbol("0", Typing(List(), Sort.Int), isTheory = true, isValue = true), List())
-  /** 1 : Int */
-  val valOne: Term = App(FunctionSymbol("1", Typing(List(), Sort.Int), isTheory = true, isValue = true), List())
-  /** x - 1 : Int */
-  val xMinusOne: Term = App(minus, List(varX, valOne))
-  /** = : Int x Int => Bool  */
-  val funcEq: FunctionSymbol = FunctionSymbol("=", Typing(List(Sort.Int, Sort.Int), Sort.Bool), isTheory = true, isValue = false, Some(Infix(InfixKind.Right, 1)))
-  /** > : Int x Int => Bool  */
-  val funcGT: FunctionSymbol = FunctionSymbol(">", Typing(List(Sort.Int, Sort.Int), Sort.Bool), isTheory = true, isValue = false, Some(Infix(InfixKind.Right, 1)))
-  val funcGE: FunctionSymbol = FunctionSymbol(">=", Typing(List(Sort.Int, Sort.Int), Sort.Bool), isTheory = true, isValue = false, Some(Infix(InfixKind.Right, 1)))
-  /** <= : Int x Int => Bool */
-  val funcLE: FunctionSymbol = FunctionSymbol("<=", Typing(List(Sort.Int, Sort.Int), Sort.Bool), isTheory = true, isValue = false, Some(Infix(InfixKind.Right, 1)))
-  /** < : Int x Int => Bool */
-  val funcLT: FunctionSymbol = FunctionSymbol("<", Typing(List(Sort.Int, Sort.Int), Sort.Bool), isTheory = true, isValue = false, Some(Infix(InfixKind.Right, 1)))
-  /** return : Int => Int */
-  val funcReturn: FunctionSymbol = FunctionSymbol("return", Typing(List(Sort.Int), Sort.Int), isTheory = false, isValue = false)
-
-  /** f( x ) */
-  val termFx: Term = App(funcF, List(varX))
-  /** f( y ) */
-  val termFy: Term = App(funcF, List(varY))
-  /** g( x ) */
-  val termGx: Term = App(funcG, List(varX))
-  /** g( y ) */
-  val termGy: Term = App(funcG, List(varY))
-  /** g( f( x ) ) */
-  val termGFx: Term = App(funcG, List(App(funcF, List(varX))))
-  /** g( f( y ) ) */
-  val termGFy: Term = App(funcG, List(App(funcF, List(varY))))
-  /** f( x - 1 ) */
-  val termFxMinOne: Term = App(funcF, List(xMinusOne))
-  /** return( 0 ) */
-  val termReturnZero: Term = App(funcReturn, List(valZero))
-  /** return( x ) */
-  val termReturnX: Term = App(funcReturn, List(varX))
-  /** [ x > 0 ] */
-  var consXGTZero: Constraint = Constraint(App(funcGT,List(varX, valZero)))
-  var consXGEZero: Constraint = Constraint(App(funcGE,List(varX, valZero)))
-  /** [ x <= 0 ] */
-  val consXLEZero: Constraint = Constraint(App(funcLE, List(varX, valZero)))
-  /** [ x < 0 ] */
-  val consXLTZero: Constraint = Constraint(App(funcLT, List(varX, valZero)))
-  /** [ x = 0 ] */
-  val consXEqZero: Constraint = Constraint(App(funcEq, List(varX, valZero)))
-
-  /**  f(x) -> f(x - 1)  [x > 0] */
-  val rho1: Rule = Rule(termFx, termFxMinOne, Set(consXGTZero))
-  /** f(x) -> return(0) [x <= 0] */
-  val rho2: Rule = Rule(termFx, termReturnZero, Set(consXLEZero))
-
-  val system: System = System("", "", "", Signature(Set(funcF, funcReturn)), Set(rho1, rho2))
-
-  /** f( x ) [ true ] */
-  val consTermFxTrue: ConstrainedTerm = ConstrainedTerm(termFx, Set())
-  /** g( x ) [ true ] */
-  val consTermGxTrue: ConstrainedTerm = ConstrainedTerm(termGx, Set())
-  /** g( f( x ) ) [ true ] */
-  val consTermGFxTrue: ConstrainedTerm = ConstrainedTerm(termGFx, Set())
-  /** f( x ) [ x > 0 ] */
-  val consTermFxXGTZero: ConstrainedTerm = ConstrainedTerm(termFx, Set(consXGTZero))
-
-  object Theory {
+  object Values {
     val zero: Term = valInt(0)
     val one: Term = valInt(1)
     val two: Term = valInt(2)
+    val three: Term = valInt(3)
     val four: Term = valInt(4)
   }
 
-  object SumUp {
-    import Theory.*
-    import equiv.utils.TheorySymbols.*
-    val x: Term = varInt("x")
-    val y: Term = varInt("y")
-    val i: Term = varInt("i")
-    val z: Term = varInt("z")
-    val sumUp: FunctionSymbol = funcIntInt("sumup", false)
-    val u: FunctionSymbol = funcIntIntIntInt("u", false)
-    val returnf: FunctionSymbol = funcIntInt("return", false)
-    val sumRecRules: Set[Rule] = Set(
-      Rule(App(sumUp, List(x)), App(u, List(x, one, zero)), Set()),
-      Rule(App(u, List(x, i, z)), App(u, List(x, App(add, List(i, one)), App(add, List(z, i)))), Set(makeConsBin(i, le, x))),
-      Rule(App(u, List(x, i, z)), App(returnf, List(z)), Set(makeConsBin(i, gt, x)))
+  object InferenceRuleEquations {
+    val f: FunctionSymbol = funcIntInt("f", false)
+    val g: FunctionSymbol = funcIntInt("g", false)
+    val termFx: App = App(f, List(x))
+    val termFy: App = App(f, List(y))
+    val termGx: App = App(g, List(x))
+    val termGy: App = App(g, List(y))
+
+    val rule1: Rule = Rule(termFx, App(f, List(App(min, List(x, one)))), Set(Constraint(App(gt, List(x, zero)))))
+    val rule2: Rule = Rule(termFx, App(returnf, List(zero)), Set(Constraint(App(le, List(x, zero)))))
+
+    val constructorEquation: Equation = Equation(
+      App(returnf, List(zero)),
+      App(returnf, List(x)),
+      Set(Constraint(App(eql, List(x, zero))))
     )
 
-    val eqBla = Equation(termFx, termGy, Set(Constraint(App(and, List( App(and, List( App(eql, List(x, one)), App(gt, List(y, two)))), App(eql, List(x, y)))))))
+    val deletionEquation1: Equation = Equation(termFy, termFy, Set())
+    val deletionEquation2: Equation = Equation(termFy, termGy, Set(consVarIntInt("y", ">", 1), consVarIntInt("y", "<", 1)))
+  }
 
-    val equation: Equation = Equation(
+  object TestEquations {
+
+    val monster: Equation = Equation(
       App(u, List(
         App(u, List(
           App(add, List(App(add, List(App(add, List(App(add, List(App(add, List(x, one)), one)), one)), one)), one)),
@@ -123,14 +60,25 @@ object Temp {
       Set(Constraint(App(eql, List(x, y))))
     )
 
-    val equation2: Equation = Equation(termGy, termFx, Set(
-      Constraint(App(lt, List(x, y))),
-      Constraint(App(eql, List(App(mul, List(x, two)), four))),
-      Constraint(App(gt, List(two, App(div, List(App(add, List(y, y)), two))))))
-    )
-
     val eqT1: Equation = Equation(varInt("y1"), varInt("y2"), Set(Constraint(App(eql, List(varInt("y1"), one))), Constraint(App(eql, List(varInt("y2"), one)))))
     val eqT2: Equation = Equation(App(add, List(App(add, List(one, x)), one)), two, Set())
+  }
+
+  object SumUp {
+    import Values.*
+    import equiv.utils.TheorySymbols.*
+    val x: Term = varInt("x")
+    val y: Term = varInt("y")
+    val i: Term = varInt("i")
+    val z: Term = varInt("z")
+    val sumUp: FunctionSymbol = funcIntInt("sumup", false)
+    val u: FunctionSymbol = funcIntIntIntInt("u", false)
+    val returnf: FunctionSymbol = funcIntInt("return", false)
+    val sumRecRules: Set[Rule] = Set(
+      Rule(App(sumUp, List(x)), App(u, List(x, one, zero)), Set()),
+      Rule(App(u, List(x, i, z)), App(u, List(x, App(add, List(i, one)), App(add, List(z, i)))), Set(makeConsBin(i, le, x))),
+      Rule(App(u, List(x, i, z)), App(returnf, List(z)), Set(makeConsBin(i, gt, x)))
+    )
   }
 
   /** @return A function symbol of type [Int x Int] => Bool */

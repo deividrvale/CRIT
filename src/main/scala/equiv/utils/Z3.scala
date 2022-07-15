@@ -19,7 +19,7 @@ object Z3 {
   }
 
   def simplala(): Unit = {
-    val equa: Equation = equiv.trs.Temp.SumUp.equation
+    val equa: Equation = equiv.trs.Temp.TestEquations.monster
     println(equa.toPrintString())
     simplifyEquation(equa)
   }

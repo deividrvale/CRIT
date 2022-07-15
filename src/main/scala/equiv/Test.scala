@@ -1,17 +1,16 @@
 package equiv
 
-import equiv.ri.Simplify
-import equiv.trs.Temp.{consVarIntInt, termFx, termFxMinOne, termFy, valZero, xMinusOne}
+import equiv.ri.inference_rules.{CONSTRUCTOR, DELETION}
+import equiv.ri.{ProofState, Simplify}
+import equiv.trs.Temp.*
 import equiv.trs.Term.App
 import equiv.utils.TermUtils
-import equiv.trs.Temp.SumUp.*
+import equiv.trs.Temp.InferenceRuleEquations.*
 
 object Test {
   def main(args: Array[String]): Unit = {
-    val term1 = App(u, List(x, App(returnf, List(x)), valZero))
-    val term2 = App(u, List(x, y, z))
-    println(s"$term1 instance of $term2?\n${term1.instanceOf(term2)}")
-
-    println(!true || false)
+    val p1 = ProofState(Set(constructorEquation, deletionEquation1, deletionEquation2), Set(rule1, rule2))
+    println(DELETION.getDELETIONEquations(p1))
+    println(CONSTRUCTOR.getCONSTRUCTOREquations(p1))
   }
 }
