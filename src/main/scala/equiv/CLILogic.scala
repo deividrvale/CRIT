@@ -348,7 +348,7 @@ class CLILogic(var pfSt: ProofState) {
   }
 
   def completeness(): Unit = {
-    COMPLETENESS.tryCompleteness(pfSt)
+    COMPLETENESS.tryCOMPLETENESS(pfSt)
       .printFailureOnNone(COMPLETENESS.name)
       .foreach(pfSt = _)
   }
@@ -357,7 +357,7 @@ class CLILogic(var pfSt: ProofState) {
     handleUserInput(
       input = chooseEquation(),
       onAuto = () => DISPROVE.oldTryDisprove(pfSt),
-      onInput = eq => DISPROVE.tryDisproveOnEquation(eq, pfSt)
+      onInput = eq => DISPROVE.oldTryDisproveOnEquation(eq, pfSt)
     ).printFailureOnNone(DISPROVE.name).foreach(pfSt.isFalse = _)
   }
 

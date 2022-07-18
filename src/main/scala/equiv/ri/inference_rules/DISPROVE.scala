@@ -8,7 +8,7 @@ import equiv.utils.ListExtension.onNonEmpty
 
 /** To show that an equation is not an inductive theorem, we must derive ⊥ from a COMPLETE proof state. For this, we use DISPROVE.
  * There are 3 cases to consider, which are defined in the functions [[disproveCase1]], [[disproveCase2]] and [[disproveCase3]]. */
-object DISPROVE {
+object DISPROVE extends INFERENCE_RULE {
   val name = "DISPROVE"
 
   /** Try to apply DISPROVE on the first possible equation.
@@ -16,7 +16,7 @@ object DISPROVE {
    * @return [[Some]]`(false)` if DISPROVE could be applied, [[None]] otherwise. */
   def oldTryDisprove(pfSt: ProofState): Option[Boolean] = {
     if (pfSt.getFlag) {
-      pfSt.equations.view.flatMap(equation => tryDisproveOnEquation(equation, pfSt)).headOption
+      pfSt.equations.view.flatMap(equation => oldTryDisproveOnEquation(equation, pfSt)).headOption
     } else {
       None
     }
@@ -26,7 +26,7 @@ object DISPROVE {
    * @param equation The [[Equation]] to try to apply DISPROVE on.
    * @param pfSt The [[ProofState]] to try to apply DISPROVE to.
    * @return [[Some]]`(false)` if DISPROVE could be applied, [[None]] otherwise. */
-  def tryDisproveOnEquation(equation: Equation, pfSt: ProofState): Option[Boolean] = {
+  def oldTryDisproveOnEquation(equation: Equation, pfSt: ProofState): Option[Boolean] = {
     val s = equation.left; val t = equation.right; val phi = equation.getConstrainsConjunctAsTerm
     if disproveCase1(s, t, phi) || disproveCase2(s, t, phi, pfSt) || disproveCase3(s, t, phi, pfSt) then { println("DISPROVE proofstate.") ; Some(false) } else None
   }

@@ -5,10 +5,11 @@ import equiv.ri.Equation
 import equiv.trs.Term.App
 import equiv.utils.ListExtension.onNonEmpty
 
-object CONSTRUCTOR {
+object CONSTRUCTOR extends INFERENCE_RULE {
   val name = "CONSTRUCTOR"
   /** Step-wise try to apply CONSTRUCTOR to every equation in the proofstate.
    * @return [[Some]](proofstate) after the first successful CONSTRUCTOR, or [[None]] if CONSTRUCTOR could not be applied. */
+  @deprecated
   def oldTryConstructor(pfSt: ProofState): Option[ProofState] = {
     pfSt.equations.view.flatMap(e1 => tryConstructorOnEquation(e1, pfSt)).headOption
   }
@@ -19,6 +20,7 @@ object CONSTRUCTOR {
    * @param succeedDebug Whether to print on a successful application.
    * @param failDebug Whether to print on a failed application.
    * @return [[Some]](proofstate), where the proofstate does not contain the original equation, but equations `s_i ~~ t_i`, or [[None]] if CONSTRUCTOR could not be applied to the equation. */
+  @deprecated
   def tryConstructorOnEquation(equation: Equation, pfSt: ProofState, succeedDebug: Boolean = true, failDebug: Boolean = false): Option[ProofState] = {
     equation match {
       case Equation(App(f1, args1), App(f2, args2), const) =>

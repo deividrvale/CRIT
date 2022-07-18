@@ -5,12 +5,13 @@ import equiv.utils.Z3
 import equiv.ri.Equation
 import equiv.utils.ListExtension.onNonEmpty
 
-object DELETION {
+object DELETION extends INFERENCE_RULE {
     val name = "DELETION"
 
     /** Step-wise try to delete equations in the given proofstate.
      * After the first possible deletable equation, return the proofstate with this equation removed.
      * @return [[Some]](proofstate), where the proofstate has one equation less, or [[None]] if no equation could be deleted. */
+    @deprecated
     def oldTryDeletion(pfSt: ProofState): Option[ProofState] = {
       pfSt.equations.view.flatMap(tryDeletionOnEquation(_, pfSt)).headOption
     }
@@ -22,6 +23,7 @@ object DELETION {
      * @param succeedDebug Whether to print on a successful application.
      * @param failDebug Whether to print on a failed application.
      * @return [[Some]](proofstate), where the proofstate has one equation less, or [[None]] if no equation could be deleted. */
+    @deprecated
     def tryDeletionOnEquation(equation: Equation, pfSt: ProofState, succeedDebug: Boolean = true, failDebug: Boolean = false): Option[ProofState] = {
       if equation.left == equation.right || !Z3.satisfiable(equation.getConstrainsConjunctAsTerm) then
         if (succeedDebug) { println(s"$name on ${equation.toPrintString()}.") }

@@ -2,7 +2,7 @@ package equiv.ri.inference_rules
 
 import equiv.ri.{ProofState, Equation}
 
-object POSTULATE {
+object POSTULATE extends INFERENCE_RULE {
   val name = "POSTULATE"
 
   def doPostulate(pfSt: ProofState, equations: Set[Equation]): ProofState = {
@@ -11,7 +11,7 @@ object POSTULATE {
   }
 }
 
-object GENERALIZATION {
+object GENERALIZATION extends INFERENCE_RULE {
   val name = "GENERALIZATION"
 
   def doGeneralization(pfSt: ProofState, oldEquation: Equation, newEquation: Equation): ProofState = {

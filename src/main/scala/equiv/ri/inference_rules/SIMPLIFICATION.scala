@@ -9,7 +9,7 @@ import equiv.utils.Z3
 
 import scala.annotation.tailrec
 
-object SIMPLIFICATION {
+object SIMPLIFICATION extends INFERENCE_RULE {
   val name = "SIMPLIFICATION"
 
   /** Try to apply SIMPLIFICATION on the given proofstate for the first equation, side, rule and subterm we find.

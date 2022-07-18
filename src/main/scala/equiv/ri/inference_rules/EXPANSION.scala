@@ -9,7 +9,7 @@ import equiv.trs.Constraint
 import equiv.utils.OptionExtension.getOnNone
 
 
-object EXPANSION {
+object EXPANSION extends INFERENCE_RULE {
   val name = "EXPANSION"
 
   /** Try to apply EXPANSION on the first possible equation, side and subterm we find.
