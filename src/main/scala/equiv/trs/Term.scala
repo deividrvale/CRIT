@@ -88,8 +88,6 @@ trait Term {
   /** Searches all subterms that are instances of the given term. */
   def findSubTermInstances(other: Term): List[(Term, Position, Substitution)] = findSubTerms(t => t.instanceOf(other))
 
-//  def containsSubTerm(term: Term): Boolean = 
-  
   /** Substitute a subterm with `replacement` at the given `position`.
    * @param position Position of substitution as a list of Ints
    * @param replacement Term to substitute */

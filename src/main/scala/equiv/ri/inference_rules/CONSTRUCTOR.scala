@@ -39,7 +39,7 @@ object CONSTRUCTOR extends INFERENCE_RULE {
    * @return [[Some]]([[pfSt]]) after application of CONSTRUCTOR, or [[None]] if CONSTRUCTOR was not possible. */
   def tryCONSTRUCTOR(pfSt: ProofState, equationSelector: List[Equation] => Equation): Option[ProofState] = {
     getCONSTRUCTOREquations(pfSt).onNonEmpty(
-      eqs => doCONSTRUCTOROnEquation(pfSt, equationSelector(eqs))
+      eqs => Some( doCONSTRUCTOROnEquation(pfSt, equationSelector(eqs)) )
     )
   }
 

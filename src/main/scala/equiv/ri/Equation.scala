@@ -19,6 +19,8 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
 
   val vars: Set[Var] = left.vars ++ right.vars ++ constraints.flatMap(_.term.vars)
 
+  val functionSymbols: Set[FunctionSymbol] = left.functionSymbols ++ right.functionSymbols ++ constraints.flatMap(_.term.functionSymbols)
+
   def getSide(side: Side): Term = side match {
     case Side.Left => left
     case Side.Right => right
@@ -51,6 +53,12 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
 
   def simplifyCons(): Equation = this.copy(constraints = super.simplify())
 
+  /** @param side The left side of the rule.
+   * @return A rewrite rule of the equation, where the orientation is determined by [[side]]. */
+  def getRule(side: Side): Rule = {
+    Rule(this.getSide(side), this.getOppositeSide(side), constraints)
+  }
+
   // *************************************************** TACTICS *************************************************** //
 
   /** Transform the equation to a constrained term, where ~~ is seen as a fresh symbol. Then rewrite the constrained term using the given  */
@@ -70,7 +78,7 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
     while(funcNames.contains(freshName)) {
       freshName = new Random().nextString(4)
     }
-    FunctionSymbol(freshName, Typing(List(left.sort, right.sort), left.sort), isTheory = false, isValue = false, Some(equiv.trs.Infix(equiv.trs.InfixKind.Left, 0)))
+    FunctionSymbol(freshName, Typing(List(left.sort, right.sort), left.sort), isTheory = false, isValue = false, None)
   }
 
   override def toString: String = toPrintString(false)

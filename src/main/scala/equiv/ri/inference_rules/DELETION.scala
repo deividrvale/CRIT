@@ -39,7 +39,7 @@ object DELETION extends INFERENCE_RULE {
      * @return The [[Some]]([[ProofState]]) after application of DELETION or [[None]] if DELETION was not possible. */
     def tryDELETION(pfSt: ProofState, equationSelector: List[Equation] => Equation): Option[ProofState] = {
       getDELETIONEquations(pfSt).onNonEmpty(
-        eqs => pfSt.removeEquation( equationSelector(eqs) )
+        eqs => Some( pfSt.removeEquation( equationSelector(eqs) ) )
       )
     }
 

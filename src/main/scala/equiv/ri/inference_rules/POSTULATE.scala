@@ -5,8 +5,7 @@ import equiv.ri.{ProofState, Equation}
 object POSTULATE extends INFERENCE_RULE {
   val name = "POSTULATE"
 
-  def doPostulate(pfSt: ProofState, equations: Set[Equation]): ProofState = {
-    println(s"POSTULATE equations ${equations.map(_.toPrintString())}.")
+  def doPOSTULATE(pfSt: ProofState, equations: Set[Equation]): ProofState = {
     pfSt.addEquations(equations).setFlag(false)
   }
 }
@@ -14,7 +13,7 @@ object POSTULATE extends INFERENCE_RULE {
 object GENERALIZATION extends INFERENCE_RULE {
   val name = "GENERALIZATION"
 
-  def doGeneralization(pfSt: ProofState, oldEquation: Equation, newEquation: Equation): ProofState = {
-    POSTULATE.doPostulate(pfSt.removeEquation(oldEquation), Set(newEquation))
+  def doGENERALIZATION(pfSt: ProofState, oldEquation: Equation, newEquation: Equation): ProofState = {
+    POSTULATE.doPOSTULATE(pfSt.removeEquation(oldEquation), Set(newEquation))
   }
 }
