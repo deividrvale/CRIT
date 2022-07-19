@@ -27,6 +27,8 @@ object Temp {
 
     val rule1: Rule = Rule(termFx, App(f, List(App(min, List(x, one)))), Set(Constraint(App(gt, List(x, zero)))))
     val rule2: Rule = Rule(termFx, App(returnf, List(zero)), Set(Constraint(App(le, List(x, zero)))))
+    val rule3: Rule = Rule(termFx, App(f, List(App(min, List(x, one)))), Set(Constraint(App(and, List(App(gt, List(x, zero)), App(not, List(App(eql, List(x, three)))))))))
+    val rule4: Rule = Rule(termFx, App(f, List(one)), Set(Constraint(App(eql, List(x, three)))))
 
     val constructorEquation: Equation = Equation(
       App(returnf, List(zero)),
@@ -41,6 +43,8 @@ object Temp {
     val disproveEquation2: Equation = Equation(return1(x), return2(x), Set(Constraint(App(le, List(x, two)))))
     val disproveEquation3: Equation = Equation(x, return1(x), Set())
     val disproveEquation4: Equation = Equation(x, y, Set())
+
+    val expansionEquation: Equation = Equation(termFx, App(f, List(four)), Set())
   }
 
   object TestEquations {

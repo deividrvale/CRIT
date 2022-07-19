@@ -131,29 +131,32 @@ object EXPANSION extends INFERENCE_RULE {
   }
 
   /** Storage variable for every subterm position subject to EXPANSION, together with the side and equation. */
-  private var expansionSubterms: Option[Map[Equation, Map[Side, List[Position]]]] = None
+  private var expansionSubterms: Map[Equation, Map[Side, List[Position]]] = Map()
 
   /** @return A [[List]] of [[Position]]s of every subterm in the given [[Side]] of the [[Equation]] in the [[ProofState]] subject to EXPANSION. */
+  @tailrec
   def getEXPANSIONEquationSideSubtermPositions(pfSt: ProofState, equation: Equation, side: Side): List[Position] = {
-    expansionSubterms match {
-      case Some(subterms) => subterms(equation)(side)
-      case None =>
-        val subterms = getEXPANSIONEquationSideSubtermPositionsAux(pfSt, equation, side, List())
-        expansionSubterms = Some(subterms)
-        subterms(equation)(side)
-    }
+    if expansionSubterms.contains(equation) then
+      if expansionSubterms(equation).contains(side) then
+        return expansionSubterms(equation)(side)
+      else
+        val updatedEquationMap = expansionSubterms(equation) + (side -> getEXPANSIONEquationSideSubtermPositionsAux(pfSt, equation, side, List()))
+        expansionSubterms = expansionSubterms + (equation -> updatedEquationMap)
+    else
+      expansionSubterms = expansionSubterms + (equation -> Map((side, getEXPANSIONEquationSideSubtermPositionsAux(pfSt, equation, side, List()))))
+    getEXPANSIONEquationSideSubtermPositions(pfSt, equation, side)
   }
 
   /** Helper function that constructs the [[expansionSubterms]] variable. */
-  def getEXPANSIONEquationSideSubtermPositionsAux(pfSt: ProofState, equation: Equation, side: Side, position: Position): Map[Equation, Map[Side, List[Position]]] = {
+  def getEXPANSIONEquationSideSubtermPositionsAux(pfSt: ProofState, equation: Equation, side: Side, position: Position): List[Position] = {
     val subterm = equation.getSide(side).subTermAt(position)
     if subterm.isBasic(pfSt.definedSymbols) then
       // Check if there is at least one applicable rule
-      if pfSt.rules.view.map( rule => subterm.instanceOf(rule.left) ).nonEmpty then Map((equation, Map((side, List(position))))) else Map()
+      if pfSt.rules.view.map( rule => subterm.instanceOf(rule.left) ).nonEmpty then List(position) else List()
       // Don't recurse, because subterms of a basic (sub)term are never basic
     else subterm match {
-      case App(_, args) => args.indices.flatMap( id => getEXPANSIONEquationSideSubtermPositionsAux(pfSt, equation, side, position :+ id) ).toMap
-      case Var(_, _) => Map()
+      case App(_, args) => args.indices.flatMap( id => getEXPANSIONEquationSideSubtermPositionsAux(pfSt, equation, side, position :+ id) ).toList
+      case Var(_, _) => List()
     }
   }
 
