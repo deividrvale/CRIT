@@ -140,14 +140,16 @@ object EXPANSION extends INFERENCE_RULE {
       if expansionSubterms(equation).contains(side) then
         return expansionSubterms(equation)(side)
       else
-        val updatedEquationMap = expansionSubterms(equation) + (side -> getEXPANSIONEquationSideSubtermPositionsAux(pfSt, equation, side, List()))
-        expansionSubterms = expansionSubterms + (equation -> updatedEquationMap)
+        val positions = getEXPANSIONEquationSideSubtermPositionsAux(pfSt, equation, side, List())
+        val updatedEquationMap = expansionSubterms(equation) + (side -> positions)
+        expansionSubterms += (equation -> updatedEquationMap)
     else
-      expansionSubterms = expansionSubterms + (equation -> Map((side, getEXPANSIONEquationSideSubtermPositionsAux(pfSt, equation, side, List()))))
+      val positions = getEXPANSIONEquationSideSubtermPositionsAux(pfSt, equation, side, List())
+      expansionSubterms += (equation -> Map(side -> positions))
     getEXPANSIONEquationSideSubtermPositions(pfSt, equation, side)
   }
 
-  /** Helper function that constructs the [[expansionSubterms]] variable. */
+  /** Helper function that returns a [[List]] of [[Position]]s where EXPANSION can be performed. */
   def getEXPANSIONEquationSideSubtermPositionsAux(pfSt: ProofState, equation: Equation, side: Side, position: Position): List[Position] = {
     val subterm = equation.getSide(side).subTermAt(position)
     if subterm.isBasic(pfSt.definedSymbols) then

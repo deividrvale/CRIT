@@ -6,6 +6,7 @@ import equiv.ri.inference_rules.SIMPLIFICATION
 import equiv.trs.{Constraint, Rule, Term}
 import equiv.trs.Term.{Position, Substitution, Var}
 import equiv.utils.Z3
+import equiv.utils.ListExtension.onNonEmpty
 
 import scala.annotation.tailrec
 
@@ -81,4 +82,89 @@ object SIMPLIFICATION extends INFERENCE_RULE {
       )
   }
 
+
+  private var subtermPositions: Map[Equation, Map[Side, Map[Rule, List[Position]]]] = Map()
+
+  def trySIMPLIFICATION(pfSt: ProofState, equationSelector: List[Equation] => Equation, sideSelector: List[Side] => Side, ruleSelector: List[Rule] => Rule, positionSelector: List[Position] => Position): Option[ProofState] = {
+    getSIMPLIFICATIONEquations(pfSt).onNonEmpty(
+      eqs => trySIMPLIFICATIONOnEquation(pfSt, equationSelector(eqs), sideSelector, ruleSelector, positionSelector)
+    )
+  }
+
+  def trySIMPLIFICATIONOnEquation(pfSt: ProofState, equation: Equation, sideSelector: List[Side] => Side, ruleSelector: List[Rule] => Rule, positionSelector: List[Position] => Position): Option[ProofState] = {
+    getSIMPLIFICATIONEquationSides(pfSt, equation).onNonEmpty(
+      sides => trySIMPLIFICATIONOnEquationSide(pfSt, equation, sideSelector(sides), ruleSelector, positionSelector)
+    )
+  }
+
+  def trySIMPLIFICATIONOnEquationSide(pfSt: ProofState, equation: Equation, side: Side, ruleSelector: List[Rule] => Rule, positionSelector: List[Position] => Position): Option[ProofState] = {
+    (getSIMPLIFICATIONEquationSideRules(pfSt, equation, side) ++ getSIMPLIFICATIONEquationSideHypotheses(pfSt, equation, side)).onNonEmpty(
+      rules => trySIMPLIFICATIONOnEquationSideRule(pfSt, equation, side, ruleSelector(rules), positionSelector)
+    )
+  }
+
+  def trySIMPLIFICATIONOnEquationSideRule(pfSt: ProofState, equation: Equation, side: Side, rule: Rule, positionSelector: List[Position] => Position): Option[ProofState] = {
+    getSIMPLIFICATIONEquationSideRuleRedexPositions(pfSt, equation, side, rule).onNonEmpty(
+      positions => doSIMPLIFICATIONOnEquationSideRulePosition(pfSt, equation, side, rule, positionSelector(positions))
+    )
+  }
+
+  def doSIMPLIFICATIONOnEquationSideRulePosition(pfSt: ProofState, equation: Equation, side: Side, rule: Rule, position: Position): Option[ProofState] = {
+    equation.getSide(side).subTermAt(position).instanceOf(rule.left) match {
+      case Some(substitution) => Some( pfSt.removeEquation(equation).addEquation( equation.replaceSide(side, equation.getSide(side).rewriteAtPos(position, rule, substitution)) ) )
+      case _ => None
+    }
+  }
+
+  def getSIMPLIFICATIONEquations(pfSt: ProofState): List[Equation] = {
+    pfSt.equations.filter( eq => getSIMPLIFICATIONEquationSides(pfSt, eq).nonEmpty ).toList
+  }
+
+  def getSIMPLIFICATIONEquationSides(pfSt: ProofState, equation: Equation): List[Side] = {
+    List(Side.Left, Side.Right).filter( side => getSIMPLIFICATIONEquationSideRules(pfSt, equation, side).nonEmpty || getSIMPLIFICATIONEquationSideHypotheses(pfSt, equation, side).nonEmpty )
+  }
+
+  def getSIMPLIFICATIONEquationSideRules(pfSt: ProofState, equation: Equation, side: Side): List[Rule] = {
+    pfSt.rules.filter( rule => getSIMPLIFICATIONEquationSideRuleRedexPositions(pfSt, equation, side, rule).nonEmpty ).toList
+  }
+
+  def getSIMPLIFICATIONEquationSideHypotheses(pfSt: ProofState, equation: Equation, side: Side): List[Rule] = {
+    pfSt.hypotheses.filter(hypothesis => getSIMPLIFICATIONEquationSideRuleRedexPositions(pfSt, equation, side, hypothesis).nonEmpty).toList
+  }
+
+//  @tailrec
+  def getSIMPLIFICATIONEquationSideRuleRedexPositions(pfSt: ProofState, equation: Equation, side: Side, rule: Rule): List[Position] = {
+//    if subtermPositions.contains(equation) then
+//      if subtermPositions(equation).contains(side) then
+//        if subtermPositions(equation)(side).contains(rule) then
+//          subtermPositions(equation)(side)(rule)
+//        else
+//          val positions = getSIMPLIFICATIONEquationSideRuleRedexPositionsAux(pfSt, equation, side, rule)
+//          val updatedSide = subtermPositions(equation)(side) + (rule -> positions)
+//          val updatedEquation = subtermPositions(equation) + (side -> updatedSide)
+//          subtermPositions += (equation -> updatedEquation)
+//      else
+//        val positions = getSIMPLIFICATIONEquationSideRuleRedexPositionsAux(pfSt, equation, side, rule)
+//        val updatedEquation = subtermPositions(equation) + (side -> Map(rule -> positions))
+//        subtermPositions += (equation -> updatedEquation)
+//    else
+//      val positions = getSIMPLIFICATIONEquationSideRuleRedexPositionsAux(pfSt, equation, side, rule)
+//      subtermPositions += (equation -> Map(side -> Map(rule -> positions)))
+//    getSIMPLIFICATIONEquationSideRuleRedexPositions(pfSt, equation, side, rule)
+    getSIMPLIFICATIONEquationSideRuleRedexPositionsAux(pfSt, equation, side, rule)
+  }
+
+  def getSIMPLIFICATIONEquationSideRuleRedexPositionsAux(pfSt: ProofState, equation: Equation, side: Side, rule: Rule): List[Position] = {
+    equation.getSide(side)
+      .findSubTerms(_.instanceOf(rule.left))
+      .filter((_, _, s: Substitution) =>
+        val constraints = equation.getConstrainsConjunctAsTerm ;
+        // Check if substitution s respects constraint ϕ, i.e. s(x) is a value for all x ∈ Var (ϕ) and [[ϕγ]] = T.
+        s.forall { (x, sx) => !constraints.vars.contains(x) || sx.isValue } &&
+          Z3.implies(
+            constraints,
+            rule.getConstrainsConjunctAsTerm.applySubstitution(s))
+      )
+      .map(_._2)
+  }
 }
