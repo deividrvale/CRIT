@@ -134,7 +134,6 @@ object EXPANSION extends INFERENCE_RULE {
   private var expansionSubterms: Map[Equation, Map[Side, List[Position]]] = Map()
 
   /** @return A [[List]] of [[Position]]s of every subterm in the given [[Side]] of the [[Equation]] in the [[ProofState]] subject to EXPANSION. */
-  @tailrec
   def getEXPANSIONEquationSideSubtermPositions(pfSt: ProofState, equation: Equation, side: Side): List[Position] = {
     if expansionSubterms.contains(equation) then
       if expansionSubterms(equation).contains(side) then
@@ -146,7 +145,7 @@ object EXPANSION extends INFERENCE_RULE {
     else
       val positions = getEXPANSIONEquationSideSubtermPositionsAux(pfSt, equation, side, List())
       expansionSubterms += (equation -> Map(side -> positions))
-    getEXPANSIONEquationSideSubtermPositions(pfSt, equation, side)
+    expansionSubterms(equation)(side)
   }
 
   /** Helper function that returns a [[List]] of [[Position]]s where EXPANSION can be performed. */

@@ -3,7 +3,7 @@ package equiv
 import equiv.ri.inference_rules.{CONSTRUCTOR, DELETION, DISPROVE, EXPANSION, SIMPLIFICATION}
 import equiv.ri.{Equation, ProofState, Simplify}
 import equiv.trs.Temp.*
-import equiv.trs.Term.App
+import equiv.trs.Term.{App, Position}
 import equiv.utils.TermUtils
 import equiv.trs.Temp.InferenceRuleEquations.*
 
