@@ -1,6 +1,6 @@
 package equiv
 
-import equiv.ri.inference_rules.{CONSTRUCTOR, DELETION, DISPROVE, EXPANSION, SIMPLIFICATION}
+import equiv.ri.inference_rules.{CONSTRUCTOR, DELETION, DISPROVE, EQ_DELETION, EXPANSION, SIMPLIFICATION}
 import equiv.ri.{Equation, ProofState, Simplify}
 import equiv.trs.Temp.*
 import equiv.trs.Term.{App, Position}
@@ -16,5 +16,6 @@ object Test {
     println("DISPROVE: " + DISPROVE.getDISPROVEEquations(p1))
     println("EXPANSION: " + EXPANSION.getEXPANSIONEquations(p1))
     println("SIMPLIFICATION: " + SIMPLIFICATION.getSIMPLIFICATIONEquations(p1))
+    println("EQ-DELETION: " + EQ_DELETION.getEQ_DELETIONEquations(p1))
   }
 }

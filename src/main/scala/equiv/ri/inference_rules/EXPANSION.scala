@@ -112,7 +112,7 @@ object EXPANSION extends INFERENCE_RULE {
   def tryEXPANSIONOnEquationSide(pfSt: ProofState, equation: Equation, side: Side, subtermSelector: List[Position] => Position, ruleSelector: Rule => Boolean): Option[ProofState] = {
     getEXPANSIONEquationSideSubtermPositions(pfSt, equation, side).onNonEmpty(
       positions =>
-        val newEquations = doEXPANSION(pfSt, equation, side, subtermSelector(positions))
+        val newEquations = generateEXPANSIONEquations(pfSt, equation, side, subtermSelector(positions))
         var newPfSt = pfSt.removeEquation(equation).addEquations(newEquations)
         val rule = equation.getRule(side)
         if ruleSelector(rule) then newPfSt = newPfSt.addHypothesis(rule)
@@ -162,7 +162,7 @@ object EXPANSION extends INFERENCE_RULE {
   }
 
   /** Apply EXPANSION to the given [[Position]] in the given [[Side]] of the [[Equation]] in the [[ProofState]]. */
-  def doEXPANSION(pfSt: ProofState, equation: Equation, side: Side, position: Position): Set[Equation] = {
+  def generateEXPANSIONEquations(pfSt: ProofState, equation: Equation, side: Side, position: Position): Set[Equation] = {
     val constrainedTerm = ConstrainedTerm(App(TermUtils.getEqualityFunctionSymbol(equation), List(equation.left, equation.right)), equation.constraints)
     val updatedPos = (if side == Side.Left then 0 else 1) :: position
     val applicableRules = pfSt.rules.flatMap( rule => constrainedTerm.term.subTermAt(updatedPos).instanceOf(rule.left).map( sub => (rule, sub) ) )

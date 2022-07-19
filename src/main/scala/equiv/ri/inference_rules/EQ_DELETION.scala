@@ -1,10 +1,12 @@
 package equiv.ri.inference_rules
 
+import equiv.ri.Equation.Side
 import equiv.ri.{Equation, ProofState}
 import equiv.trs.{ConstrainedObject, Constraint, FunctionSymbol, Term}
 import equiv.trs.Term.{App, Position, Var}
 import equiv.utils.TermUtils.getFreshVar
 import equiv.utils.{TermUtils, TheorySymbols, Z3}
+import equiv.utils.ListExtension.onNonEmpty
 
 import scala.collection.immutable.LazyList.cons
 
@@ -13,12 +15,14 @@ object EQ_DELETION extends INFERENCE_RULE {
 
   /** Step-wise try to apply EQ-DELETION on the equations in the given proofstate. After the first possible EQ-DELETION, return the new proofstate.
    * @return [[Some]](proofstate) after one EQ-DELETION on the first possible equation, or [[None]] if no EQ-DELETIONs were possible. */
+  @deprecated
   def tryEqDeletion(pfSt: ProofState): Option[ProofState] = {
     pfSt.equations.view.flatMap( e1 => tryEqDeletionOnEquation(e1, pfSt) ).headOption
   }
 
   /** Try to apply EQ-DELETION on the given equation on the outermost possible subterms.
    * @return [[Some]](proofstate) after EQ-DELETION, or [[None]] if EQ-DELETION was not possible. */
+  @deprecated
   def tryEqDeletionOnEquation(equation: Equation, pfSt: ProofState): Option[ProofState] = {
     doEqDeletionOnEquationSubtermPairs(equation, getOuterMostTermPairs(equation.left, equation.right, equation.constraintVars), pfSt)
   }
@@ -30,6 +34,7 @@ object EQ_DELETION extends INFERENCE_RULE {
    * @param succeedDebug Whether to print on a successful application.
    * @param failDebug Whether to print on a failed application.
    * @return [[Some]](proofstate) after EQ-DELETION, or [[None]] if the subtermPairs set was empty */
+  @deprecated
   def tryEqDeletionOnEquationOnPositions(equation: Equation, positions: Set[Position], pfSt: ProofState, succeedDebug: Boolean = true, failDebug: Boolean = false): Option[ProofState] = {
     val subtermPairs = positions.map( pos =>
       tryToGetSubtermPairAtPosition(equation.left, equation.right, pos, equation.constraintVars)
@@ -42,6 +47,7 @@ object EQ_DELETION extends INFERENCE_RULE {
     else None
   }
 
+  @deprecated
   def areContextsEqual(leftTerm: Term, rightTerm: Term, currentPosition: Position, positions: Set[Position]): Boolean = {
     if positions.contains(currentPosition) then
       true
@@ -63,6 +69,7 @@ object EQ_DELETION extends INFERENCE_RULE {
    * @param succeedDebug Whether to print on a successful application.
    * @param failDebug Whether to print on a failed application.
    * @return [[Some]](proofstate) after EQ-DELETION, or [[None]] if the subtermPairs set was empty */
+  @deprecated
   def doEqDeletionOnEquationSubtermPairs(equation: Equation, subtermPairs: Set[(Term, Term)], pfSt: ProofState, succeedDebug: Boolean = true, failDebug: Boolean = false): Option[ProofState] = {
     if subtermPairs.nonEmpty then
       val newEquation = equation.addConstraint( Constraint( TheorySymbols.notX( ConstrainedObject.termSetToConjunctionTerm(subtermPairs.map((t1, t2) => TheorySymbols.eqXY(t1, t2)) ) ) ) )
@@ -75,6 +82,7 @@ object EQ_DELETION extends INFERENCE_RULE {
 
   /** Get the outermost pairs of terms for which EQ-DELETION is possible.
    * @return A set of pairs of [[Term]]s */
+  @deprecated
   def getOuterMostTermPairs(term1: Term, term2: Term, constraintVars: Set[Var]): Set[(Term, Term)] = {
     if term1.isEqDeletable(constraintVars) && term2.isEqDeletable(constraintVars) then
       return Set((term1, term2))
@@ -93,6 +101,7 @@ object EQ_DELETION extends INFERENCE_RULE {
    * @param position The [[Position]] to get the subterms from in both [[Term]]s
    * @param constraintVars The set of variables in the constraint of the equation.
    * @return [[Some]] pair of terms if EQ-DELETION is possible here, otherwise [[None]] */
+  @deprecated
   def tryToGetSubtermPairAtPosition(leftTerm: Term, rightTerm: Term, position: Position, constraintVars: Set[Var]): Option[(Term, Term)] = {
     position match {
       case List() =>
@@ -113,6 +122,7 @@ object EQ_DELETION extends INFERENCE_RULE {
    * @param rightTerm The [[Term]] corresponding initially to the [[Right]] side of the equation.
    * @param constraintVars The set of variables in the constraint of the equation.
    * @return A [[Set]] of all found positions with subterm pairs subject to EQ-DELETION. */
+  @deprecated
   def getAllPossibleEqDeletionPositions(leftTerm: Term, rightTerm: Term, constraintVars: Set[Var]): Set[(Position, (Term, Term))] = {
     var positions: Set[(Position, (Term, Term))] = Set()
     if leftTerm.isEqDeletable(constraintVars) && rightTerm.isEqDeletable(constraintVars) then
@@ -123,6 +133,44 @@ object EQ_DELETION extends INFERENCE_RULE {
           for i <- args1.indices do {
             positions ++= getAllPossibleEqDeletionPositions(args1(i), args2(i), constraintVars).map( (pos, terms) => (i::pos, terms) )
           }
+      case _ =>
+    }
+    positions
+  }
+
+  def tryEQ_DELETION(pfSt: ProofState, equationSelector: List[Equation] => Equation, positionsSelector: List[Position] => List[Position]): Option[ProofState] = {
+    getEQ_DELETIONEquations(pfSt).onNonEmpty(eqs => tryEQ_DELETIONOnEquation(pfSt, equationSelector(eqs), positionsSelector))
+  }
+
+  def tryEQ_DELETIONOnEquation(pfSt: ProofState, equation: Equation, positionsSelector: List[Position] => List[Position]): Option[ProofState] = {
+    getEQ_DELETIONEquationPositions(pfSt, equation).onNonEmpty(positions => Some( doEQ_DELETIONOnEquationPositions(pfSt, equation, positionsSelector(positions)) ))
+  }
+
+  def doEQ_DELETIONOnEquationPositions(pfSt: ProofState, equation: Equation, positions: List[Position]): ProofState = {
+    val newConstraint = Constraint(
+      TheorySymbols.notX( ConstrainedObject.termSetToConjunctionTerm(
+        positions.map( position => TheorySymbols.eqXY(
+          equation.left.subTermAt(position),
+          equation.right.subTermAt(position)
+        ) ).toSet ) ) )
+    pfSt.replaceEquationWith(equation, equation.addConstraint(newConstraint))
+  }
+
+  def getEQ_DELETIONEquations(pfSt: ProofState): List[Equation] = {
+    pfSt.equations.filter(equation => getEQ_DELETIONEquationPositions(pfSt, equation).nonEmpty).toList
+  }
+
+  def getEQ_DELETIONEquationPositions(pfSt: ProofState, equation: Equation): List[Position] = {
+    getEQ_DELETIONEquationPositionsAux(equation.left, equation.right, equation.constraintVars)
+  }
+
+  def getEQ_DELETIONEquationPositionsAux(leftTerm: Term, rightTerm: Term, constraintVars: Set[Var]): List[Position] = {
+    var positions: List[Position] = List()
+    if leftTerm.isEqDeletable(constraintVars) && rightTerm.isEqDeletable(constraintVars) then
+      positions = List(List())
+    (leftTerm, rightTerm) match {
+      case (App(f1, args1), App(f2, args2)) =>
+        if f1 == f2 then positions ++= args1.indices.flatMap(id => getEQ_DELETIONEquationPositionsAux(args1(id), args2(id), constraintVars).map(id::_) )
       case _ =>
     }
     positions
