@@ -13,9 +13,11 @@ object Equiv {
   }
   
   def sample(): Unit = {
-    import equiv.trs.Temp.TestEquations.*
+    import equiv.trs.Temp.Sums._
 
-    val pfSt = ProofState(Set(monster), Set())
+    val rules = sumUpRules ++ sumRecRules
+
+    val pfSt = ProofState(Set(sumUpRecEq), rules)
 
     equiv.CLILogic(pfSt).RI()
   }
