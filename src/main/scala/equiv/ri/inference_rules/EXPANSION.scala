@@ -163,7 +163,7 @@ object EXPANSION extends INFERENCE_RULE {
 
   /** Apply EXPANSION to the given [[Position]] in the given [[Side]] of the [[Equation]] in the [[ProofState]]. */
   def generateEXPANSIONEquations(pfSt: ProofState, equation: Equation, side: Side, position: Position): Set[Equation] = {
-    val constrainedTerm = ConstrainedTerm(App(TermUtils.getEqualityFunctionSymbol(equation), List(equation.left, equation.right)), equation.constraints)
+    val constrainedTerm = equation.toConstrainedTerm
     val updatedPos = (if side == Side.Left then 0 else 1) :: position
     val applicableRules = pfSt.rules.flatMap( rule => constrainedTerm.term.subTermAt(updatedPos).instanceOf(rule.left).map( sub => (rule, sub) ) )
     applicableRules.map( (rule, sub) => constrainedTerm.rewriteAtPos(updatedPos, rule, sub) match { case ConstrainedTerm(App(_, List(left, right)), cons) => Equation(left, right, cons) } )

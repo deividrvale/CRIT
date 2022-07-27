@@ -9,11 +9,3 @@ object POSTULATE extends INFERENCE_RULE {
     pfSt.addEquations(equations).setFlag(false)
   }
 }
-
-object GENERALIZATION extends INFERENCE_RULE {
-  val name = "GENERALIZATION"
-
-  def doGENERALIZATION(pfSt: ProofState, oldEquation: Equation, newEquation: Equation): ProofState = {
-    POSTULATE.doPOSTULATE(pfSt.removeEquation(oldEquation), Set(newEquation))
-  }
-}
