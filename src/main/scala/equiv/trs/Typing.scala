@@ -1,5 +1,10 @@
 package equiv.trs
 
+/**
+ * @param input Sort of the arguments of the function symbol
+ * @param output Output sort
+ * @param isVariadic Whether the function symbol supports an arbitrary number of arguments
+ */
 case class Typing(input: List[Sort], output: Sort, isVariadic: Boolean = false) {
   override def toString: String = toPrintString(false)
   

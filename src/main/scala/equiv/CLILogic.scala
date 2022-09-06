@@ -22,9 +22,9 @@ class CLILogic(var pfSt: ProofState) {
   val c: Option[Int] = None
 
   val autoValues: List[String] = List("-1", "a", "au", "aut", "auto")
-  val returnValues: List[String] = List("q", "r", "quit", "return", "ret", "exit", "e", "cancel")
-  val leftValues: List[String] = List("0", "l", "left", "le", "lef", "links")
-  val rightValues: List[String] = List("1", "r", "right", "ri", "rig", "righ", "rechts")
+  val returnValues: List[String] = List("q", "quit", "return", "ret", "exit", "e", "cancel")
+  val leftValues: List[String] = List("l", "left", "le", "lef", "links")
+  val rightValues: List[String] = List("r", "right", "ri", "rig", "righ", "rechts")
   assert(leftValues.intersect(rightValues).isEmpty)
   val noValues: List[String] = List("0", "n", "no", "nee")
   val yesValues: List[String] = List("1", "y", "ye", "yes", "ja")
