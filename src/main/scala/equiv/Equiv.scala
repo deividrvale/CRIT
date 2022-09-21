@@ -19,7 +19,8 @@ object Equiv {
 
     val pfSt = ProofState(Set(sumUpRecEq), rules)
 
-    equiv.CLILogic(pfSt).RI()
+    InputHandler.main(pfSt)
+//    equiv.CLILogic(pfSt).RI()
   }
 
   def parse(fileName: String): Unit = {
