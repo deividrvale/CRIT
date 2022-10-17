@@ -19,8 +19,9 @@ object Equiv {
 
     val pfSt = ProofState(Set(
 //      sumUpRecEq,
-      sumUpRec1,
-      sumUpRec2
+//      sumUpRec1,
+//      sumUpRec2
+      eqDelEq
     ), rules)
 
     InputHandler.main(pfSt)

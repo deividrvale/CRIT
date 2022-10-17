@@ -6,7 +6,7 @@ import equiv.ri.inference_rules.{COMPLETENESS, CONSTRUCTOR, DELETION, DISPROVE, 
 import equiv.trs.Term.Position
 import equiv.trs.{Rule, Term}
 import equiv.utils.OptionExtension.printRedOnNone
-import equiv.utils.PrintUtils
+import equiv.utils.{PrintUtils, Z3}
 
 import scala.collection.immutable.ListMap
 import scala.io.StdIn.readLine
@@ -72,8 +72,16 @@ object InputHandler {
         SIMPLIFICATION.trySIMPLIFICATION(pfSt, equationSelector, sideSelector, ruleSelector, positionSelector)
       case Z3SimplifyName =>
         message = "Applied Z3 simplification."
-        None
+        Some(simplify_calc(pfSt))
     }, message)
+  }
+
+  def simplify_calc(pfSt: ProofState): ProofState = {
+    var newPfSt = pfSt
+    val newEquations = pfSt.equations.map(_.simplifyCons())
+    if newEquations != pfSt.equations then
+      newPfSt = pfSt.copy(equations = newEquations)
+    newPfSt.replaceAllEquationWith(pfSt.equations.map(Z3.simplifyEquation))
   }
 
   def ruleAcceptor(rule: Rule): Boolean = {
@@ -134,6 +142,7 @@ object InputHandler {
 
   def positionsSelector(positions: List[Position]): List[Position] = {
     println("Choose positions:")
+    // TODO
     List(positionSelector(positions))
   }
 
