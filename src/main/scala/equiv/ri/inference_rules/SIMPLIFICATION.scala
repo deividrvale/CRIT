@@ -148,10 +148,8 @@ object SIMPLIFICATION extends INFERENCE_RULE {
    * @param rule The [[Rule]] used for SIMPLIFICATION.
    * @param position The [[Position]] where SIMPLIFICATION is applied. */
   def doSIMPLIFICATIONOnEquationSideRulePosition(pfSt: ProofState, equation: Equation, side: Side, rule: Rule, position: Position): Option[ProofState] = {
-    equation.getSide(side).subTermAt(position).instanceOf(rule.left) match {
-      case Some(substitution) => Some( pfSt.removeEquation(equation).addEquation( equation.replaceSide(side, equation.getSide(side).rewriteAtPos(position, rule, substitution)) ) )
-      case _ => None
-    }
+    equation.getSide(side).subTermAt(position).instanceOf(rule.left).map(substitution =>
+      pfSt.removeEquation(equation).addEquation(equation.rewriteSideAtPos(side, position, rule, substitution)))
   }
 
   /** Helper variable that stores a [[List]] of [[Position]]s for some [[Equation]], [[Side]], [[Rule]]. */

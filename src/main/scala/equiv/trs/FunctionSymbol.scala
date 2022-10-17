@@ -7,7 +7,7 @@ case class FunctionSymbol(name: String, typing: Typing, isTheory: Boolean = fals
   assert( typing.input.isEmpty || !isValue,
   s"Function symbol $name is a value, but has arity > 0." ) // assert that values have arity 0
 
-  assert( !isTemporary || name != TermUtils.reservedFunctionSymbol,
+  assert( isTemporary || name != TermUtils.reservedFunctionSymbol,
   s"Function symbol name ${TermUtils.reservedFunctionSymbol} is protected and cannot be used.")
 
   def isConstructor(definedSymbols: Set[FunctionSymbol]): Boolean = !definedSymbols.contains(this) && (!isTheory || isValue)

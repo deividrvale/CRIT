@@ -36,6 +36,10 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
     case Side.Right => this.copy(right = term)
   }
 
+  def rewriteSideAtPos(side: Side, position: Position, rule: Rule, substitution: Substitution): Equation = {
+    this.replaceSide(side, this.getSide(side).rewriteAtPos(position, rule, substitution))
+  }
+
   def replaceAllConstraints(newConstraints: Set[Constraint]): Equation =
     this.copy(constraints = newConstraints)
 

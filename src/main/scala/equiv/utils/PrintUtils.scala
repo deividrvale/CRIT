@@ -5,6 +5,7 @@ object PrintUtils {
   val zeroAryFunctionColour: String = Console.MAGENTA
   val variableColour: String = Console.GREEN
   val failureColour: String = Console.RED
+  val positionColour: String = Console.CYAN
 
   /** Map for certain function symbols that should be printed differently from their internal representation. */
   val functionSymbolPrintStrings: Map[String, String] = Map( (TheorySymbols.and.name, "/\\"), (TheorySymbols.or.name, "\\/"), (TheorySymbols.not.name, "¬") )

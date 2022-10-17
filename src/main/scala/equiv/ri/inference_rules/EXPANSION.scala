@@ -81,11 +81,11 @@ object EXPANSION extends INFERENCE_RULE {
    * @param equationSelector Function that selects an [[Equation]] from a non-empty list of [[Equation]]s.
    * @param sideSelector Function that selects a [[Side]] from a non-empty list of [[Side]]s.
    * @param subtermSelector Function that selects a subterm [[Position]] from a non-empty list of [[Position]]s.
-   * @param ruleSelector Function that decides whether to add a [[Rule]] to the [[ProofState]].
+   * @param ruleAcceptor Function that decides whether to add a [[Rule]] to the [[ProofState]].
    * @return [[Some]]([[pfSt]]) after application of EXPANSION if possible, otherwise [[None]] */
-  def tryEXPANSION(pfSt: ProofState, equationSelector: List[Equation] => Equation, sideSelector: List[Side] => Side, subtermSelector: List[Position] => Position, ruleSelector: Rule => Boolean): Option[ProofState] = {
+  def tryEXPANSION(pfSt: ProofState, equationSelector: List[Equation] => Equation, sideSelector: List[Side] => Side, subtermSelector: List[Position] => Position, ruleAcceptor: Rule => Boolean): Option[ProofState] = {
     getEXPANSIONEquations(pfSt).onNonEmpty(
-      eqs => tryEXPANSIONOnEquation(pfSt, equationSelector(eqs), sideSelector, subtermSelector, ruleSelector)
+      eqs => tryEXPANSIONOnEquation(pfSt, equationSelector(eqs), sideSelector, subtermSelector, ruleAcceptor)
     )
   }
 
@@ -94,11 +94,11 @@ object EXPANSION extends INFERENCE_RULE {
    * @param equation The [[Equation]] subject to EXPANSION.
    * @param sideSelector Function that selects a [[Side]] from a non-empty list of [[Side]]s.
    * @param subtermSelector Function that selects a subterm [[Position]] from a non-empty list of [[Position]]s.
-   * @param ruleSelector Function that decides whether to add a [[Rule]] to the [[ProofState]].
+   * @param ruleAcceptor Function that decides whether to add a [[Rule]] to the [[ProofState]].
    * @return [[Some]]([[pfSt]]) after application of EXPANSION if possible, otherwise [[None]] */
-  def tryEXPANSIONOnEquation(pfSt: ProofState, equation: Equation, sideSelector: List[Side] => Side, subtermSelector: List[Position] => Position, ruleSelector: Rule => Boolean): Option[ProofState] = {
+  def tryEXPANSIONOnEquation(pfSt: ProofState, equation: Equation, sideSelector: List[Side] => Side, subtermSelector: List[Position] => Position, ruleAcceptor: Rule => Boolean): Option[ProofState] = {
     getEXPANSIONEquationSides(pfSt, equation).onNonEmpty(
-      sides => tryEXPANSIONOnEquationSide(pfSt, equation, sideSelector(sides), subtermSelector, ruleSelector)
+      sides => tryEXPANSIONOnEquationSide(pfSt, equation, sideSelector(sides), subtermSelector, ruleAcceptor)
     )
   }
 
@@ -107,15 +107,15 @@ object EXPANSION extends INFERENCE_RULE {
    * @param equation The [[Equation]] subject to EXPANSION.
    * @param side The [[Side]] of the [[Equation]] subject to EXPANSION.
    * @param subtermSelector Function that selects a subterm [[Position]] from a non-empty list of [[Position]]s.
-   * @param ruleSelector Function that decides whether to add a [[Rule]] to the [[ProofState]].
+   * @param ruleAcceptor Function that decides whether to add a [[Rule]] to the [[ProofState]].
    * @return [[Some]]([[pfSt]]) after application of EXPANSION if possible, otherwise [[None]] */
-  def tryEXPANSIONOnEquationSide(pfSt: ProofState, equation: Equation, side: Side, subtermSelector: List[Position] => Position, ruleSelector: Rule => Boolean): Option[ProofState] = {
+  def tryEXPANSIONOnEquationSide(pfSt: ProofState, equation: Equation, side: Side, subtermSelector: List[Position] => Position, ruleAcceptor: Rule => Boolean): Option[ProofState] = {
     getEXPANSIONEquationSideSubtermPositions(pfSt, equation, side).onNonEmpty(
       positions =>
         val newEquations = generateEXPANSIONEquations(pfSt, equation, side, subtermSelector(positions))
         var newPfSt = pfSt.removeEquation(equation).addEquations(newEquations)
         val rule = equation.getRule(side)
-        if ruleSelector(rule) then newPfSt = newPfSt.addHypothesis(rule)
+        if ruleAcceptor(rule) then newPfSt = newPfSt.addHypothesis(rule)
         Some(newPfSt)
     )
   }
@@ -166,7 +166,7 @@ object EXPANSION extends INFERENCE_RULE {
     val constrainedTerm = equation.toConstrainedTerm
     val updatedPos = (if side == Side.Left then 0 else 1) :: position
     val applicableRules = pfSt.rules.flatMap( rule => constrainedTerm.term.subTermAt(updatedPos).instanceOf(rule.left).map( sub => (rule, sub) ) )
-    applicableRules.map( (rule, sub) => constrainedTerm.rewriteAtPos(updatedPos, rule, sub) match { case ConstrainedTerm(App(_, List(left, right)), cons) => Equation(left, right, cons) } )
+    applicableRules.map( (rule, sub) => constrainedTerm.rewriteAtPos(updatedPos, rule, sub) match { case ConstrainedTerm(App(_, List(left, right)), cons) => Equation(left, right, cons).addConstraints(rule.substituteConstraints(sub)) } )
   }
 }
 

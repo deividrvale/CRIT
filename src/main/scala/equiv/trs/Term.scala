@@ -138,6 +138,8 @@ object Term {
   type Position = List[Int]
   type Substitution = Map[Var, Term]
 
+  def positionToString(p: Position): String = PrintUtils.positionColour ++ { if p.isEmpty then "root" else p.mkString("", ":", "") } ++ Console.RESET
+
   case class Var(name: String, sort: Sort) extends Term {
     override def rootFunc: Option[FunctionSymbol] = None
 
