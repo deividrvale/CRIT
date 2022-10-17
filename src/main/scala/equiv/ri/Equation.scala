@@ -17,7 +17,7 @@ object Equation {
 
 case class Equation(left: Term, right : Term, var constraints : Set[Constraint]) extends ConstrainedObject(constraints) {
 
-  val vars: Set[Var] = left.vars ++ right.vars ++ constraints.flatMap(_.term.vars)
+  val vars: Set[Var] = left.vars ++ right.vars ++ constraintVars
 
   val functionSymbols: Set[FunctionSymbol] = left.functionSymbols ++ right.functionSymbols ++ constraints.flatMap(_.term.functionSymbols)
 

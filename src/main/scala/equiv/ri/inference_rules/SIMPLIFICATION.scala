@@ -1,10 +1,12 @@
 package equiv.ri.inference_rules
 
+import equiv.InputHandler
 import equiv.ri.{Equation, ProofState}
 import equiv.ri.Equation.Side
 import equiv.ri.inference_rules.SIMPLIFICATION
 import equiv.trs.{Constraint, Rule, Term}
 import equiv.trs.Term.{Position, Substitution, Var}
+import equiv.utils.BooleanUtils.implies
 import equiv.utils.Z3
 import equiv.utils.ListExtension.onNonEmpty
 
@@ -198,16 +200,24 @@ object SIMPLIFICATION extends INFERENCE_RULE {
 
   /** An auxiliary function for the [[getSIMPLIFICATIONEquationSideRuleRedexPositions]] method that returns all [[Position]]s where SIMPLIFICATION can be performed with the given [[Equation]], [[Side]] and [[Rule]] */
   def getSIMPLIFICATIONEquationSideRuleRedexPositionsAux(pfSt: ProofState, equation: Equation, side: Side, rule: Rule): List[Position] = {
+    val equationConstraint = equation.getConstrainsConjunctAsTerm
     equation.getSide(side)
       .findSubTerms(_.instanceOf(rule.left))
-      .filter((_, _, s: Substitution) =>
-        val constraints = equation.getConstrainsConjunctAsTerm ;
-        // Check if substitution s respects constraint ϕ, i.e. s(x) is a value for all x ∈ Var (ϕ) and [[ϕγ]] = T.
-        s.forall { (x, sx) => !constraints.vars.contains(x) || sx.isValue } &&
-          Z3.implies(
-            constraints,
-            rule.getConstrainsConjunctAsTerm.applySubstitution(s))
-      )
+      .filter((_, _, substitution: Substitution) => {
+        println(substitution);
+        // γ(x) is a value or variable in Var (ϕ) for all x ∈ LVar (l → r [ψ]), and ϕ ⇒ (ψγ) is valid.
+        val a = substitution.forall((variable, term) =>
+          implies(rule.logicVars.contains(variable),
+            term.isValue ||
+              (term match {
+                case v: Var => equationConstraint.vars.contains(v)
+                case _ => false
+              })))
+        val b = Z3.implies(
+          equationConstraint,
+          rule.getConstrainsConjunctAsTerm.applySubstitution(substitution))
+        a && b
+      })
       .map(_._2)
   }
 }

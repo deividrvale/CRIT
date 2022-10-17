@@ -108,6 +108,9 @@ object Temp {
     val sumUpRecEq: Equation = Equation(makeAppUn(sumUp, x), makeAppUn(sumRec, x), Set())
     val sumUpDownEq: Equation = Equation(makeAppUn(sumUp, x), makeAppUn(sumDown, x), Set())
     val sumDownRecEq: Equation = Equation(makeAppUn(sumDown, x), makeAppUn(sumRec, x), Set())
+
+    val sumUpRec1: Equation = Equation(makeAppUn(returnInt, zero), makeAppUn(sumRec, x), Set(makeConsBin(one, gt, x)))
+    val sumUpRec2: Equation = Equation(makeAppUn(returnInt, zero), makeAppUn(sumRec, y), Set(makeConsBin(one, gt, y)))
   }
 
   /** @return A function symbol of type [Int x Int] => Bool */

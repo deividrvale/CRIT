@@ -52,7 +52,8 @@ object Z3 {
   /** @return Whether the first term implies the second */
   def implies(term1: Term, term2: Term): Boolean = {
     val formula = TheorySymbols.notX(TheorySymbols.implXY(term1, term2))
-    solve(formula) == SolverResult.Unsatisfiable
+    val result = solve(formula)
+    result == SolverResult.Unsatisfiable
   }
 
   /** @return Whether the first term implies the second and the second implies the first */

@@ -17,7 +17,11 @@ object Equiv {
 
     val rules = sumUpRules ++ sumRecRules
 
-    val pfSt = ProofState(Set(sumUpRecEq), rules)
+    val pfSt = ProofState(Set(
+//      sumUpRecEq,
+      sumUpRec1,
+      sumUpRec2
+    ), rules)
 
     InputHandler.main(pfSt)
 //    equiv.CLILogic(pfSt).RI()

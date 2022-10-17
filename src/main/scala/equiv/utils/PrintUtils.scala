@@ -12,4 +12,6 @@ object PrintUtils {
 
   /** Append " failure." to the given string and colour it red. */
   def failureString(string: String): String = s"$failureColour$string failed.${Console.RESET}"
+
+  def printRed(string: String): String = s"$failureColour$string${Console.RESET}"
 }

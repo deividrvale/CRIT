@@ -5,12 +5,17 @@ import equiv.ri.Equation.Side
 import equiv.ri.inference_rules.{COMPLETENESS, CONSTRUCTOR, DELETION, DISPROVE, EQ_DELETION, EXPANSION, GENERALIZATION, POSTULATE, SIMPLIFICATION}
 import equiv.trs.Term.Position
 import equiv.trs.{Rule, Term}
-import equiv.utils.OptionExtension.printFailureOnNone
+import equiv.utils.OptionExtension.printRedOnNone
+import equiv.utils.PrintUtils
 
 import scala.collection.immutable.ListMap
 import scala.io.StdIn.readLine
 
 object InputHandler {
+  var errorMessage = "Failure"
+  var endMessage = "Rewriting induction complete. All equations deleted."
+  val Z3SimplifyName = "Z3 simplify"
+
   val inferenceRules: List[String] = List(
     COMPLETENESS.name,
     CONSTRUCTOR.name,
@@ -20,32 +25,55 @@ object InputHandler {
     EXPANSION.name,
     GENERALIZATION.name,
     POSTULATE.name,
-    SIMPLIFICATION.name)
+    SIMPLIFICATION.name,
+    Z3SimplifyName)
 
   def main(initialPfSt: ProofState): Unit = {
     var pfSt = initialPfSt
-    while true do
+    while pfSt.equations.nonEmpty do
       println(pfSt.toPrintString())
-      (inferenceRuleSelector(inferenceRules) match {
-        case CONSTRUCTOR.name =>
-          CONSTRUCTOR.tryCONSTRUCTOR(pfSt, equationSelector)
-        case COMPLETENESS.name =>
-          COMPLETENESS.tryCOMPLETENESS(pfSt)
-        case DELETION.name =>
-          DELETION.tryDELETION(pfSt, equationSelector)
-        case DISPROVE.name =>
-          DISPROVE.tryDISPROVE(pfSt).map(_ => pfSt)
-        case EQ_DELETION.name =>
-          EQ_DELETION.tryEQ_DELETION(pfSt, equationSelector, positionsSelector)
-        case EXPANSION.name =>
-          EXPANSION.tryEXPANSION(pfSt, equationSelector, sideSelector, positionSelector, ruleAcceptor)
-        case GENERALIZATION.name =>
-          None
-        case POSTULATE.name =>
-          None
-        case SIMPLIFICATION.name =>
-          SIMPLIFICATION.trySIMPLIFICATION(pfSt, equationSelector, sideSelector, ruleSelector, positionSelector)
-      }).printFailureOnNone("Inference rule").foreach(pfSt = _) // If tactic fails print this. Otherwise, change the pfSt to the new pfSt
+      val maybePfStMessage = doRIIteration(pfSt)
+      maybePfStMessage._1 match {
+        case None => PrintUtils.printRed(errorMessage)
+        case Some(newPfSt) => pfSt = newPfSt
+      }
+      println(maybePfStMessage._2)
+    println(endMessage)
+  }
+
+  /** Do an iteration of the rewriting induction process.
+   * Let the user choose an inference rule (or Z3 simplification) to apply.
+   * @return 1st tuple element: [[Some]]([[ProofState]]) on success and [[None]] on failure.
+   * 2nd tuple element: message to print after application. */
+  def doRIIteration(pfSt: ProofState): (Option[ProofState], String) = {
+    var message = ""
+    (inferenceRuleSelector(inferenceRules) match {
+      case CONSTRUCTOR.name =>
+        CONSTRUCTOR.tryCONSTRUCTOR(pfSt, equationSelector)
+      case COMPLETENESS.name =>
+        COMPLETENESS.tryCOMPLETENESS(pfSt)
+      case DELETION.name =>
+        DELETION.tryDELETION(pfSt, equationSelector)
+      case DISPROVE.name =>
+        DISPROVE.tryDISPROVE(pfSt).map(_ => {
+          endMessage = "ProofState false"; pfSt.removeAllEquations()
+        })
+      case EQ_DELETION.name =>
+        EQ_DELETION.tryEQ_DELETION(pfSt, equationSelector, positionsSelector)
+      case EXPANSION.name =>
+        EXPANSION.tryEXPANSION(pfSt, equationSelector, sideSelector, positionSelector, ruleAcceptor)
+      case GENERALIZATION.name =>
+        message = "Not implemented yet."
+        None
+      case POSTULATE.name =>
+        message = "Not implemented yet."
+        None
+      case SIMPLIFICATION.name =>
+        SIMPLIFICATION.trySIMPLIFICATION(pfSt, equationSelector, sideSelector, ruleSelector, positionSelector)
+      case Z3SimplifyName =>
+        message = "Applied Z3 simplification."
+        None
+    }, message)
   }
 
   def ruleAcceptor(rule: Rule): Boolean = {

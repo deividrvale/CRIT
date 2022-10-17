@@ -47,6 +47,9 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], hypotheses: Se
   def removeEquation(equation: Equation): ProofState =
     this.copy(equations = equations - equation)
 
+  def removeAllEquations(): ProofState =
+    this.copy(equations = Set())
+
   /** Add a single equation to the proofstate */
   def addEquation(equation: Equation): ProofState =
     this.copy(equations = equations + equation)
