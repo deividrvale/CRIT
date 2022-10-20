@@ -160,27 +160,14 @@ object EXPANSION extends INFERENCE_RULE {
   }
 
   /** Helper function that returns a [[List]] of [[Position]]s where EXPANSION can be performed. */
-  @deprecated
   def getEXPANSIONEquationSideSubtermPositionsAux(pfSt: ProofState, equation: Equation, side: Side, position: Position): List[Position] = {
-    val subterm = equation.getSide(side).subTermAt(position)
-    if subterm.isBasic(pfSt.definedSymbols) then
-      // Check if there is at least one applicable rule
-      if pfSt.rules.view.map( rule => subterm.instanceOf(rule.left) ).nonEmpty then List(position) else List()
-      // Don't recurse, because subterms of a basic (sub)term are never basic
-    else subterm match {
-      case App(_, args) => args.indices.flatMap( id => getEXPANSIONEquationSideSubtermPositionsAux(pfSt, equation, side, position :+ id) ).toList
-      case Var(_, _) => List()
-    }
-  }
-  /** Helper function that returns a [[List]] of [[Position]]s where EXPANSION can be performed. */
-  def getEXPANSIONEquationSideSubtermPositionsAux2(pfSt: ProofState, equation: Equation, side: Side, position: Position): List[Position] = {
     val subterm = equation.getSide(side).subTermAt(position)
     if subterm.isBasic(pfSt.definedSymbols) then
       // Check if there is at least one applicable rule
       if pfSt.rules.view.map( rule => subterm.unifiableWith(rule.left) ).nonEmpty then List(position) else List()
       // Don't recurse, because subterms of a basic (sub)term are never basic
     else subterm match {
-      case App(_, args) => args.indices.flatMap( id => getEXPANSIONEquationSideSubtermPositionsAux2(pfSt, equation, side, position :+ id) ).toList
+      case App(_, args) => args.indices.flatMap( id => getEXPANSIONEquationSideSubtermPositionsAux(pfSt, equation, side, position :+ id) ).toList
       case Var(_, _) => List()
     }
   }
