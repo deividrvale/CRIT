@@ -126,9 +126,13 @@ object EXPANSION extends INFERENCE_RULE {
     val constrainedTerm = equation.toConstrainedTerm
     val updatedPos = (if side == Side.Left then 0 else 1) :: position
     val applicableRules = pfSt.rules.flatMap(rule => constrainedTerm.term.subTermAt(updatedPos).unifiableWith(rule.left).map(sub => (rule, sub)))
-    applicableRules.map((rule, sub) => constrainedTerm.rewriteAtPos(updatedPos, rule, sub) match {
-      case ConstrainedTerm(App(_, List(left, right)), cons) => Equation(left.applySubstitution(sub), right.applySubstitution(sub), cons.map(_.applySubstitution(sub))).addConstraints(rule.substituteConstraints(sub))
-    })
+    applicableRules.map((rule, sub) => doEXPANSIONRule(constrainedTerm, updatedPos, rule, sub))
+  }
+
+  def doEXPANSIONRule(constrainedTerm: ConstrainedTerm, position: Position, rule: Rule, substitution: Substitution): Equation = {
+    constrainedTerm.applySubstitution(substitution).rewriteAtPos(position, rule, substitution) match {
+      case ConstrainedTerm(App(_, List(left, right)), cons) => Equation(left, right, cons).addConstraints(rule.substituteConstraints(substitution))
+    }
   }
 
   /** @return A [[List]] of [[Equation]]s from a [[ProofState]] to which EXPANSION can be applied. */
