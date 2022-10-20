@@ -18,9 +18,9 @@ object Equiv {
     val rules = sumUpRules ++ sumRecRules
 
     val pfSt = ProofState(Set(
-      eqDelEq6
+      expEq2
     ),
-      Set()
+      Set(fRule)
 //      rules
     )
 

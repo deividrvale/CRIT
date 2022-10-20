@@ -113,11 +113,22 @@ object EXPANSION extends INFERENCE_RULE {
     getEXPANSIONEquationSideSubtermPositions(pfSt, equation, side).onNonEmpty(
       positions =>
         val newEquations = generateEXPANSIONEquations(pfSt, equation, side, subtermSelector(List(equation.getSide(side)), positions))
-        var newPfSt = pfSt.removeEquation(equation).addEquations(newEquations)
+        val newPfSt = pfSt.removeEquation(equation).addEquations(newEquations)
         val rule = equation.getRule(side)
-        if ruleAcceptor(rule) then newPfSt = newPfSt.addHypothesis(rule)
-        Some(newPfSt)
+        if ruleAcceptor(rule) then
+          Some(newPfSt.addHypothesis(rule))
+        else Some(newPfSt)
     )
+  }
+
+  /** Apply EXPANSION to the given [[Position]] in the given [[Side]] of the [[Equation]] in the [[ProofState]]. */
+  def generateEXPANSIONEquations(pfSt: ProofState, equation: Equation, side: Side, position: Position): Set[Equation] = {
+    val constrainedTerm = equation.toConstrainedTerm
+    val updatedPos = (if side == Side.Left then 0 else 1) :: position
+    val applicableRules = pfSt.rules.flatMap(rule => constrainedTerm.term.subTermAt(updatedPos).unifiableWith(rule.left).map(sub => (rule, sub)))
+    applicableRules.map((rule, sub) => constrainedTerm.rewriteAtPos(updatedPos, rule, sub) match {
+      case ConstrainedTerm(App(_, List(left, right)), cons) => Equation(left.applySubstitution(sub), right.applySubstitution(sub), cons.map(_.applySubstitution(sub))).addConstraints(rule.substituteConstraints(sub))
+    })
   }
 
   /** @return A [[List]] of [[Equation]]s from a [[ProofState]] to which EXPANSION can be applied. */
@@ -149,6 +160,7 @@ object EXPANSION extends INFERENCE_RULE {
   }
 
   /** Helper function that returns a [[List]] of [[Position]]s where EXPANSION can be performed. */
+  @deprecated
   def getEXPANSIONEquationSideSubtermPositionsAux(pfSt: ProofState, equation: Equation, side: Side, position: Position): List[Position] = {
     val subterm = equation.getSide(side).subTermAt(position)
     if subterm.isBasic(pfSt.definedSymbols) then
@@ -160,14 +172,19 @@ object EXPANSION extends INFERENCE_RULE {
       case Var(_, _) => List()
     }
   }
-
-  /** Apply EXPANSION to the given [[Position]] in the given [[Side]] of the [[Equation]] in the [[ProofState]]. */
-  def generateEXPANSIONEquations(pfSt: ProofState, equation: Equation, side: Side, position: Position): Set[Equation] = {
-    val constrainedTerm = equation.toConstrainedTerm
-    val updatedPos = (if side == Side.Left then 0 else 1) :: position
-    val applicableRules = pfSt.rules.flatMap( rule => constrainedTerm.term.subTermAt(updatedPos).instanceOf(rule.left).map( sub => (rule, sub) ) )
-    applicableRules.map( (rule, sub) => constrainedTerm.rewriteAtPos(updatedPos, rule, sub) match { case ConstrainedTerm(App(_, List(left, right)), cons) => Equation(left, right, cons).addConstraints(rule.substituteConstraints(sub)) } )
+  /** Helper function that returns a [[List]] of [[Position]]s where EXPANSION can be performed. */
+  def getEXPANSIONEquationSideSubtermPositionsAux2(pfSt: ProofState, equation: Equation, side: Side, position: Position): List[Position] = {
+    val subterm = equation.getSide(side).subTermAt(position)
+    if subterm.isBasic(pfSt.definedSymbols) then
+      // Check if there is at least one applicable rule
+      if pfSt.rules.view.map( rule => subterm.unifiableWith(rule.left) ).nonEmpty then List(position) else List()
+      // Don't recurse, because subterms of a basic (sub)term are never basic
+    else subterm match {
+      case App(_, args) => args.indices.flatMap( id => getEXPANSIONEquationSideSubtermPositionsAux2(pfSt, equation, side, position :+ id) ).toList
+      case Var(_, _) => List()
+    }
   }
+
 }
 
 

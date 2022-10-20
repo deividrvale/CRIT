@@ -67,6 +67,21 @@ trait Term {
     }
   }
 
+  /** Check if the current term (t1) is unifiable with the given term (t2), i.e. there exists a substitution γ such that t1γ = t2γ */
+  def unifiableWith(term: Term): Option[Substitution] = {
+    (this, term) match {
+      case (_, v@Var(_,_)) => Some(Map(v -> this))
+      case (v@Var(_,_), _) => Some(Map(v -> term))
+      case (App(f1, args1), App(f2, args2)) =>
+        if (f1 == f2) {
+          (args1 zip args2).map(ts => ts._1.unifiableWith(ts._2)).foldLeft[Option[Substitution]](Some(Map.empty))({
+            case (Some(map1), Some(map2)) => MapUtils.union(map1, map2)
+            case _ => None
+          })
+        } else None
+    }
+  }
+
   /** Searches all subterms with the given property.
    * @param property A property of terms.
    * @return All subterms with the property together with their positions. */

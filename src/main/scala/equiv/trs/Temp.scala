@@ -120,6 +120,11 @@ object Temp {
 
     val sumUpRec1: Equation = Equation(makeAppUn(returnInt, zero), makeAppUn(sumRec, x), Set(makeConsBin(one, gt, x)))
     val sumUpRec2: Equation = Equation(makeAppUn(returnInt, zero), makeAppUn(sumRec, y), Set(makeConsBin(one, gt, y)))
+
+    val f: FunctionSymbol = funcIntInt("f", false)
+    val fRule: Rule = Rule(makeAppUn(f, one), makeAppUn(returnInt, two), Set())
+    val expEq1: Equation = Equation(makeAppUn(f, x), makeAppUn(returnInt, two), Set())
+    val expEq2: Equation = Equation(makeAppUn(f, x), makeAppUn(returnInt, makeAppBin(add, one, one)), Set())
   }
 
   /** @return A function symbol of type [Int x Int] => Bool */
