@@ -11,28 +11,6 @@ import equiv.utils.ListExtension.onNonEmpty
 object DISPROVE extends INFERENCE_RULE {
   val name = "DISPROVE"
 
-  /** Try to apply DISPROVE on the first possible equation.
-   * @param pfSt The [[ProofState]] to try to apply DISPROVE to.
-   * @return [[Some]]`(false)` if DISPROVE could be applied, [[None]] otherwise. */
-  @deprecated
-  def oldTryDisprove(pfSt: ProofState): Option[Boolean] = {
-    if (pfSt.getFlag) {
-      pfSt.equations.view.flatMap(equation => oldTryDisproveOnEquation(equation, pfSt)).headOption
-    } else {
-      None
-    }
-  }
-
-  /** Try to apply DISPROVE on the given equation {s ~~ t [ϕ]}.
-   * @param equation The [[Equation]] to try to apply DISPROVE on.
-   * @param pfSt The [[ProofState]] to try to apply DISPROVE to.
-   * @return [[Some]]`(false)` if DISPROVE could be applied, [[None]] otherwise. */
-  @deprecated
-  def oldTryDisproveOnEquation(equation: Equation, pfSt: ProofState): Option[Boolean] = {
-    val s = equation.left; val t = equation.right; val phi = equation.getConstrainsConjunctAsTerm
-    if disproveCase1(s, t, phi) || disproveCase2(s, t, phi, pfSt) || disproveCase3(s, t, phi, pfSt) then { println("DISPROVE proofstate.") ; Some(false) } else None
-  }
-
   /** Try DISPROVE.
    * @param pfSt The current [[ProofState]].
    * @return [[Some]]([[false]]) if there is an [[Equation]] subject to DISPROVE, [[None]] otherwise. */
