@@ -13,6 +13,8 @@ trait Term {
 
   def isTheory: Boolean
 
+  def isValue: Boolean
+
   /** Check if this term is basic, i.e. its root is a defined symbol and all its arguments are constructor terms */
   def isBasic(definedSymbols: Set[FunctionSymbol]): Boolean = this match {
     case Var(_, _) => false
@@ -61,6 +63,21 @@ trait Term {
             case (Some(map1),Some(map2)) => MapUtils.union(map1,map2)
             case _ => None
           }
+        } else None
+    }
+  }
+
+  /** Check if the current term (t1) is unifiable with the given term (t2), i.e. there exists a substitution γ such that t1γ = t2γ */
+  def unifiableWith(term: Term): Option[Substitution] = {
+    (this, term) match {
+      case (_, v@Var(_,_)) => Some(Map(v -> this))
+      case (v@Var(_,_), _) => Some(Map(v -> term))
+      case (App(f1, args1), App(f2, args2)) =>
+        if (f1 == f2) {
+          (args1 zip args2).map(ts => ts._1.unifiableWith(ts._2)).foldLeft[Option[Substitution]](Some(Map.empty))({
+            case (Some(map1), Some(map2)) => MapUtils.union(map1, map2)
+            case _ => None
+          })
         } else None
     }
   }
@@ -116,6 +133,9 @@ trait Term {
   def rewriteAtPos(position: Position, rule: Rule, substitution: Substitution): Term =
     substituteAtPos(position, rule.right.applySubstitution(substitution))
 
+  /** Check if the term is subject to the EQ-DELETION rule, i.e. it is in `Terms(Σ_theory, Var(ϕ))`, where ϕ is the constraint of the equation subject to EQ-DELETION.
+   * @param constraintVars A set of variables (`Var(ϕ)`) from the constraint subject to the EQ-DELETION rule.
+   * @return [[true]] if the term is subject to the EQ-DELETION rule, [[false]] otherwise. */
   def isEqDeletable(constraintVars: Set[Var]) : Boolean = this match {
     case v@Var(_, _) => constraintVars.contains(v)
     case App(f, args) => f.isTheory && args.forall(_.isEqDeletable(constraintVars))
@@ -133,10 +153,14 @@ object Term {
   type Position = List[Int]
   type Substitution = Map[Var, Term]
 
+  def positionToString(p: Position): String = PrintUtils.positionColour ++ { if p.isEmpty then "root" else p.mkString("[", ":", "]") } ++ Console.RESET
+
   case class Var(name: String, sort: Sort) extends Term {
     override def rootFunc: Option[FunctionSymbol] = None
 
     override def isTheory: Boolean = sort.isTheory
+
+    override def isValue: Boolean = false
 
     override def toString: String = toPrintString(false)
 
@@ -161,6 +185,8 @@ object Term {
     override def rootFunc: Option[FunctionSymbol] = Some(fun)
 
     override def isTheory: Boolean = fun.isTheory && args.forall(_.isTheory)
+
+    override def isValue: Boolean = fun.isValue
 
     val sort: Sort = if(fun.typing.output == Sort.Any) sortsArgsAny.head else fun.typing.output
 

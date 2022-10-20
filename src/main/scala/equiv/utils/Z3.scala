@@ -1,6 +1,10 @@
 package equiv.utils
 
-import equiv.trs.{FunctionSymbol, Sort, Term, Typing}
+import equiv.ri.Equation
+import equiv.trs.parsing.QuasiTerm.{App, InfixChain}
+import equiv.trs.*
+import equiv.trs.parsing.{QuasiSystem, QuasiTerm, QuasiTheory, TRSParser, Z3Parser}
+import equiv.trs.{FunctionSymbol, Sort, Term, Typing, parsing}
 
 import java.io.{File, PrintWriter}
 import sys.process.*
@@ -10,19 +14,36 @@ enum SolverResult:
 
 object Z3 {
   def main(args: Array[String]): Unit = {
-    def gt(x: Term, y: Term) = Term.App(FunctionSymbol(">", Typing(List(Sort.Int, Sort.Int), Sort.Bool)), List(x,y))
-    def lt(x: Term, y: Term) = Term.App(FunctionSymbol("<", Typing(List(Sort.Int, Sort.Int), Sort.Bool)), List(x,y))
-    def and(x: Term, y: Term) = Term.App(FunctionSymbol("and", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool)), List(x,y))
+//    solveMain()
+    simplala()
+  }
+
+  def simplala(): Unit = {
+    val equa: Equation = equiv.trs.Temp.TestEquations.monster
+    println(equa.toPrintString())
+    simplifyEquation(equa)
+  }
+
+  def solveMain(): Unit = {
+    def gt(x: Term, y: Term) = Term.App(FunctionSymbol(">", Typing(List(Sort.Int, Sort.Int), Sort.Bool)), List(x, y))
+
+    def lt(x: Term, y: Term) = Term.App(FunctionSymbol("<", Typing(List(Sort.Int, Sort.Int), Sort.Bool)), List(x, y))
+
+    def and(x: Term, y: Term) = Term.App(FunctionSymbol("or", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool)), List(x, y))
+
     def impl(x: Term, y: Term) = Term.App(FunctionSymbol("=>", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool)), List(x, y))
+
     def variable(v: String) = Term.Var(v, Sort.Int)
+
     def int(x: Int) = Term.App(FunctionSymbol(x.toString, Typing(List.empty, Sort.Int)))
+
     val x = variable("x")
 
     List(
-      lt(x, int(-1)),
-      gt(int(2), int(5)),
+      and(lt(x, int(-1)),
+        gt(int(2), int(5))),
       gt(int(5), int(5)),
-    ).foreach{ formula =>
+    ).foreach { formula =>
       println(formula)
       println(solve(formula))
     }
@@ -30,14 +51,14 @@ object Z3 {
 
   /** @return Whether the first term implies the second */
   def implies(term1: Term, term2: Term): Boolean = {
-    val formula = TermUtils.not(TermUtils.impl(term1, term2))
-    try { solve(formula) == SolverResult.Unsatisfiable }
-    finally { return false }
+    val formula = TheorySymbols.notX(TheorySymbols.implXY(term1, term2))
+    val result = solve(formula)
+    result == SolverResult.Unsatisfiable
   }
 
   /** @return Whether the first term implies the second and the second implies the first */
   def constraintBiImplication(term1: Term, term2: Term): Boolean = {
-    val formula = TermUtils.not(TermUtils.biImpl(term1, term2))
+    val formula = TheorySymbols.notX(TheorySymbols.biImplXY(term1, term2))
     solve(formula) == SolverResult.Unsatisfiable
   }
 
@@ -46,28 +67,40 @@ object Z3 {
     solve(term) == SolverResult.Satisfiable
   }
 
-  /** TODO */
-  def simplify(formula: Term): Term = {
-    val variables: Set[Term.Var] = formula.vars
-    val output: Iterator[String] = query(
-      s"""${variables.map{ v => s"(declare-fun $v () Int)" }.mkString("\n")}
-         |
-         |(check-sat)"""
-    )
-    Term.Var("x", Sort.Int)
-    ???
+  def simplifyEquation(equation: Equation): Equation = {
+    Equation(simplifyTerm(equation.left), simplifyTerm(equation.right), Constraint(simplifyTerm(equation.getConstrainsConjunctAsTerm)).split())
   }
 
-  def solve(formula: Term) : SolverResult = {
-    val variables: Set[Term.Var] = formula.vars
+  /** TODO */
+  def simplifyTerm(formula: Term): Term = {
+    val inputFile: File = File.createTempFile("input", ".smt2")
+    val q =
+      s"""|${formula.vars.map { v => s"(declare-const $v ${v.sort})" }.mkString("\n")}
+          |${formula.functionSymbols.map(f => if !f.isTheory then s"(declare-fun $f ${f.typing.input.mkString("(", " ", ")")} ${f.typing.output})" else "").mkString(sep = "\n")}
+          |(simplify ${formula.toStringApplicative})
+          |""".stripMargin
+    new PrintWriter(inputFile) {
+      write(q)
+      close()
+    }
+    val out: String = Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator.next()
+
+    new Z3Parser(out, formula.functionSymbols.map(f => (f.name, f)).toMap, formula.vars.map(v => (v.name, v)).toMap).parseTerm() match {
+      case Left(t: Term) => t
+      case Right(s: String) => println(s); formula
+    }
+  }
+
+  def solve(formula: Term): SolverResult = {
     val output: Iterator[String] = query(
-      s"""${variables.map{ v => s"(declare-fun $v () Int)" }.mkString("\n")}
-        |
-        |(assert
-        |   ${formula.toStringApplicative}
-        |)
-        |
-        |(check-sat)"""
+      s"""${formula.vars.map { v => s"(declare-const $v ${v.sort})" }.mkString("\n")}
+         |${formula.functionSymbols.map(f => if !f.isTheory then s"(declare-fun $f ${f.typing.input.mkString("(", " ", ")")} ${f.typing.output})" else "").mkString(sep = "\n")}
+         |
+         |(assert
+         |   ${formula.toStringApplicative}
+         |)
+         |
+         |(check-sat)"""
     )
 
     output.next() match {
@@ -90,9 +123,9 @@ object Z3 {
       close()
     }
 
-    ////    For debugging:
-    //    println(inputFile.getAbsolutePath)
-    //    Thread.sleep(100000)
+//    For debugging:
+//    println(inputFile.getAbsolutePath)
+//    Thread.sleep(100000)
 
     Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator
   }

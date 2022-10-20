@@ -1,31 +1,19 @@
 package equiv.utils
 
+import equiv.ri.Equation
 import equiv.trs.Term.{App, Position, Var}
-import equiv.trs.Term
-import equiv.trs.{Constraint, FunctionSymbol, Sort, Term, Typing}
+import equiv.trs.*
 
 import scala.annotation.tailrec
 
 object TermUtils {
-  val conjunctionSymbol: String = "/\\"
+  val reservedFunctionSymbol = "~~~~"
 
-  val boolTrue: Term = App(FunctionSymbol("true", Typing(List(), Sort.Bool), isTheory = true),List())
-  val boolFalse: Term = App(FunctionSymbol("false", Typing(List(), Sort.Bool), isTheory = true),List())
-  def constraintTrue: Constraint = Constraint(boolTrue)
-  def constraintFalse: Constraint = Constraint(boolFalse)
-
-  def impl(x: Term, y: Term): App = App(FunctionSymbol("=>", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool), isTheory = true), List(x, y))
-  def biImpl(x: Term, y: Term): App = App(FunctionSymbol("<=>", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool), isTheory = true), List(x, y))
-  def and(x: Term, y: Term): App = App(FunctionSymbol("and", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool), isTheory = true), List(x, y))
-  def not(x: Term): App = App(FunctionSymbol("not", Typing(List(Sort.Bool), Sort.Bool), isTheory = true), List(x))
-  def is(x: Term, y: Term): App = App(FunctionSymbol("=", Typing(List(Sort.Any, Sort.Any), Sort.Bool), isTheory = true), List(x, y))
-  def notis(x: Term, y: Term): App = not(is(x,y))
-
-  var lastVarName = "v0"
+  var lastVarNameInt: Int = 0
 
   def getFreshVarName: String = {
-    val newVarName = "v" + (lastVarName.substring(1).toInt + 1).toString
-    lastVarName = newVarName
+    val newVarName = "v" + lastVarNameInt.toString
+    lastVarNameInt += 1
     newVarName
   }
 
@@ -43,5 +31,18 @@ object TermUtils {
       case (_, List()) => true
       case (List(), _) => true
     }
+  }
+
+  /** Check if the given string is an [[Int]], i.e. it potentially starts with [[-]] and contains furthermore only digits */
+  def isInt(string: String): Boolean = {
+    (string.head == '-' || string.head.isDigit) && string.tail.forall(_.isDigit)
+  }
+
+  /** If the given [[String]] is an [[Int]], then convert it to a [[FunctionSymbol]] with the corresponding value.
+   * @return [[Some]]([[FunctionSymbol]]) if the [[String]] is an [[Int]], otherwise [[None]] */
+  def maybeGetValue(string: String): Option[App] = if isInt(string) then Some(TheorySymbols.valInt(string.toInt)) else None
+
+  def getEqualityFunctionSymbol(equation: Equation): FunctionSymbol = {
+    FunctionSymbol(reservedFunctionSymbol, Typing(List(equation.left.sort, equation.right.sort), equation.left.sort), isTheory = false, isValue = false, None, isTemporary = true)
   }
 }

@@ -17,7 +17,9 @@ object Equation {
 
 case class Equation(left: Term, right : Term, var constraints : Set[Constraint]) extends ConstrainedObject(constraints) {
 
-  val vars: Set[Var] = left.vars ++ right.vars ++ constraints.flatMap(_.term.vars)
+  val vars: Set[Var] = left.vars ++ right.vars ++ constraintVars
+
+  val functionSymbols: Set[FunctionSymbol] = left.functionSymbols ++ right.functionSymbols ++ constraints.flatMap(_.term.functionSymbols)
 
   def getSide(side: Side): Term = side match {
     case Side.Left => left
@@ -34,6 +36,13 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
     case Side.Right => this.copy(right = term)
   }
 
+  def rewriteSideAtPos(side: Side, position: Position, rule: Rule, substitution: Substitution): Equation = {
+    this.replaceSide(side, this.getSide(side).rewriteAtPos(position, rule, substitution))
+  }
+
+  def replaceAllConstraints(newConstraints: Set[Constraint]): Equation =
+    this.copy(constraints = newConstraints)
+
   def addConstraint(newConstraint: Constraint): Equation =
     this.copy(constraints = constraints + newConstraint)
 
@@ -46,10 +55,23 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
   def withConstraint(newConstraints: Set[Constraint]): Equation =
     this.copy(constraints = newConstraints)
 
-  /** TODO Get the pairwise set of equalities for the constructor arguments in the equation */
-  def getConstructorArguments: Set[Equation] = ???
-
   def simplifyCons(): Equation = this.copy(constraints = super.simplify())
+
+  /** @param side The left side of the rule.
+   * @return A rewrite rule of the equation, where the orientation is determined by [[side]]. */
+  def getRule(side: Side): Rule = {
+    Rule(this.getSide(side), this.getOppositeSide(side), constraints)
+  }
+
+  /** Check if the current equation is an instance of the given equation.
+   * @param equation The equation to check for being more general.
+   * @return [[Some]]([[Substitution]]) if [[this]] is an instance of [[equation]], [[None]] otherwise. */
+  def instanceOf(equation: Equation): Option[Substitution] =
+    this.toConstrainedTerm.term.instanceOf(equation.toConstrainedTerm.term)
+
+  /** Get the equation represented as a constrained term, where the equality symbol (~~) is seen as a fresh function symbol. */
+  def toConstrainedTerm: ConstrainedTerm =
+    ConstrainedTerm(App(TermUtils.getEqualityFunctionSymbol(this), List(left, right)), constraints)
 
   // *************************************************** TACTICS *************************************************** //
 
@@ -70,10 +92,10 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
     while(funcNames.contains(freshName)) {
       freshName = new Random().nextString(4)
     }
-    FunctionSymbol(freshName, Typing(List(left.sort, right.sort), left.sort), isTheory = false, isValue = false, Some(equiv.trs.Infix(equiv.trs.InfixKind.Left, 0)))
+    FunctionSymbol(freshName, Typing(List(left.sort, right.sort), left.sort), isTheory = false, isValue = false, None)
   }
 
   override def toString: String = toPrintString(false)
 
-  override def toPrintString(colours: Boolean = true): String = s"${left.toPrintString(colours)} ~~ ${right.toPrintString(colours)} ${super.toPrintString(colours)}"
+  override def toPrintString(colours: Boolean = true): String = s"${left.toPrintString(colours)} ~~ ${right.toPrintString(colours)}${if constraints.nonEmpty then " " else ""}${super.toPrintString(colours)}"
 }

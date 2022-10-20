@@ -14,6 +14,8 @@ object OptionExtension {
      * @param string The string to print to the console
      * @return The current object, unaltered */
     def printFailureOnNone(string: String): Option[A] = option.printOnNone(PrintUtils.failureString(string))
+    
+    def printRedOnNone(string: String): Option[A] = option.printOnNone(PrintUtils.failureColourString(string))
 
     /** If the current object is [[None]], return the given value, otherwise return itself.
      * @param value Value to return if the current object is [[None]]
