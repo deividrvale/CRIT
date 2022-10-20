@@ -7,7 +7,8 @@ import equiv.trs.*
 import scala.annotation.tailrec
 
 object TermUtils {
-  val reservedFunctionSymbol = "~~~~"
+  val equalityFunctionSymbolName: String = "~~"
+  val reservedFunctionSymbol: String = equalityFunctionSymbolName ++ equalityFunctionSymbolName
 
   var lastVarNameInt: Int = 0
 
