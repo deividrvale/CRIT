@@ -143,8 +143,10 @@ object EQ_DELETION extends INFERENCE_RULE {
    * @param equationSelector Function that selects an [[Equation]] from a non-empty list of [[Equation]]s.
    * @param positionsSelector Function that selects a list of [[Position]]s from a non-empty list of [[Position]]s.
    * @return [[Some]]([[pfSt]]) after application of EQ-DELETION if possible, otherwise [[None]]. */
-  def tryEQ_DELETION(pfSt: ProofState, equationSelector: List[Equation] => Equation, positionsSelector: List[Position] => List[Position]): Option[ProofState] = {
-    getEQ_DELETIONEquations(pfSt).onNonEmpty(eqs => tryEQ_DELETIONOnEquation(pfSt, equationSelector(eqs), positionsSelector))
+  def tryEQ_DELETION(pfSt: ProofState, equationSelector: List[Equation] => Equation, positionsSelector: (Iterable[Term], List[Position]) => List[Position]): Option[ProofState] = {
+    getEQ_DELETIONEquations(pfSt).onNonEmpty(eqs =>
+      tryEQ_DELETIONOnEquation(pfSt, equationSelector(eqs), positionsSelector)
+    )
   }
 
   /** Try to apply EQ-DELETION on the given [[ProofState]] and [[Equation]].
@@ -152,8 +154,15 @@ object EQ_DELETION extends INFERENCE_RULE {
    * @param equation The [[Equation]] subject to EQ-DELETION.
    * @param positionsSelector Function that selects a list of [[Position]]s from a non-empty list of [[Position]]s.
    * @return [[Some]]([[pfSt]]) after application of EQ-DELETION if possible, otherwise [[None]]. */
-  def tryEQ_DELETIONOnEquation(pfSt: ProofState, equation: Equation, positionsSelector: List[Position] => List[Position]): Option[ProofState] = {
-    getEQ_DELETIONEquationPositions(pfSt, equation).onNonEmpty(positions => Some( doEQ_DELETIONOnEquationPositions(pfSt, equation, positionsSelector(positions)) ))
+  def tryEQ_DELETIONOnEquation(pfSt: ProofState, equation: Equation, positionsSelector: (Iterable[Term], List[Position]) => List[Position]): Option[ProofState] = {
+    getEQ_DELETIONEquationPositions(pfSt, equation).onNonEmpty(positions =>
+      Some(
+        doEQ_DELETIONOnEquationPositions(pfSt, equation,
+          //positionsSelector(List(equation.getSide(Side.Left), equation.getSide(Side.Right)), positions)
+          positions
+        )
+      )
+    )
   }
 
   /** Try to apply EQ-DELETION on the given [[ProofState]].
@@ -178,7 +187,7 @@ object EQ_DELETION extends INFERENCE_RULE {
 
   /** @return A [[List]] of [[Position]]s to which EQ-DELETION can be applied. May be empty. */
   def getEQ_DELETIONEquationPositions(pfSt: ProofState, equation: Equation): List[Position] = {
-    getEQ_DELETIONEquationPositionsAux(equation.left, equation.right, equation.constraintVars)
+    getEQ_DELETIONMinimumPositions(equation.left, equation.right, equation.constraintVars)
   }
 
   /** Auxiliary function that recursively computes all positions of two [[Term]]s where EQ-DELETION can be applied.
@@ -196,5 +205,17 @@ object EQ_DELETION extends INFERENCE_RULE {
       case _ =>
     }
     positions
+  }
+
+  def getEQ_DELETIONMinimumPositions(leftTerm: Term, rightTerm: Term, constraintVars: Set[Var]): List[Position] = {
+    (leftTerm, rightTerm) match {
+      case (App(f1, args1), App(f2, args2)) =>
+        if f1 == f2 then args1.indices.flatMap(id => getEQ_DELETIONMinimumPositions(args1(id), args2(id), constraintVars).map(id :: _)).toList
+        else List(List())
+      case (Var(x1, _), Var(x2, _)) =>
+        if x1 == x2 then List()
+        else List(List())
+      case _ => List(List())
+    }
   }
 }

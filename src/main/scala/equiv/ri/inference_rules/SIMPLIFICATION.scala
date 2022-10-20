@@ -98,7 +98,7 @@ object SIMPLIFICATION extends INFERENCE_RULE {
    * @param ruleSelector Function that selects a [[Rule]] from a non-empty list of [[Rule]]s.
    * @param positionSelector Function that selects a [[Position]] from a non-empty list of [[Position]]s.
    * @return [[Some]]([[pfSt]]) after application of SIMPLIFICATION if possible, otherwise [[None]] */
-  def trySIMPLIFICATION(pfSt: ProofState, equationSelector: List[Equation] => Equation, sideSelector: List[Side] => Side, ruleSelector: List[Rule] => Rule, positionSelector: List[Position] => Position): Option[ProofState] = {
+  def trySIMPLIFICATION(pfSt: ProofState, equationSelector: List[Equation] => Equation, sideSelector: List[Side] => Side, ruleSelector: List[Rule] => Rule, positionSelector: (Iterable[Term], List[Position]) => Position): Option[ProofState] = {
     getSIMPLIFICATIONEquations(pfSt).onNonEmpty(
       eqs => trySIMPLIFICATIONOnEquation(pfSt, equationSelector(eqs), sideSelector, ruleSelector, positionSelector)
     )
@@ -111,7 +111,7 @@ object SIMPLIFICATION extends INFERENCE_RULE {
    * @param ruleSelector Function that selects a [[Rule]] from a non-empty list of [[Rule]]s.
    * @param positionSelector Function that selects a [[Position]] from a non-empty list of [[Position]]s.
    * @return [[Some]]([[pfSt]]) after application of SIMPLIFICATION if possible, otherwise [[None]] */
-  def trySIMPLIFICATIONOnEquation(pfSt: ProofState, equation: Equation, sideSelector: List[Side] => Side, ruleSelector: List[Rule] => Rule, positionSelector: List[Position] => Position): Option[ProofState] = {
+  def trySIMPLIFICATIONOnEquation(pfSt: ProofState, equation: Equation, sideSelector: List[Side] => Side, ruleSelector: List[Rule] => Rule, positionSelector: (Iterable[Term], List[Position]) => Position): Option[ProofState] = {
     getSIMPLIFICATIONEquationSides(pfSt, equation).onNonEmpty(
       sides => trySIMPLIFICATIONOnEquationSide(pfSt, equation, sideSelector(sides), ruleSelector, positionSelector)
     )
@@ -124,7 +124,7 @@ object SIMPLIFICATION extends INFERENCE_RULE {
    * @param ruleSelector Function that selects a [[Rule]] from a non-empty list of [[Rule]]s.
    * @param positionSelector Function that selects a [[Position]] from a non-empty list of [[Position]]s.
    * @return [[Some]]([[pfSt]]) after application of SIMPLIFICATION if possible, otherwise [[None]] */
-  def trySIMPLIFICATIONOnEquationSide(pfSt: ProofState, equation: Equation, side: Side, ruleSelector: List[Rule] => Rule, positionSelector: List[Position] => Position): Option[ProofState] = {
+  def trySIMPLIFICATIONOnEquationSide(pfSt: ProofState, equation: Equation, side: Side, ruleSelector: List[Rule] => Rule, positionSelector: (Iterable[Term], List[Position]) => Position): Option[ProofState] = {
     (getSIMPLIFICATIONEquationSideRules(pfSt, equation, side) ++ getSIMPLIFICATIONEquationSideHypotheses(pfSt, equation, side)).onNonEmpty(
       rules => trySIMPLIFICATIONOnEquationSideRule(pfSt, equation, side, ruleSelector(rules), positionSelector)
     )
@@ -137,9 +137,9 @@ object SIMPLIFICATION extends INFERENCE_RULE {
    * @param rule The [[Rule]] used for SIMPLIFICATION.
    * @param positionSelector Function that selects a [[Position]] from a non-empty list of [[Position]]s.
    * @return [[Some]]([[pfSt]]) after application of SIMPLIFICATION if possible, otherwise [[None]] */
-  def trySIMPLIFICATIONOnEquationSideRule(pfSt: ProofState, equation: Equation, side: Side, rule: Rule, positionSelector: List[Position] => Position): Option[ProofState] = {
+  def trySIMPLIFICATIONOnEquationSideRule(pfSt: ProofState, equation: Equation, side: Side, rule: Rule, positionSelector: (Iterable[Term], List[Position]) => Position): Option[ProofState] = {
     getSIMPLIFICATIONEquationSideRuleRedexPositions(pfSt, equation, side, rule).onNonEmpty(
-      positions => doSIMPLIFICATIONOnEquationSideRulePosition(pfSt, equation, side, rule, positionSelector(positions))
+      positions => doSIMPLIFICATIONOnEquationSideRulePosition(pfSt, equation, side, rule, positionSelector(List(equation.getSide(side)), positions))
     )
   }
 
@@ -204,7 +204,6 @@ object SIMPLIFICATION extends INFERENCE_RULE {
     equation.getSide(side)
       .findSubTerms(_.instanceOf(rule.left))
       .filter((_, _, substitution: Substitution) => {
-        println(substitution);
         // γ(x) is a value or variable in Var (ϕ) for all x ∈ LVar (l → r [ψ]), and ϕ ⇒ (ψγ) is valid.
         val a = substitution.forall((variable, term) =>
           implies(rule.logicVars.contains(variable),

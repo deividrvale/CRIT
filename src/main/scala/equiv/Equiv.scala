@@ -9,23 +9,22 @@ import java.awt.Frame // usable for GUI
 object Equiv {
   def main(args: Array[String]): Unit = {    
     sample()
-    // parseAndDoRI("decompose")
   }
   
   def sample(): Unit = {
     import equiv.trs.Temp.Sums._
+    import equiv.trs.Temp.InferenceRuleEquations._
 
     val rules = sumUpRules ++ sumRecRules
 
     val pfSt = ProofState(Set(
-//      sumUpRecEq,
-//      sumUpRec1,
-//      sumUpRec2
-      eqDelEq
-    ), rules)
+      eqDelEq6
+    ),
+      Set()
+//      rules
+    )
 
     InputHandler.main(pfSt)
-//    equiv.CLILogic(pfSt).RI()
   }
 
   def parse(fileName: String): Unit = {

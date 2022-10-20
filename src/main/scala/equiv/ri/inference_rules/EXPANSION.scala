@@ -83,7 +83,7 @@ object EXPANSION extends INFERENCE_RULE {
    * @param subtermSelector Function that selects a subterm [[Position]] from a non-empty list of [[Position]]s.
    * @param ruleAcceptor Function that decides whether to add a [[Rule]] to the [[ProofState]].
    * @return [[Some]]([[pfSt]]) after application of EXPANSION if possible, otherwise [[None]] */
-  def tryEXPANSION(pfSt: ProofState, equationSelector: List[Equation] => Equation, sideSelector: List[Side] => Side, subtermSelector: List[Position] => Position, ruleAcceptor: Rule => Boolean): Option[ProofState] = {
+  def tryEXPANSION(pfSt: ProofState, equationSelector: List[Equation] => Equation, sideSelector: List[Side] => Side, subtermSelector: (Iterable[Term], List[Position]) => Position, ruleAcceptor: Rule => Boolean): Option[ProofState] = {
     getEXPANSIONEquations(pfSt).onNonEmpty(
       eqs => tryEXPANSIONOnEquation(pfSt, equationSelector(eqs), sideSelector, subtermSelector, ruleAcceptor)
     )
@@ -96,7 +96,7 @@ object EXPANSION extends INFERENCE_RULE {
    * @param subtermSelector Function that selects a subterm [[Position]] from a non-empty list of [[Position]]s.
    * @param ruleAcceptor Function that decides whether to add a [[Rule]] to the [[ProofState]].
    * @return [[Some]]([[pfSt]]) after application of EXPANSION if possible, otherwise [[None]] */
-  def tryEXPANSIONOnEquation(pfSt: ProofState, equation: Equation, sideSelector: List[Side] => Side, subtermSelector: List[Position] => Position, ruleAcceptor: Rule => Boolean): Option[ProofState] = {
+  def tryEXPANSIONOnEquation(pfSt: ProofState, equation: Equation, sideSelector: List[Side] => Side, subtermSelector: (Iterable[Term], List[Position]) => Position, ruleAcceptor: Rule => Boolean): Option[ProofState] = {
     getEXPANSIONEquationSides(pfSt, equation).onNonEmpty(
       sides => tryEXPANSIONOnEquationSide(pfSt, equation, sideSelector(sides), subtermSelector, ruleAcceptor)
     )
@@ -109,10 +109,10 @@ object EXPANSION extends INFERENCE_RULE {
    * @param subtermSelector Function that selects a subterm [[Position]] from a non-empty list of [[Position]]s.
    * @param ruleAcceptor Function that decides whether to add a [[Rule]] to the [[ProofState]].
    * @return [[Some]]([[pfSt]]) after application of EXPANSION if possible, otherwise [[None]] */
-  def tryEXPANSIONOnEquationSide(pfSt: ProofState, equation: Equation, side: Side, subtermSelector: List[Position] => Position, ruleAcceptor: Rule => Boolean): Option[ProofState] = {
+  def tryEXPANSIONOnEquationSide(pfSt: ProofState, equation: Equation, side: Side, subtermSelector: (Iterable[Term], List[Position]) => Position, ruleAcceptor: Rule => Boolean): Option[ProofState] = {
     getEXPANSIONEquationSideSubtermPositions(pfSt, equation, side).onNonEmpty(
       positions =>
-        val newEquations = generateEXPANSIONEquations(pfSt, equation, side, subtermSelector(positions))
+        val newEquations = generateEXPANSIONEquations(pfSt, equation, side, subtermSelector(List(equation.getSide(side)), positions))
         var newPfSt = pfSt.removeEquation(equation).addEquations(newEquations)
         val rule = equation.getRule(side)
         if ruleAcceptor(rule) then newPfSt = newPfSt.addHypothesis(rule)

@@ -45,6 +45,15 @@ object Temp {
     val disproveEquation4: Equation = Equation(x, y, Set())
 
     val expansionEquation: Equation = Equation(termFx, App(f, List(four)), Set())
+
+    val eqDelEq: Equation = Equation(makeAppUn(returnInt, makeAppTer(u, x, x, x)), makeAppUn(returnInt, makeAppTer(u, y, y, y)), Set(makeConsBin(x, eql, y)))
+    val eqDelEq2: Equation = Equation(makeAppBin(add, one, one), makeAppBin(add, zero, one), Set())
+    val eqDelEq5: Equation = Equation(makeAppUn(returnInt,makeAppBin(add, x, one)), makeAppUn(returnInt, makeAppBin(add, y, one)), Set(Constraint(makeAppUn(not, makeAppBin(eql, x, y)))))
+    val eqDelEq3: Equation = Equation(makeAppUn(returnInt,makeAppBin(add, zero, one)), makeAppUn(returnInt, makeAppBin(add, one, one)), Set())
+    val eqDelEq4: Equation = Equation(makeAppBin(add, x, one), makeAppBin(add, y, one), Set())
+    val eqDelEq6: Equation = Equation(makeAppTer(u, x, makeAppBin(add, x, one), makeAppBin(min, x, one)), makeAppTer(u, y, makeAppBin(add, x, two), makeAppBin(add, y, one)), Set())
+
+    val disProveEq2: Equation = Equation(makeAppUn(returnInt, x), makeAppUn(returnInt, y), Set(Constraint(makeAppUn(not, makeAppBin(eql, x, y)))))
   }
 
   object TestEquations {
@@ -111,8 +120,6 @@ object Temp {
 
     val sumUpRec1: Equation = Equation(makeAppUn(returnInt, zero), makeAppUn(sumRec, x), Set(makeConsBin(one, gt, x)))
     val sumUpRec2: Equation = Equation(makeAppUn(returnInt, zero), makeAppUn(sumRec, y), Set(makeConsBin(one, gt, y)))
-
-    val eqDelEq: Equation = Equation(makeAppTer(u, x, x, x), makeAppTer(u, y, y, y), Set(makeConsBin(x, eql, y)))
   }
 
   /** @return A function symbol of type [Int x Int] => Bool */

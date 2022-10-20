@@ -9,12 +9,14 @@ import equiv.utils.OptionExtension.printRedOnNone
 import equiv.utils.{PrintUtils, Z3}
 
 import scala.collection.immutable.ListMap
+import scala.collection.mutable.ListBuffer
 import scala.io.StdIn.readLine
+import scala.util.control.Breaks.break
 
 object InputHandler {
-  var errorMessage = "Failure"
-  var endMessage = "Rewriting induction complete. All equations deleted."
-  val Z3SimplifyName = "Z3 simplify"
+  var errorMessage: String = ""
+  var endMessage: String = PrintUtils.successColourString("Rewriting induction complete. All equations deleted.")
+  val Z3SimplifyName: String = "Z3 simplify"
 
   val inferenceRules: List[String] = List(
     COMPLETENESS.name,
@@ -31,10 +33,11 @@ object InputHandler {
   def main(initialPfSt: ProofState): Unit = {
     var pfSt = initialPfSt
     while pfSt.equations.nonEmpty do
+      errorMessage = "Could not find equations subject to this inference rule."
       println(pfSt.toPrintString())
       val maybePfStMessage = doRIIteration(pfSt)
       maybePfStMessage._1 match {
-        case None => PrintUtils.printRed(errorMessage)
+        case None => println(PrintUtils.failureColourString(errorMessage))
         case Some(newPfSt) => pfSt = newPfSt
       }
       println(maybePfStMessage._2)
@@ -56,17 +59,19 @@ object InputHandler {
         DELETION.tryDELETION(pfSt, equationSelector)
       case DISPROVE.name =>
         DISPROVE.tryDISPROVE(pfSt).map(_ => {
-          endMessage = "ProofState false"; pfSt.removeAllEquations()
+          endMessage = PrintUtils.failureColourString("DISPROVE successful. Rewriting Induction terminated.") ; pfSt.removeAllEquations()
         })
       case EQ_DELETION.name =>
         EQ_DELETION.tryEQ_DELETION(pfSt, equationSelector, positionsSelector)
       case EXPANSION.name =>
         EXPANSION.tryEXPANSION(pfSt, equationSelector, sideSelector, positionSelector, ruleAcceptor)
       case GENERALIZATION.name =>
-        message = "Not implemented yet."
+        GENERALIZATION.tryGENERALIZATION(pfSt, equationSelector, equationInputter())
+        message = "Equation parsing not implemented yet."
         None
       case POSTULATE.name =>
-        message = "Not implemented yet."
+        POSTULATE.doPOSTULATE(pfSt, equationsInputter())
+        message = "Equation parsing not implemented yet."
         None
       case SIMPLIFICATION.name =>
         SIMPLIFICATION.trySIMPLIFICATION(pfSt, equationSelector, sideSelector, ruleSelector, positionSelector)
@@ -95,9 +100,14 @@ object InputHandler {
   }
 
   def loopForCorrectInput(correctInput: List[String]): String = {
+    loopForInputCondition({s => correctInput.contains(s)})
+  }
+
+  /** Ask the user for an input line (``readLine()``) until the given condition is satisfied. */
+  def loopForInputCondition(condition: String => Boolean, errorMessage: String = "Incorrect input, try again: "): String = {
     var input = readLine()
-    while !correctInput.contains(input) do
-      print("Incorrect input, try again: ")
+    while !condition(input) do
+      print(errorMessage)
       input = readLine()
     input
   }
@@ -135,15 +145,28 @@ object InputHandler {
     selectFromList(positions, p => term.subTermAt(p).toPrintString())
   }
 
-  def positionSelector(positions: List[Position]): Position = {
-    println("Choose a subterm:")
-    selectFromList(positions, Term.positionToString)
+  def positionSelector(terms: Iterable[Term], positions: List[Position]): Position = {
+    println("Choose a position:")
+    selectFromList(positions, p => s"${Term.positionToString(p)}: ${terms.map(_.subTermAt(p).toPrintString()).mkString("", " ~~ ", "")}" )
   }
 
-  def positionsSelector(positions: List[Position]): List[Position] = {
-    println("Choose positions:")
-    // TODO
-    List(positionSelector(positions))
+  def positionsSelector(terms: Iterable[Term], positions: List[Position]): List[Position] = {
+    var selectedPositions: Set[Position] = Set()
+    var remainingPositions = positions.toSet
+    var morePositions = true
+    while morePositions && remainingPositions.nonEmpty do {
+      val selectedPosition = positionSelector(terms, remainingPositions.toList)
+      selectedPositions += selectedPosition
+      remainingPositions -= selectedPosition
+      if remainingPositions.nonEmpty then {
+        println("Do you want to select another position? (Y/n)")
+        loopForCorrectInput(List("y", "Y", "", "n", "N")) match {
+          case "n" | "N" => morePositions = false
+          case _ =>
+        }
+      }
+    }
+    selectedPositions.toList
   }
 
   def sideSelector(sides: List[Side]): Side = {
@@ -154,6 +177,35 @@ object InputHandler {
   def equationSideSelector(equation: Equation): Side = {
     println("Choose a side:")
     selectFromList(List(Side.Left, Side.Right), side => equation.getSide(side).toPrintString())
+  }
+
+  def equationInputter(): Equation = {
+    println("Enter an equation:")
+    val equationString = loopForInputCondition(isEquationString, "Failed to parse equation. Check that the input is formatted correctly. Please try again:\n")
+    parseEquation(equationString)
+  }
+
+  def equationsInputter(): Set[Equation] = {
+    var equations: Set[Equation] = Set()
+    var moreEquations = true
+    while moreEquations do {
+      equations = equations + equationInputter()
+      println("Do you want to add another equation? (Y/n)")
+      loopForCorrectInput(List("y", "Y", "", "n", "N")) match {
+        case "n" | "N" => moreEquations = false
+      }
+    }
+    equations
+  }
+
+  /** Check if the given string can be parsed into an equation. */
+  def isEquationString(string: String): Boolean = {
+    false
+  }
+
+  /** Parse an equation string to an equation. */
+  def parseEquation(string: String): Equation = {
+    ???
   }
 
 }
