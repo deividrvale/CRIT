@@ -123,6 +123,7 @@ object Temp {
 
     val f: FunctionSymbol = funcIntInt("f", false)
     val fRule: Rule = Rule(makeAppUn(f, one), makeAppUn(returnInt, two), Set())
+    val fRule2: Rule = Rule(makeAppUn(f, two), makeAppUn(returnInt, one), Set())
     val expEq1: Equation = Equation(makeAppUn(f, x), makeAppUn(returnInt, two), Set())
     val expEq2: Equation = Equation(makeAppUn(f, x), makeAppUn(returnInt, makeAppBin(add, one, one)), Set())
   }

@@ -93,6 +93,6 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], hypotheses: Se
     s"( E = { ${equations.map(_.toPrintString(colours)).mkString(sep= ",\n        ") } }, \n  " +
       s"R = { ${rules.map(_.toPrintString(colours)).mkString(sep= ",\n        ")} },\n  " +
       s"H = { ${hypotheses.map(_.toPrintString(colours)).mkString(sep=",\n        ")} },\n " +
-      s"flag = $flag )"
+      s"flag = ${if flag then "COMPLETE" else "INCOMPLETE"} )"
 
 }

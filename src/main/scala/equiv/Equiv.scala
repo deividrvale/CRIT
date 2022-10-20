@@ -20,7 +20,7 @@ object Equiv {
     val pfSt = ProofState(Set(
       expEq2
     ),
-      Set(fRule)
+      Set(fRule, fRule2)
 //      rules
     )
 
