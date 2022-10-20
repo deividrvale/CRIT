@@ -1,7 +1,7 @@
 # LCTRS-RI-Tool
 A tool for automating Rewriting Induction (RI) for Logically Constrained Term Rewriting Systems (LCTRSs).
 
-Based on the paper "Verifying Procedural Programs via Constrained Rewriting Induction" [[1]](#1) and the Ctrl-tool [[2]](#2).
+Based on the paper "Verifying Procedural Programs via Constrained Rewriting Induction" by Fuhs, Kop and Nishida [[1]](#1) and the Ctrl-tool [[2]](#2).
 
 Made by Jörg Endrullis and Wouter Brozius.
 For citing, please see the `CITATION.cff` file
