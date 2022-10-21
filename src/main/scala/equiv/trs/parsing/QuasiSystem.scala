@@ -186,7 +186,6 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
 
   private def toSystemIntroduceSorts: System = {
     val (signature, variableSortsAllRules) = deriveTypings
-    variableSortsAllRules.foreach{ println(_) }
     val signatureMap = signature.asMap
     def variableSorts(rule: QuasiRule) = variableSortsAllRules.filter(_._1._1 == rule).map { case ((_, name), sort) => name -> sort }
     System(theory, logic, solver, signature, rules = rules.map { rule =>
