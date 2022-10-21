@@ -1,17 +1,17 @@
 package equiv
 
 import equiv.ri.{Equation, ProofState}
+import equiv.trs.QueryEquivalence
 import equiv.trs.Temp.*
+import equiv.trs.parsing.QuasiQueryEquivalence
 import equiv.utils.Z3
 
 import java.awt.Frame // usable for GUI
 
 object Equiv {
   def main(args: Array[String]): Unit = {    
-//    sample()
-    val m = Map("x" -> 1, "x" -> 2)
-    println(m)
-    println(m("x"))
+    //sample()
+    parse("sum")
   }
   
   def sample(): Unit = {
@@ -33,8 +33,12 @@ object Equiv {
   def parse(fileName: String): Unit = {
     TRSParserTest.parseTRS(s"examples/$fileName.ctrs").foreach(
       system =>
-        val equations: Set[Equation] = Set() // TODO get starting equation
+        val equations: Set[Equation] = system.query match {
+          case Some(QueryEquivalence(equation)) => Set(equation)
+          case _ => Set()
+        }
         val pfSt: ProofState = ProofState(equations, system.rules)
+        println(pfSt)
     )
   }
 
