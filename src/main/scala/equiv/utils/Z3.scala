@@ -13,58 +13,26 @@ enum SolverResult:
   case Satisfiable, Unsatisfiable, Undetermined
 
 object Z3 {
-  def main(args: Array[String]): Unit = {
-//    solveMain()
-    simplala()
-  }
-
-  def simplala(): Unit = {
-    val equa: Equation = equiv.trs.Temp.TestEquations.monster
-    println(equa.toPrintString())
-    simplifyEquation(equa)
-  }
-
-  def solveMain(): Unit = {
-    def gt(x: Term, y: Term) = Term.App(FunctionSymbol(">", Typing(List(Sort.Int, Sort.Int), Sort.Bool)), List(x, y))
-
-    def lt(x: Term, y: Term) = Term.App(FunctionSymbol("<", Typing(List(Sort.Int, Sort.Int), Sort.Bool)), List(x, y))
-
-    def and(x: Term, y: Term) = Term.App(FunctionSymbol("or", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool)), List(x, y))
-
-    def impl(x: Term, y: Term) = Term.App(FunctionSymbol("=>", Typing(List(Sort.Bool, Sort.Bool), Sort.Bool)), List(x, y))
-
-    def variable(v: String) = Term.Var(v, Sort.Int)
-
-    def int(x: Int) = Term.App(FunctionSymbol(x.toString, Typing(List.empty, Sort.Int)))
-
-    val x = variable("x")
-
-    List(
-      and(lt(x, int(-1)),
-        gt(int(2), int(5))),
-      gt(int(5), int(5)),
-    ).foreach { formula =>
-      println(formula)
-      println(solve(formula))
+  /** @return [[Some]]([[true]]) if the implication is satisfiable.
+   *         [[Some]]([[false]]) if the implication is not satisfiable.
+   *         [[None]] if it is unknown. */
+  def implies(term1: Term, term2: Term): Option[Boolean] = {
+    val formula = TheorySymbols.notX(TheorySymbols.implXY(term1, term2))
+    val result = solve(formula)
+    result match {
+      case SolverResult.Unsatisfiable => Some(true)
+      case SolverResult.Satisfiable => Some(false)
+      case SolverResult.Undetermined => None
     }
   }
 
-  /** @return Whether the first term implies the second */
-  def implies(term1: Term, term2: Term): Boolean = {
-    val formula = TheorySymbols.notX(TheorySymbols.implXY(term1, term2))
-    val result = solve(formula)
-    result == SolverResult.Unsatisfiable
-  }
-
-  /** @return Whether the first term implies the second and the second implies the first */
-  def constraintBiImplication(term1: Term, term2: Term): Boolean = {
-    val formula = TheorySymbols.notX(TheorySymbols.biImplXY(term1, term2))
-    solve(formula) == SolverResult.Unsatisfiable
-  }
-
   /** Check if a term is satisfiable */
-  def satisfiable(term: Term): Boolean = {
-    solve(term) == SolverResult.Satisfiable
+  def satisfiable(term: Term): Option[Boolean] = {
+    solve(term) match {
+      case SolverResult.Satisfiable => Some(true)
+      case SolverResult.Unsatisfiable => Some(false)
+      case SolverResult.Undetermined => None
+    }
   }
 
   def simplifyEquation(equation: Equation): Equation = {
@@ -127,6 +95,10 @@ object Z3 {
 //    println(inputFile.getAbsolutePath)
 //    Thread.sleep(100000)
 
-    Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator
+    try {
+      Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator
+    } catch {
+      t => println(s"Z3 error: ${t}") ; Iterator("undetermined")
+    }
   }
 }

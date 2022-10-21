@@ -138,7 +138,7 @@ object SIMPLIFICATION extends INFERENCE_RULE {
               })))
         val b = Z3.implies(
           equationConstraint,
-          rule.getConstrainsConjunctAsTerm.applySubstitution(substitution))
+          rule.getConstrainsConjunctAsTerm.applySubstitution(substitution)).contains(true)
         a && b
       })
       .map(_._2)

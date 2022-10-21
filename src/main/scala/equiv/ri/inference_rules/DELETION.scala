@@ -20,6 +20,6 @@ object DELETION extends INFERENCE_RULE {
 
     /** @return A [[List]] of all [[Equation]]s to which the DELETION rule can be applied. May be empty. */
     def getDELETIONEquations(pfSt: ProofState): List[Equation] = {
-      pfSt.equations.filter(eq => eq.left == eq.right || !Z3.satisfiable(eq.getConstrainsConjunctAsTerm)).toList
+      pfSt.equations.filter(eq => eq.left == eq.right || Z3.satisfiable(eq.getConstrainsConjunctAsTerm).contains(false)).toList
     }
 }

@@ -11,7 +11,10 @@ import java.awt.Frame // usable for GUI
 object Equiv {
   def main(args: Array[String]): Unit = {    
     //sample()
-    parse("sum")
+    parse("sum") match {
+      case Some(pfSt) => InputHandler.main(pfSt)
+      case _ => println("Failed to parse")
+    }
   }
   
   def sample(): Unit = {
@@ -30,7 +33,7 @@ object Equiv {
     InputHandler.main(pfSt)
   }
 
-  def parse(fileName: String): Unit = {
+  def parse(fileName: String): Option[ProofState] = {
     TRSParserTest.parseTRS(s"examples/$fileName.ctrs").foreach(
       system =>
         val equations: Set[Equation] = system.query match {
@@ -38,8 +41,10 @@ object Equiv {
           case _ => Set()
         }
         val pfSt: ProofState = ProofState(equations, system.rules)
-        println(pfSt)
+//        println(pfSt)
+        return Some(pfSt)
     )
+    None
   }
 
 

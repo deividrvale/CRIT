@@ -33,7 +33,7 @@ object DISPROVE extends INFERENCE_RULE {
   def disproveCase1(s: Term, t: Term, phi: Term): Boolean = {
     s.sort.isTheory // ι is a theory sort,
     && s.isTheory && t.isTheory // s, t ∈ Terms(Σ_theory, V),
-    && Z3.satisfiable(TheorySymbols.andXY(phi, TheorySymbols.notEqXY(s, t))) // and ϕ ∧ s != t is satisfiable
+    && Z3.satisfiable(TheorySymbols.andXY(phi, TheorySymbols.notEqXY(s, t))).contains(true) // and ϕ ∧ s != t is satisfiable
   }
 
   /** Case 2 where we can disprove an equation:
@@ -44,7 +44,7 @@ object DISPROVE extends INFERENCE_RULE {
     (s, t) match {
       case (App(f, _), App(g, _)) =>  // s = f(\vec{s}) and t = g(\vec{t})
         f.isConstructor(pfSt.definedSymbols) && g.isConstructor(pfSt.definedSymbols) && f != g // with f, g distinct constructors
-        && Z3.satisfiable(phi) // and ϕ satisfiable
+        && Z3.satisfiable(phi).contains(true) // and ϕ satisfiable
       case _ => false
     }
   }
@@ -58,7 +58,7 @@ object DISPROVE extends INFERENCE_RULE {
     s match { 
       case v_s@Var(_, _) =>
         !phi.vars.contains(v_s) // s ∈ ( V \ Var(ϕ) ),
-        && Z3.satisfiable(phi) // ϕ is satisfiable
+        && Z3.satisfiable(phi).contains(true) // ϕ is satisfiable
         && pfSt.constructors.count(_.typing.output == s.sort) > 1 &&  // at least two different constructors have output sort ι (i.e. same sort as s),
         // and either 
         (t match {
