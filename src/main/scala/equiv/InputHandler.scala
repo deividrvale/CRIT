@@ -6,7 +6,7 @@ import equiv.ri.inference_rules.{COMPLETENESS, CONSTRUCTOR, DELETION, DISPROVE, 
 import equiv.trs.Term.Position
 import equiv.trs.{Rule, Term}
 import equiv.utils.OptionExtension.printRedOnNone
-import equiv.utils.{PrintUtils, Z3}
+import equiv.utils.{PrintUtils, TermUtils, Z3}
 
 import scala.collection.immutable.ListMap
 import scala.collection.mutable.ListBuffer
@@ -147,7 +147,7 @@ object InputHandler {
 
   def positionSelector(terms: Iterable[Term], positions: List[Position]): Position = {
     println("Choose a position:")
-    selectFromList(positions, p => s"${Term.positionToString(p)}: ${terms.map(_.subTermAt(p).toPrintString()).mkString("", " ~~ ", "")}" )
+    selectFromList(positions, p => s"${Term.positionToString(p)}: ${terms.map(_.subTermAt(p).toPrintString()).mkString("", s" ${TermUtils.equalityFunctionSymbolName} ", "")}" )
   }
 
   def positionsSelector(terms: Iterable[Term], positions: List[Position]): List[Position] = {

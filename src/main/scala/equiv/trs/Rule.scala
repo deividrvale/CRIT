@@ -1,5 +1,7 @@
 package equiv.trs
 
+import equiv.ri.Equation
+import equiv.ri.Equation.Side
 import equiv.trs.Term.{App, Substitution}
 import equiv.trs.Term.Var
 
@@ -14,6 +16,9 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends C
   val vars: Set[Var] = left.vars ++ right.vars ++ constraints.flatMap(_.term.vars)
 
   val functionSymbols: Set[FunctionSymbol] = left.functionSymbols ++ right.functionSymbols ++ constraints.flatMap(_.term.functionSymbols)
+
+  val getEquation: Equation = Equation(left, right, constraints)
+  val getReverseEquation: Equation = Equation(right, left, constraints)
 
   /** Set of logic variables: variables in the constraint together with ('fresh') variables in the right side that do not occur in the left side. */
   val logicVars: Set[Var] = constraintVars ++ (right.vars -- left.vars)
