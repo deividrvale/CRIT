@@ -10,11 +10,11 @@ import java.awt.Frame // usable for GUI
 
 object Equiv {
   def main(args: Array[String]): Unit = {    
-    //sample()
-    parse("sum") match {
-      case Some(pfSt) => InputHandler.main(pfSt)
-      case _ => println("Failed to parse")
-    }
+    sample()
+//    parse("sum") match {
+//      case Some(pfSt) => InputHandler.main(pfSt)
+//      case _ => println("Failed to parse")
+//    }
   }
   
   def sample(): Unit = {

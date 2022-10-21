@@ -26,7 +26,10 @@ object Z3 {
     }
   }
 
-  /** Check if a term is satisfiable */
+  /** Check if a term is satisfiable.
+   * @return [[Some]]([[true]]) if the term is satisfiable.
+   * [[Some]]([[false]]) if the term is unsatisfiable.
+   * [[None]] if it is unknown. */
   def satisfiable(term: Term): Option[Boolean] = {
     solve(term) match {
       case SolverResult.Satisfiable => Some(true)

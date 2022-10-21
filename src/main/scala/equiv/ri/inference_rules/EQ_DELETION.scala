@@ -83,14 +83,14 @@ object EQ_DELETION extends INFERENCE_RULE {
   }
 
   def getEQ_DELETIONMinimumPositions(leftTerm: Term, rightTerm: Term, constraintVars: Set[Var]): List[Position] = {
-    (leftTerm, rightTerm) match {
-      case (App(f1, args1), App(f2, args2)) =>
-        if f1 == f2 then args1.indices.flatMap(id => getEQ_DELETIONMinimumPositions(args1(id), args2(id), constraintVars).map(id :: _)).toList
-        else List(List())
-      case (Var(x1, _), Var(x2, _)) =>
-        if x1 == x2 then List()
-        else List(List())
-      case _ => List(List())
+    if leftTerm.isEqDeletable(constraintVars) && rightTerm.isEqDeletable(constraintVars) then
+      List(List())
+    else {
+      (leftTerm, rightTerm) match {
+        case (App(f1, args1), App(f2, args2)) =>
+          if f1 == f2 then return args1.indices.flatMap(id => getEQ_DELETIONMinimumPositions(args1(id), args2(id), constraintVars).map(id :: _)).toList
+      }
+      List()
     }
   }
 }
