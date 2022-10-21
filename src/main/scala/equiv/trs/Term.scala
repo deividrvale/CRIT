@@ -55,7 +55,7 @@ trait Term {
   def instanceOf(other: Term) : Option[Substitution] = {
     if(this.sort != other.sort) None else
     (this,other) match {
-      case (_, v@Var(_,_)) => Some(Map(v -> this))
+      case (_, v@Var(_,_)) => Some(Map(v -> this)) // TODO check there is no other v in the substitution
       case (Var(_, _), App(_, _)) => None
       case (App(f1, args1), App(f2, args2)) =>
         if(f1 == f2) {
@@ -67,7 +67,8 @@ trait Term {
     }
   }
 
-  /** Check if the current term (t1) is unifiable with the given term (t2), i.e. there exists a substitution γ such that t1γ = t2γ */
+  /** Check if the current term (t1) is unifiable with the given term (t2), i.e. there exists a substitution γ such that t1γ = t2γ
+   * TODO check Martelli-Montanari */
   def unifiableWith(term: Term): Option[Substitution] = {
     (this, term) match {
       case (_, v@Var(_,_)) => Some(Map(v -> this))
