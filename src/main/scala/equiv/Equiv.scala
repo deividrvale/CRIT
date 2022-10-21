@@ -8,7 +8,10 @@ import java.awt.Frame // usable for GUI
 
 object Equiv {
   def main(args: Array[String]): Unit = {    
-    sample()
+//    sample()
+    val m = Map("x" -> 1, "x" -> 2)
+    println(m)
+    println(m("x"))
   }
   
   def sample(): Unit = {

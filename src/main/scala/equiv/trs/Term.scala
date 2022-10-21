@@ -71,8 +71,9 @@ trait Term {
    * TODO check Martelli-Montanari */
   def unifiableWith(term: Term): Option[Substitution] = {
     (this, term) match {
-      case (_, v@Var(_,_)) => Some(Map(v -> this))
-      case (v@Var(_,_), _) => Some(Map(v -> term))
+      case (v1@Var(x1, _), v2@Var(x2, _)) => if x1 == x2 then Some(Map()) else Some(Map(v2 -> v1))
+      case (a@App(_, _), v@Var(_,_)) => Some(Map(v -> a))
+      case (v@Var(_,_), a@App(_, _)) => if a.vars.contains(v) then None else Some(Map(v -> a))
       case (App(f1, args1), App(f2, args2)) =>
         if (f1 == f2) {
           (args1 zip args2).map(ts => ts._1.unifiableWith(ts._2)).foldLeft[Option[Substitution]](Some(Map.empty))({
