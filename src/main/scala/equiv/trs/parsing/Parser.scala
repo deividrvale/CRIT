@@ -13,7 +13,9 @@ class TRSParser(readFile: String => String) extends RegexParsers {
   // a name can consist of anything except some reserved characters '(', ')', ':', ',', ';', '[', ']'
   val name: Parser[String] = not("->") ~> """[^():,;\[\]\s]+""".r
 
-  val query: Parser[String] = """(?s).*""".r
+  val query: Parser[QuasiQuery] =
+    ("user-equivalence" ~> rule("-><-") ^^ { rule => QuasiQueryEquivalence(rule) }) |
+    ("""(?s).*""".r ^^ { string => QuasiQueryUnknown(string) })
 
   val unsignedInt: Parser[Int] = """\d+""".r ^^ { _.toInt }
 
@@ -60,8 +62,14 @@ class TRSParser(readFile: String => String) extends RegexParsers {
     opt("IRREGULAR") ~
     opt("QUERY" ~> query)
     ^? (
-      { case (theory, logic, solver, signature, chains) ~ rules ~ nonstandard ~ irregular ~ querySimplification if undefinedInfix(signature, rules).isEmpty =>
-        QuasiSystem(theory, logic, solver, signature, rules.map(_.infix2app(signature.leftAsMap)), chains.map(_.infix2app(signature.leftAsMap))) },
+      { case (theory, logic, solver, signature, chains) ~ rules ~ nonstandard ~ irregular ~ query if undefinedInfix(signature, rules).isEmpty =>
+        QuasiSystem(theory, logic, solver, signature,
+          rules.map(_.infix2app(signature.leftAsMap)),
+          chains.map(_.infix2app(signature.leftAsMap)),
+          query match {
+            case Some(QuasiQueryEquivalence(equation)) => Some(QuasiQueryEquivalence(equation.infix2app(signature.leftAsMap)))
+            case other => other
+          }) },
       { case (_, _, _, signature,_) ~ rules ~ _ ~ _ ~ _ => undefinedInfix(signature, rules).get }
     )
 
@@ -101,10 +109,10 @@ class TRSParser(readFile: String => String) extends RegexParsers {
   def constraint: Parser[QuasiTerm] = opt("<--") ~> "[" ~> term <~ "]"
 
   // Rules
-  def rules: Parser[Set[QuasiRule]] = rep(rule) ^^ { _.toSet }
+  def rules: Parser[Set[QuasiRule]] = rep(rule("->")) ^^ { _.toSet }
 
-  def rule: Parser[QuasiRule] =
-    not(keywords) ~> term ~ ("->" ~> term) ~ (opt(constraint) <~ opt(";")) ^^ { case left ~ right ~ constraint => QuasiRule(left, right, constraint) }
+  def rule(separator: String): Parser[QuasiRule] =
+    not(keywords) ~> term ~ (separator ~> term) ~ (opt(constraint) <~ opt(";")) ^^ { case left ~ right ~ constraint => QuasiRule(left, right, constraint) }
 
   // Renamings
   def renamings: Parser[Set[Renaming]] = rep(renaming) ^^ { _.toSet }

@@ -45,6 +45,7 @@ object TRSParserTest {
       case e : Throwable =>
         if(parseResult != null) println("Parse result:\n" + parseResult.toString)
         println(s"Error: ${e.getMessage}")
+        e.printStackTrace()
         None
     }
   }

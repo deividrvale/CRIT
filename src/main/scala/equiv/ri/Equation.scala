@@ -13,6 +13,8 @@ import equiv.trs.Term.Var
 object Equation {
   enum Side:
     case Left, Right
+
+  def fromRule(rule: Rule): Equation = Equation(rule.left, rule.right, rule.constraints)
 }
 
 case class Equation(left: Term, right : Term, var constraints : Set[Constraint]) extends ConstrainedObject(constraints) {

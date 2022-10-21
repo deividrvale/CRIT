@@ -1,14 +1,20 @@
 package equiv.trs.parsing
 
+import equiv.ri.Equation
 import equiv.trs.parsing.QuasiTerm.{App, InfixChain}
-import equiv.trs.{FunctionSymbol, Signature, Sort, System, Typing}
+import equiv.trs.{FunctionSymbol, QueryEquivalence, Signature, Sort, System, Typing}
 
-case class QuasiSystem(theory: String, logic: String, solver: String, signatureOriginal: QuasiSignature, rules: Set[QuasiRule], chains: Set[QuasiRule]) {
+case class QuasiSystem(theory: String, logic: String, solver: String, signatureOriginal: QuasiSignature, rules: Set[QuasiRule], chains: Set[QuasiRule], query: Option[QuasiQuery] = None) {
   def deriveTypings: (Signature, Map[(QuasiRule, String), Sort]) = {
     // a function argument (Some(nr)) or output (None)
     type Port = (Any, Option[Int])
 
-    val usedSymbols = rules.flatMap(_.functionSymbols)
+    val allRules = rules ++ (query match
+      case Some(QuasiQueryEquivalence(equation)) => Set(equation)
+      case _ => Set()
+    )
+
+    val usedSymbols = allRules.flatMap(_.functionSymbols)
     val intSymbols = usedSymbols.filter(_._2 == 0).filter(_._1.toIntOption.nonEmpty).map(_._1)
     val intSignature = QuasiSignature(intSymbols.map{ i => Left(FunctionSymbol(i,Typing(List.empty,Sort.Int), isTheory = true)) }) //TODO maybe remove isTheory?
     val signature = signatureOriginal.union(intSignature)
@@ -38,7 +44,7 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
     // variables as ports
     def portOfVariable(rule: QuasiRule, name: String): ((QuasiRule, String), Option[Int]) = ((rule, name), None)
 
-    val variables: Set[((QuasiRule, String), Option[Int])] = rules.flatMap { rule =>
+    val variables: Set[((QuasiRule, String), Option[Int])] = allRules.flatMap { rule =>
       rule.functionSymbols.filter { symbol => symbol._2 == 0 && !symbol2arity.contains(symbol._1) }.map { symbol => portOfVariable(rule, symbol._1) }
     }
 
@@ -87,7 +93,7 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
       }
     }
 
-    rules.foreach { rule =>
+    allRules.foreach { rule =>
       setPortsEqual(deriveEquality(rule, rule.left), deriveEquality(rule, rule.right))
       rule.constraint.foreach(deriveEquality(rule, _))
     }
@@ -155,9 +161,14 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
   }
 
   private def applyChains: QuasiSystem = {
-    this.copy(rules = rules.map{ rule =>
-      QuasiRule(applyChains(rule.left, chains), applyChains(rule.right, chains), rule.constraint.map(applyChains(_,chains)))
+    this.copy(rules = rules.map{ rule => applyChains(rule) }, query = query match {
+      case Some(QuasiQueryEquivalence(equation)) => Some(QuasiQueryEquivalence(applyChains(equation)))
+      case other => other
     })
+  }
+
+  private def applyChains(rule: QuasiRule): QuasiRule = {
+    QuasiRule(applyChains(rule.left, chains), applyChains(rule.right, chains), rule.constraint.map(applyChains(_,chains)))
   }
 
   private def applyChains(term: QuasiTerm, chains: Set[QuasiRule]): QuasiTerm = {
@@ -175,10 +186,14 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
 
   private def toSystemIntroduceSorts: System = {
     val (signature, variableSortsAllRules) = deriveTypings
+    variableSortsAllRules.foreach{ println(_) }
     val signatureMap = signature.asMap
+    def variableSorts(rule: QuasiRule) = variableSortsAllRules.filter(_._1._1 == rule).map { case ((_, name), sort) => name -> sort }
     System(theory, logic, solver, signature, rules = rules.map { rule =>
-      val variableSorts = variableSortsAllRules.filter(_._1._1 == rule).map { case ((_, name), sort) => name -> sort }
-      rule.toRule(signatureMap, variableSorts)
+      rule.toRule(signatureMap, variableSorts(rule))
+    }, query = query match {
+      case Some(QuasiQueryEquivalence(equation)) => Some(QueryEquivalence(Equation.fromRule(equation.toRule(signatureMap, variableSorts(equation)))))
+      case _ => None
     })
   }
 
@@ -188,6 +203,9 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
        |
        |RULES:
        |  ${rules.mkString("\n  ")}
+       |
+       |QUERY:
+       |  $query
        |""".stripMargin
   }
 }
