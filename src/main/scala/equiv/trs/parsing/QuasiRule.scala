@@ -1,5 +1,6 @@
 package equiv.trs.parsing
 
+import equiv.ri.Equation
 import equiv.trs.{Constraint, FunctionSymbol, Rule, Sort}
 import equiv.utils.MapUtils
 import equiv.trs.parsing.QuasiTerm.{App, InfixChain}
@@ -19,6 +20,14 @@ case class QuasiRule(left: QuasiTerm, right: QuasiTerm, constraint: Option[Quasi
 
   def toRule(signature: Map[String, FunctionSymbol], variableSorts: Map[String, Sort]): Rule = {
     Rule(
+      left.toTerm(signature, variableSorts),
+      right.toTerm(signature, variableSorts),
+      constraint.map(t => Constraint(t.toTerm(signature, variableSorts)).split()).getOrElse(Set())
+    )
+  }
+
+  def toEquation(signature: Map[String, FunctionSymbol], variableSorts: Map[String, Sort]): Equation = {
+    Equation(
       left.toTerm(signature, variableSorts),
       right.toTerm(signature, variableSorts),
       constraint.map(t => Constraint(t.toTerm(signature, variableSorts)).split()).getOrElse(Set())
