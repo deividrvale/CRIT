@@ -9,6 +9,7 @@ import equiv.utils.{TermUtils, TheorySymbols, Z3}
 import equiv.utils.ListExtension.onNonEmpty
 
 import scala.collection.immutable.LazyList.cons
+import scala.language.postfixOps
 
 object EQ_DELETION extends INFERENCE_RULE {
   val name = "EQ-DELETION"
@@ -62,35 +63,37 @@ object EQ_DELETION extends INFERENCE_RULE {
 
   /** @return A [[List]] of [[Position]]s to which EQ-DELETION can be applied. May be empty. */
   def getEQ_DELETIONEquationPositions(pfSt: ProofState, equation: Equation): List[Position] = {
-    getEQ_DELETIONMinimumPositions(equation.left, equation.right, equation.constraintVars)
+    getEQ_DELETIONMinimumPositions(equation.left, equation.right, equation.constraintVars).getOrElse(List())
   }
 
   /** Auxiliary function that recursively computes all positions of two [[Term]]s where EQ-DELETION can be applied.
    * @param leftTerm Initially the left side of the [[Equation]] subject to EQ-DELETION.
    * @param rightTerm Initially the right side of the [[Equation]] subject to EQ-DELETION.
    * @param constraintVars The set of [[Var]]s in the [[Constraint]]s of the [[Equation]] subject to EQ-DELETION.
-   * @return A [[List]] of [[Position]] where EQ-DELETION can be applied. May be empty. */
-  def getEQ_DELETIONEquationPositionsAux(leftTerm: Term, rightTerm: Term, constraintVars: Set[Var]): List[Position] = {
-    var positions: List[Position] = List()
+   * @return [[Some]] [[List]] of [[Position]]s where EQ-DELETION can be applied. May be empty. [[None]] if EQ-DELETION is not possible. */
+  def getEQ_DELETIONMinimumPositions(leftTerm: Term, rightTerm: Term, constraintVars: Set[Var]): Option[List[Position]] = {
     if leftTerm.isEqDeletable(constraintVars) && rightTerm.isEqDeletable(constraintVars) then
-      positions = List(List())
+      return Some(List(List()))
     (leftTerm, rightTerm) match {
+      case (Var(x1, _), Var(x2, _)) =>
+        if x1 == x2 then
+          return Some(List())
       case (App(f1, args1), App(f2, args2)) =>
-        if f1 == f2 then positions ++= args1.indices.flatMap(id => getEQ_DELETIONEquationPositionsAux(args1(id), args2(id), constraintVars).map(id::_) )
+        if f1 == f2 then
+          val recurse = args1.indices.map(id =>
+            getEQ_DELETIONMinimumPositions(args1(id), args2(id), constraintVars).map(_.map(id::_))
+          )
+          val recurse2: Option[List[Position]] = recurse.foldLeft(Some(List()) : Option[List[Position]])((a, b) => mergeMaybeLists(a, b))
+          return recurse2
       case _ =>
     }
-    positions
+    None
   }
 
-  def getEQ_DELETIONMinimumPositions(leftTerm: Term, rightTerm: Term, constraintVars: Set[Var]): List[Position] = {
-    if leftTerm.isEqDeletable(constraintVars) && rightTerm.isEqDeletable(constraintVars) then
-      List(List())
-    else {
-      (leftTerm, rightTerm) match {
-        case (App(f1, args1), App(f2, args2)) =>
-          if f1 == f2 then return args1.indices.flatMap(id => getEQ_DELETIONMinimumPositions(args1(id), args2(id), constraintVars).map(id :: _)).toList
-      }
-      List()
+  def mergeMaybeLists[T](maybeList1: Option[List[T]], maybeList2: Option[List[T]]): Option[List[T]] = {
+    (maybeList1, maybeList2) match {
+      case (Some(list1), Some(list2)) => Some(list1 ++ list2)
+      case _ => None
     }
   }
 }

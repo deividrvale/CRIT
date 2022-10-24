@@ -16,20 +16,22 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
 
     val usedSymbols = allRules.flatMap(_.functionSymbols)
     val intSymbols = usedSymbols.filter(_._2 == 0).filter(_._1.toIntOption.nonEmpty).map(_._1)
-    val intSignature = QuasiSignature(intSymbols.map{ i => Left(FunctionSymbol(i,Typing(List.empty,Sort.Int), isTheory = true)) }) //TODO maybe remove isTheory?
+    val intSignature = QuasiSignature(intSymbols.map{ i => Left(FunctionSymbol(i,Typing(List.empty,Sort.Int), isTheory = true, isValue = true)) }) //TODO maybe remove isTheory?
     val signature = signatureOriginal.union(intSignature)
+
+
 
     val signatureSymbols = signature.asMap
     val signatureSymbolsTyped = signature.leftAsMap
 
     // function symbols with arities
-    var symbol2arity = signature.left.map { symbol => symbol.name -> (symbol.typing.input.length, symbol.isTheory, symbol.typing.isVariadic) }.toMap
+    var symbol2arity = signature.left.map { symbol => symbol.name -> (symbol.typing.input.length, symbol.isTheory, symbol.isValue, symbol.typing.isVariadic) }.toMap
     usedSymbols.filter { s => signatureSymbols.contains(s._1) || s._2 > 0 }.foreach { case (symbol, arity) =>
       if (symbol2arity.contains(symbol)) {
-        val (theArity, theory, variadic) = symbol2arity(symbol)
+        val (theArity, theory, isValue, variadic) = symbol2arity(symbol)
         if (theArity != arity && !variadic) throw new RuntimeException(s"The symbol $symbol occurs with varying arities.")
       } else {
-        if (!symbol2arity.contains(symbol)) symbol2arity = symbol2arity.updated(symbol, (arity, false, false))
+        if (!symbol2arity.contains(symbol)) symbol2arity = symbol2arity.updated(symbol, (arity, false, false, false))
       }
     }
 
@@ -60,7 +62,7 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
     }
 
     // ports (excluding sort Any)
-    var port2class: Map[Port, Int] = (symbol2arity.toList.flatMap { case (symbol, (arity, _, _)) =>
+    var port2class: Map[Port, Int] = (symbol2arity.toList.flatMap { case (symbol, (arity, _, _, _)) =>
       ((symbol, None) :: (0 until arity).toList.map { i => (symbol, Some(i)) }).filterNot(isSortAny)
     } ++ variables).zipWithIndex.toMap
 
@@ -117,7 +119,7 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
 
     // set missing types to "result"
     val default = Sort("result", false)
-    symbol2arity.foreach { case (symbol, (arity, theory, variadic)) =>
+    symbol2arity.foreach { case (symbol, (arity, theory, isValue, variadic)) =>
       (0 until arity).foreach { i =>
         if (isSortAny(symbol, Some(i))) Sort.Any
         else class2sort.get(port2class((symbol, Some(i)))) match {
@@ -135,7 +137,7 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
 
     // typing for each symbol
     (
-      Signature(symbol2arity.map { case (symbol, (arity, theory, variadic)) =>
+      Signature(symbol2arity.map { case (symbol, (arity, theory, isValue, variadic)) =>
         val inputSorts = (0 until arity).toList.map { i =>
           if (isSortAny(symbol, Some(i))) Sort.Any
           else class2sort.get(port2class((symbol, Some(i)))) match {
@@ -150,7 +152,7 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
             case None => throw new RuntimeException(s"Failed to derive the output sort of $symbol.")
           }
 
-        FunctionSymbol(symbol, Typing(inputSorts, outputSort, isVariadic = variadic), theory, false, signature.left.find(_.name == symbol).flatMap(_.infix))
+        FunctionSymbol(symbol, Typing(inputSorts, outputSort, isVariadic = variadic), theory, isValue, signature.left.find(_.name == symbol).flatMap(_.infix))
       }.toSet),
       variables.map { case port@((rule, name), _) => (rule, name) -> class2sort(port2class(port)) }.toMap
     )

@@ -44,7 +44,7 @@ class TRSParser(readFile: String => String) extends RegexParsers {
     opt("CHAIN" ~> rep1(term ~ (":" ~> term <~ ";")) ^^ { _.map{ case left ~ right => QuasiRule(left,right,None) } }) ~
     opt("SMT-RENAMINGS" ~> renamings) ~
     opt("SMT-TRANSLATIONS" ~> translations) ^^ { case includes ~ signature ~ wellFounded ~ chains ~ smtRenamings ~ smtTranslations =>
-      (QuasiTheory(QuasiSignature(signature.functions), chains.getOrElse(List.empty).toSet, smtRenamings.getOrElse(Set.empty)) :: includes.map(parseTheoryRecursive)).reduce(_.union(_))
+      (QuasiTheory(QuasiSignature(signature.functions.map(_.left.map(f => f.copy(isTheory = true)))), chains.getOrElse(List.empty).toSet, smtRenamings.getOrElse(Set.empty)) :: includes.map(parseTheoryRecursive)).reduce(_.union(_))
     }
 
   def system: Parser[QuasiSystem] =

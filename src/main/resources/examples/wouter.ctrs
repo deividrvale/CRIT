@@ -1,0 +1,17 @@
+THEORY ints     ;
+LOGIC QF_LIA    ;
+SOLVER internal ;
+
+SIGNATURE f, g, h ;
+
+RULES
+  f(x)  -> g(x)     [x > 0]       ;
+  f(x)  -> g(x - 2)     [x < 1]       ;
+  f(x)  -> g(x - 4)     [x < 3]       ;
+  f(x)  -> g(x - 123)     [x < 10]       ;
+
+QUERY user-equivalence f(x) -><- g(x)
+
+END OF FILE
+
+

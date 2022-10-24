@@ -10,11 +10,11 @@ import java.awt.Frame // usable for GUI
 
 object Equiv {
   def main(args: Array[String]): Unit = {    
-    sample()
-//    parse("sum") match {
-//      case Some(pfSt) => InputHandler.main(pfSt)
-//      case _ => println("Failed to parse")
-//    }
+//    sample()
+    parse("sum") match {
+      case Some(pfSt) => InputHandler.main(pfSt)
+      case _ => println("Failed to parse")
+    }
   }
   
   def sample(): Unit = {
@@ -24,10 +24,11 @@ object Equiv {
     val rules = sumUpRules ++ sumRecRules
 
     val pfSt = ProofState(Set(
-      expEq2
+      expEq2, eqDelEq, eqDelEq2, eqDelEq3, eqDelEq4, eqDelEq5, eqDelEq6
     ),
-      Set(fRule, fRule2)
-//      rules
+//      Set(fRule, fRule2),
+      Set(),
+//      rules,
     )
 
     InputHandler.main(pfSt)
@@ -41,7 +42,7 @@ object Equiv {
           case _ => Set()
         }
         val pfSt: ProofState = ProofState(equations, system.rules)
-//        println(pfSt)
+//        println(system)
         return Some(pfSt)
     )
     None
