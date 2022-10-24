@@ -35,6 +35,14 @@ class Z3Parser(termString: String, functionSymbolsMap: Map[String, FunctionSymbo
   def parseVariadic(functionSymbol: FunctionSymbol, arguments: List[Term]): Term = {
     val n = functionSymbol.typing.input.length
     if arguments.length == n then App(functionSymbol, arguments)
+    else if functionSymbol.name == "-" then { println("check") ; arguments.head match {
+      case App(FunctionSymbol(name, _, _, _, _, _), _) =>
+        println("check 2")
+        return App(FunctionSymbol((name.toInt * -1).toString, typing = Typing(List(), Sort.Int), true, true), List())
+      case _ =>
+        val firstNArguments = arguments.take(n)
+        parseVariadic(functionSymbol, App(functionSymbol, firstNArguments) :: arguments.drop(n))
+    }}
     else
       val firstNArguments = arguments.take(n)
       parseVariadic(functionSymbol, App(functionSymbol, firstNArguments) :: arguments.drop(n) )

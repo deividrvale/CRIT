@@ -14,7 +14,7 @@ class TRSParser(readFile: String => String) extends RegexParsers {
   val name: Parser[String] = not("->") ~> """[^():,;\[\]\s]+""".r
 
   val query: Parser[QuasiQuery] =
-    ("user-equivalence" ~> rule("-><-") ^^ { rule => QuasiQueryEquivalence(rule) }) |
+    (opt("user-") ~> "equivalence" ~> rule("-><-") ^^ { rule => QuasiQueryEquivalence(rule) }) |
     ("""(?s).*""".r ^^ { string => QuasiQueryUnknown(string) })
 
   val unsignedInt: Parser[Int] = """\d+""".r ^^ { _.toInt }

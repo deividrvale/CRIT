@@ -18,6 +18,9 @@ object InputHandler {
   var endMessage: String = PrintUtils.successColourString("Rewriting induction complete. All equations deleted.")
   val Z3SimplifyName: String = "Z3 simplify"
 
+  val SIMPLRULENAME = SIMPLIFICATION.name ++ " (RULES)"
+  val SIMPCALCNAME = SIMPLIFICATION.name ++ " (CALC)"
+
   val inferenceRules: List[String] = List(
     COMPLETENESS.name,
     CONSTRUCTOR.name,
@@ -27,8 +30,8 @@ object InputHandler {
     EXPANSION.name,
     GENERALIZATION.name,
     POSTULATE.name,
-    SIMPLIFICATION.name,
-    Z3SimplifyName)
+    SIMPLRULENAME,
+    SIMPCALCNAME)
 
   def main(initialPfSt: ProofState): Unit = {
     var pfSt = initialPfSt
@@ -59,7 +62,7 @@ object InputHandler {
         DELETION.tryDELETION(pfSt, equationSelector)
       case DISPROVE.name =>
         DISPROVE.tryDISPROVE(pfSt).map(_ => {
-          endMessage = PrintUtils.failureColourString("DISPROVE successful. Rewriting Induction terminated.") ; pfSt.removeAllEquations()
+          endMessage = PrintUtils.successColourString("DISPROVE. Rewriting Induction terminated.") ; pfSt.removeAllEquations()
         })
       case EQ_DELETION.name =>
         EQ_DELETION.tryEQ_DELETION(pfSt, equationSelector, positionsSelector)
@@ -73,10 +76,9 @@ object InputHandler {
         POSTULATE.doPOSTULATE(pfSt, equationsInputter())
         message = "Equation parsing not implemented yet."
         None
-      case SIMPLIFICATION.name =>
+      case SIMPLRULENAME =>
         SIMPLIFICATION.trySIMPLIFICATION(pfSt, equationSelector, sideSelector, ruleSelector, positionSelector)
-      case Z3SimplifyName =>
-        message = "Applied Z3 simplification."
+      case SIMPCALCNAME =>
         Some(simplify_calc(pfSt))
     }, message)
   }

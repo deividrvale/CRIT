@@ -181,7 +181,7 @@ object Term {
       args.length >= fun.typing.input.length &&
       args.indices.forall{ i => val sort = fun.typing.getSort(Some(i)); sort.contains(Sort.Any) || sort.contains(args(i).sort) } &&
       sortsArgsAny.size <= 1,
-      s"The term ${fun.name}( ${args.mkString(", ")} ) is not well-typed; here $fun."
+      s"The term ${fun.toPrintString()}(${args.map(_.toPrintString()).mkString(", ")}) is not well-typed; here $fun."
     )
 
     override def rootFunc: Option[FunctionSymbol] = Some(fun)

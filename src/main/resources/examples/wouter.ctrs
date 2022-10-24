@@ -5,9 +5,9 @@ SOLVER internal ;
 SIGNATURE f, g, h ;
 
 RULES
-  f(x)  -> g(x)     [x > 0]       ;
+  f(x)  -> f(x - 1)     [x > 0]       ;
 
-QUERY user-equivalence x -><- 0 [x = 0]
+QUERY equivalence x -><- 2 [x = 2]
 
 END OF FILE
 
