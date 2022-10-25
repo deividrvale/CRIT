@@ -35,16 +35,21 @@ class Z3Parser(termString: String, functionSymbolsMap: Map[String, FunctionSymbo
   def parseVariadic(functionSymbol: FunctionSymbol, arguments: List[Term]): Term = {
     val n = functionSymbol.typing.input.length
     if arguments.length == n then App(functionSymbol, arguments)
-    else if functionSymbol.name == "-" then { println("check") ; arguments.head match {
-      case App(FunctionSymbol(name, _, _, _, _, _), _) =>
-        println("check 2")
-        return App(FunctionSymbol((name.toInt * -1).toString, typing = Typing(List(), Sort.Int), true, true), List())
-      case _ =>
-        val firstNArguments = arguments.take(n)
-        parseVariadic(functionSymbol, App(functionSymbol, firstNArguments) :: arguments.drop(n))
-    }}
+    else if functionSymbol.name == "-" then parseMinus(arguments.head)
     else
-      val firstNArguments = arguments.take(n)
-      parseVariadic(functionSymbol, App(functionSymbol, firstNArguments) :: arguments.drop(n) )
+      if arguments.length == 2 then // TODO this is not a nice solution
+        App(functionSymbol, arguments)
+      else
+        val firstNArguments = arguments.take(n)
+        parseVariadic(functionSymbol, App(functionSymbol, firstNArguments) :: arguments.drop(n) )
   }
+
+  def parseMinus(argument: Term): Term = {
+    argument match {
+      case App(FunctionSymbol(name, _, _, _, _, _), _) =>
+        App(FunctionSymbol((name.toInt * -1).toString, typing = Typing(List(), Sort.Int), true, true), List())
+      case _ => println("Parse error. Too many arguments for operator -.") ; null
+    }
+  }
+
 }
