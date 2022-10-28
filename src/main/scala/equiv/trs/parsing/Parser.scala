@@ -82,7 +82,10 @@ class TRSParser(readFile: String => String) extends RegexParsers {
       case fun ~ (input ~ (output ~ infixType)) =>
         var inputSorts = input.getOrElse(List.empty).map(Sort(_))
         val variadic = inputSorts.lastOption.exists{ s => s.name.startsWith("<") && s.name.endsWith(">") }
-        if(variadic) inputSorts = inputSorts.init ++ List(Sort(inputSorts.last.name.drop(1).dropRight(1)))
+        if(variadic) {
+          inputSorts = inputSorts.init ++ List(Sort(inputSorts.last.name.drop(1).dropRight(1)))
+          if inputSorts.length == 1 then inputSorts = inputSorts ++ inputSorts // Require that variadic function symbols have at least 2 arguments.
+        }
         inputSorts = inputSorts.map{ s => if(s == Sort("?A")) Sort.Any else s }
         val outputSort = if(output == "?A") Sort.Any else Sort(output)
         Left(FunctionSymbol(fun, Typing(inputSorts, outputSort, isVariadic = variadic), infix = infixType))

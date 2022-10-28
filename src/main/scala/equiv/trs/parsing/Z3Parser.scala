@@ -37,11 +37,8 @@ class Z3Parser(termString: String, functionSymbolsMap: Map[String, FunctionSymbo
     if arguments.length == n then App(functionSymbol, arguments)
     else if functionSymbol.name == "-" then parseMinus(arguments.head)
     else
-      if arguments.length == 2 then // TODO this is not a nice solution
-        App(functionSymbol, arguments)
-      else
-        val firstNArguments = arguments.take(n)
-        parseVariadic(functionSymbol, App(functionSymbol, firstNArguments) :: arguments.drop(n) )
+      val firstNArguments = arguments.take(n)
+      parseVariadic(functionSymbol, App(functionSymbol, firstNArguments) :: arguments.drop(n) )
   }
 
   def parseMinus(argument: Term): Term = {
