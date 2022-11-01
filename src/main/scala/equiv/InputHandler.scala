@@ -19,7 +19,8 @@ object InputHandler {
   val Z3SimplifyName: String = "Z3 simplify"
 
   val SIMPLRULENAME = SIMPLIFICATION.name ++ " (RULES)"
-  val SIMPCALCNAME = SIMPLIFICATION.name ++ " (CALC)"
+  val CALCSIMPNAME = "CALCULATION (SIMPLIFICATION)"
+  val CALCVARNAME = "CALCULATION (VARIABLE REPLACEMENT)"
 
   val inferenceRules: List[String] = List(
     COMPLETENESS.name,
@@ -31,7 +32,8 @@ object InputHandler {
     GENERALIZATION.name,
     POSTULATE.name,
     SIMPLRULENAME,
-    SIMPCALCNAME)
+    CALCSIMPNAME,
+    CALCVARNAME)
 
   def main(initialPfSt: ProofState): Unit = {
     var pfSt = initialPfSt
@@ -78,8 +80,10 @@ object InputHandler {
         None
       case SIMPLRULENAME =>
         SIMPLIFICATION.trySIMPLIFICATION(pfSt, equationSelector, sideSelector, ruleSelector, positionSelector)
-      case SIMPCALCNAME =>
+      case CALCSIMPNAME =>
         Some(simplify_calc(pfSt))
+      case CALCVARNAME =>
+        ???
     }, message)
   }
 
@@ -149,7 +153,7 @@ object InputHandler {
 
   def positionSelector(terms: Iterable[Term], positions: List[Position]): Position = {
     println("Choose a position:")
-    selectFromList(positions, p => s"${Term.positionToString(p)}: ${terms.map(_.subTermAt(p).toPrintString()).mkString("", s" ${TermUtils.equalityFunctionSymbolName} ", "")}" )
+    selectFromList(positions, p => s"${Term.positionToString(p)}: ${terms.map(_.subTermAt(p).toPrintString()).mkString("", s" ${TermUtils.RIEqualityFunctionSymbolName} ", "")}" )
   }
 
   def positionsSelector(terms: Iterable[Term], positions: List[Position]): List[Position] = {

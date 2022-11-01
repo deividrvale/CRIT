@@ -1,6 +1,6 @@
 package equiv
 
-import equiv.ri.{Equation, ProofState}
+import equiv.ri.{CALCULATION, Equation, ProofState}
 import equiv.trs.QueryEquivalence
 import equiv.trs.Temp.*
 import equiv.trs.parsing.QuasiQueryEquivalence
@@ -9,14 +9,20 @@ import equiv.utils.Z3
 import java.awt.Frame // usable for GUI
 
 object Equiv {
-  def main(args: Array[String]): Unit = {    
-//    sample()
+  def main(args: Array[String]): Unit = {
     parse("wouter") match {
-      case Some(pfSt) => InputHandler.main(pfSt)
+      case Some(pfSt) =>
+        debug(pfSt)
+        InputHandler.main(pfSt)
       case _ => println("Failed to parse")
     }
   }
-  
+
+  def debug(pfSt: ProofState): Unit = {
+    println(CALCULATION.getEquationSubtermVarReplacementPositionsAux(pfSt.equations.head.left))
+    println(CALCULATION.getEquationSubtermVarReplacementPositionsAux(pfSt.equations.head.right))
+  }
+
   def sample(): Unit = {
     import equiv.trs.Temp.Sums._
     import equiv.trs.Temp.InferenceRuleEquations._

@@ -1,7 +1,7 @@
 package equiv
 
 import equiv.ri.inference_rules.{CONSTRUCTOR, DELETION, DISPROVE, EQ_DELETION, EXPANSION, SIMPLIFICATION}
-import equiv.ri.{Equation, ProofState, Simplify}
+import equiv.ri.{Equation, ProofState}
 import equiv.trs.Temp.*
 import equiv.trs.Term.{App, Position}
 import equiv.utils.TermUtils

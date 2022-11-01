@@ -73,7 +73,7 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
 
   /** Get the equation represented as a constrained term, where the equality symbol (~~) is seen as a fresh function symbol. */
   def toConstrainedTerm: ConstrainedTerm =
-    ConstrainedTerm(App(TermUtils.getEqualityFunctionSymbol(this), List(left, right)), constraints)
+    ConstrainedTerm(App(TermUtils.getRIEqualityFunctionSymbol(this.left.sort), List(left, right)), constraints)
 
   // *************************************************** TACTICS *************************************************** //
 
@@ -90,7 +90,7 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
    *         with Typing such that it is the parent of the left and right side of the equation */
   private def getFreshFunctionSymbol(rule: Rule): FunctionSymbol = {
     val funcNames = left.functionSymbolNames ++ right.functionSymbolNames ++ constraints.flatMap(_.term.functionSymbolNames) ++ rule.right.functionSymbolNames
-    var freshName = TermUtils.equalityFunctionSymbolName
+    var freshName = TermUtils.RIEqualityFunctionSymbolName
     while(funcNames.contains(freshName)) {
       freshName = new Random().nextString(4)
     }
@@ -99,5 +99,5 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
 
   override def toString: String = toPrintString(false)
 
-  override def toPrintString(colours: Boolean = true): String = s"${left.toPrintString(colours)} ${TermUtils.equalityFunctionSymbolName} ${right.toPrintString(colours)}${if constraints.nonEmpty then " " else ""}${super.toPrintString(colours)}"
+  override def toPrintString(colours: Boolean = true): String = s"${left.toPrintString(colours)} ${TermUtils.RIEqualityFunctionSymbolName} ${right.toPrintString(colours)}${if constraints.nonEmpty then " " else ""}${super.toPrintString(colours)}"
 }

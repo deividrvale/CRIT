@@ -19,6 +19,9 @@ case class ConstrainedTerm(term: Term, constraints: Set[Constraint]) extends Con
   def applySubstitution(substitution: Substitution): ConstrainedTerm =
     ConstrainedTerm(term.applySubstitution(substitution), constraints.map(_.applySubstitution(substitution)))
 
+  def addConstraint(constraint: Constraint): ConstrainedTerm =
+    this.copy(constraints = constraints + constraint)
+
   override def toString: String = toPrintString(false)
 
   override def toPrintString(colours: Boolean = true): String =

@@ -27,6 +27,14 @@ trait Term {
     case App(f, args) => f.isConstructor(definedSymbols) && args.forall(_.isConstructorTerm(definedSymbols))
   }
 
+  /** Check if the given term is a calculation containing variables, so: a term in `Sigma_theory(Var)` that is not ground. */
+  def isCalculationContainingVariables(isRoot: Boolean = true): Boolean = {
+    this match {
+      case Var(_, _) => !isRoot
+      case App(f, args) => f.isTheory && (args.nonEmpty || !isRoot) && args.forall(_.isCalculationContainingVariables(false))
+    }
+  }
+
   /** @return A set of variables that occur in the given term */
   def vars: Set[Var] = this match {
     case x@Var(_, _) => Set(x)

@@ -7,8 +7,9 @@ import equiv.trs.*
 import scala.annotation.tailrec
 
 object TermUtils {
-  val equalityFunctionSymbolName: String = "~~"
-  val reservedFunctionSymbol: String = equalityFunctionSymbolName ++ equalityFunctionSymbolName
+  val equalityFunctionSymbolName: String = "="
+  val RIEqualityFunctionSymbolName: String = "~~"
+  val reservedFunctionSymbol: String = RIEqualityFunctionSymbolName ++ RIEqualityFunctionSymbolName
 
   var lastVarNameInt: Int = 0
 
@@ -43,7 +44,14 @@ object TermUtils {
    * @return [[Some]]([[FunctionSymbol]]) if the [[String]] is an [[Int]], otherwise [[None]] */
   def maybeGetValue(string: String): Option[App] = if isInt(string) then Some(TheorySymbols.valInt(string.toInt)) else None
 
-  def getEqualityFunctionSymbol(equation: Equation): FunctionSymbol = {
-    FunctionSymbol(reservedFunctionSymbol, Typing(List(equation.left.sort, equation.right.sort), equation.left.sort), isTheory = false, isValue = false, None, isTemporary = true)
+  /** Get the reserved function symbol used in RI (Rewriting Induction) to indicate the equality that is to be proven. */
+  def getRIEqualityFunctionSymbol(sort: Sort): FunctionSymbol = {
+    FunctionSymbol(reservedFunctionSymbol, Typing(List(sort, sort), Sort.Bool), isTheory = false, isValue = false, None, isTemporary = true)
   }
+
+  /** Get the symbol "=" used for equality in the theory. */
+  def getEqualityFunctionSymbol(sort: Sort): FunctionSymbol = {
+    FunctionSymbol(equalityFunctionSymbolName, Typing(List(sort, sort), Sort.Bool), isTheory = true)
+  }
+
 }

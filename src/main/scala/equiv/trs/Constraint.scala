@@ -1,7 +1,7 @@
 package equiv.trs
 
-import equiv.trs.Term.{App, Substitution}
-import equiv.utils.TheorySymbols
+import equiv.trs.Term.{App, Substitution, Var}
+import equiv.utils.{TermUtils, TheorySymbols}
 
 case class Constraint(term: Term) {
   assert(term.sort == Sort.Bool)
@@ -16,6 +16,22 @@ case class Constraint(term: Term) {
           return args.flatMap(split).toSet
     }
     Set(Constraint(term2))
+  }
+
+  /**
+   * Check if the constraint is the assignment of a term to a variable, i.e. of the form `x = t` or `t = x`, where `x` is a variable and `t` a non-variable term.
+   * @return The variable that is assigned if the constraint is of this form, [[None]] otherwise
+   */
+  def maybeVar: Option[Term.Var] = {
+    term match {
+      case App(FunctionSymbol(TermUtils.equalityFunctionSymbolName, _, _, _, _, _), List(l, r)) =>
+        (l, r) match {
+          case (v@Var(_, _), App(_, _)) => Some(v)
+          case (App(_, _), v@Var(_, _)) => Some(v)
+          case _ => None
+      }
+      case _ => None
+    }
   }
 
   override def toString: String = toPrintString(false)
