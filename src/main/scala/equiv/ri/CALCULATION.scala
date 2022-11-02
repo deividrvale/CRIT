@@ -32,7 +32,7 @@ object CALCULATION {
   }
 
   def doSubtermVarReplacementOnEquation(pfSt: ProofState, equation: Equation): Option[ProofState] = {
-    val positions = getEquationSubtermVarReplacementPositions(pfSt, equation) // TODO: remove duplicate work
+    val positions = getEquationSubtermVarReplacementPositions(equation) // TODO: remove duplicate work
     if positions.nonEmpty then
       Some(doSubtermVarReplacementOnEquationPositions(pfSt, equation, positions))
     else None
@@ -64,7 +64,7 @@ object CALCULATION {
   }
 
   def getSubtermVarReplacementEquations(pfSt: ProofState): List[Equation] = {
-    pfSt.equations.filter(getEquationSubtermVarReplacementPositions(pfSt, _).nonEmpty).toList
+    pfSt.equations.filter(getEquationSubtermVarReplacementPositions(_).nonEmpty).toList
   }
 
   /** Get a list of positions of biggest subterms that are calculations containing variables, but not only variables or only theory symbols.

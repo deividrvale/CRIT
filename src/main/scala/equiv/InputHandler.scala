@@ -18,9 +18,8 @@ object InputHandler {
   var endMessage: String = PrintUtils.successColourString("Rewriting induction complete. All equations deleted.")
   val Z3SimplifyName: String = "Z3 simplify"
 
-  val SIMPLRULENAME = SIMPLIFICATION.name ++ " (RULES)"
-  val CALCSIMPNAME = "CALCULATION (SIMPLIFICATION)"
-  val CALCVARNAME = "CALCULATION (VARIABLE REPLACEMENT)"
+  val CALC_SIMP_NAME = "CALCULATION (SIMPLIFICATION)"
+  val CALC_VAR_NAME = "CALCULATION (VARIABLE REPLACEMENT)"
 
   val inferenceRules: List[String] = List(
     COMPLETENESS.name,
@@ -31,9 +30,9 @@ object InputHandler {
     EXPANSION.name,
     GENERALIZATION.name,
     POSTULATE.name,
-    SIMPLRULENAME,
-    CALCSIMPNAME,
-    CALCVARNAME)
+    SIMPLIFICATION.name,
+    CALC_SIMP_NAME,
+    CALC_VAR_NAME)
 
   def main(initialPfSt: ProofState): Unit = {
     var pfSt = initialPfSt
@@ -78,11 +77,11 @@ object InputHandler {
         POSTULATE.doPOSTULATE(pfSt, equationsInputter())
         message = "Equation parsing not implemented yet."
         None
-      case SIMPLRULENAME =>
+      case SIMPLIFICATION.name =>
         SIMPLIFICATION.trySIMPLIFICATION(pfSt, equationSelector, sideSelector, ruleSelector, positionSelector)
-      case CALCSIMPNAME =>
+      case CALC_SIMP_NAME =>
         Some(simplify_calc(pfSt))
-      case CALCVARNAME =>
+      case CALC_VAR_NAME =>
         ???
     }, message)
   }
@@ -119,7 +118,7 @@ object InputHandler {
   }
 
   /** @return A sorted [[Map]] from integers (as strings) to objects of type [[T]] */
-  def withIndex[T](input: List[T]): Map[String, T] = ListMap(input.zipWithIndex.map((data, i) => (i.toString, data)).sortBy(_._1):_*)
+  def withIndex[T](input: List[T]): Map[String, T] = ListMap(input.zipWithIndex.sortBy(t => t._2).map((data, i) => (i.toString, data)): _*)
 
   /** Prompt the user to choose a value from a list.
    * @param input The list to choose an option from
