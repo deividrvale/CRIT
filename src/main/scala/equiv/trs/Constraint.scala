@@ -18,21 +18,8 @@ case class Constraint(term: Term) {
     Set(Constraint(term2))
   }
 
-  /**
-   * Check if the constraint is the assignment of a term to a variable, i.e. of the form `x = t` or `t = x`, where `x` is a variable and `t` a non-variable term.
-   * @return The variable that is assigned if the constraint is of this form, [[None]] otherwise
-   */
-  def maybeVar: Option[Term.Var] = {
-    term match {
-      case App(FunctionSymbol(TermUtils.equalityFunctionSymbolName, _, _, _, _, _), List(l, r)) =>
-        (l, r) match {
-          case (v@Var(_, _), App(_, _)) => Some(v)
-          case (App(_, _), v@Var(_, _)) => Some(v)
-          case _ => None
-      }
-      case _ => None
-    }
-  }
+  /** Try to find the given term in an assignment in the constraint. If there is one, return the first variable that is assigned to it. */
+  def maybeFindAssignment(t: Term): Option[Var] = term.maybeFindAssignment(t)
 
   override def toString: String = toPrintString(false)
 

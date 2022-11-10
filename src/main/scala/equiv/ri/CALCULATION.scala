@@ -42,9 +42,9 @@ object CALCULATION {
     var updatedEquation: ConstrainedTerm = equation.toConstrainedTerm
     positions.foreach(
       pos =>
-        val subterm: Term = updatedEquation.term.subTermAt(pos)
-        maybeGetFirstVar(updatedEquation.constraints) match {
-          case Some(x@Var(_, _)) => updatedEquation = updatedEquation.substituteAtPos(pos, x)
+        val subterm: Term = updatedEquation.term.subTermAt(pos) ;
+        tryFindFirstAssignment(updatedEquation, subterm) match {
+          case Some(v@Var(_, _)) => updatedEquation = updatedEquation.substituteAtPos(pos, v)
           case None =>
             val freshVar = TermUtils.getFreshVar(subterm.sort)
             val newConstraint = Constraint(App(TermUtils.getEqualityFunctionSymbol(subterm.sort), List(freshVar, subterm)))
@@ -57,10 +57,21 @@ object CALCULATION {
     }
   }
 
-  @tailrec
+  def tryFindFirstAssignment(equation: ConstrainedTerm, term: Term): Option[Var] = {
+    equation.constraints.foreach( c =>
+      c.maybeFindAssignment(term) match {
+        case None =>
+        case Some(v) => return Some(v)
+      }
+    )
+    None
+  }
+
+//  @tailrec
   def maybeGetFirstVar(constraints: Iterable[Constraint]): Option[Var] = {
-    val maybeVar: Option[Var] = constraints.headOption.flatMap(_.maybeVar)
-    if maybeVar.nonEmpty then maybeVar else maybeGetFirstVar(constraints.drop(1))
+//    val maybeVars: Option[List[Var]] = constraints.headOption.map(constraint => constraint.getEqualityVars)
+//    if maybeVars.nonEmpty then maybeVars.getOrElse(None) else maybeGetFirstVar(constraints.drop(1))
+    None
   }
 
   def getSubtermVarReplacementEquations(pfSt: ProofState): List[Equation] = {

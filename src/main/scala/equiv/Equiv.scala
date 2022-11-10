@@ -10,9 +10,10 @@ import java.awt.Frame // usable for GUI
 
 object Equiv {
   def main(args: Array[String]): Unit = {
+//    sample()
     parse("wouter") match {
       case Some(pfSt) =>
-        debug(pfSt)
+//        debug(pfSt)
         InputHandler.main(pfSt)
       case _ => println("Failed to parse")
     }
@@ -21,6 +22,7 @@ object Equiv {
   def debug(pfSt: ProofState): Unit = {
     println(CALCULATION.getEquationSubtermVarReplacementPositionsAux(pfSt.equations.head.left))
     println(CALCULATION.getEquationSubtermVarReplacementPositionsAux(pfSt.equations.head.right))
+//    println(pfSt.equations.head.constraints.head.getEqualityVars)
   }
 
   def sample(): Unit = {
@@ -30,7 +32,8 @@ object Equiv {
     val rules = sumUpRules ++ sumRecRules
 
     val pfSt = ProofState(Set(
-      expEq2, eqDelEq, eqDelEq2, eqDelEq3, eqDelEq4, eqDelEq5, eqDelEq6
+//      expEq2, eqDelEq, eqDelEq2, eqDelEq3, eqDelEq4, eqDelEq5, eqDelEq6
+      constructorEquation
     ),
 //      Set(fRule, fRule2),
       Set(),

@@ -1,6 +1,6 @@
 package equiv
 
-import equiv.ri.{Equation, ProofState}
+import equiv.ri.{CALCULATION, Equation, ProofState}
 import equiv.ri.Equation.Side
 import equiv.ri.inference_rules.{COMPLETENESS, CONSTRUCTOR, DELETION, DISPROVE, EQ_DELETION, EXPANSION, GENERALIZATION, POSTULATE, SIMPLIFICATION}
 import equiv.trs.Term.Position
@@ -82,7 +82,7 @@ object InputHandler {
       case CALC_SIMP_NAME =>
         Some(simplify_calc(pfSt))
       case CALC_VAR_NAME =>
-        ???
+        CALCULATION.trySubtermVarReplacement(pfSt, equationSelector)
     }, message)
   }
 

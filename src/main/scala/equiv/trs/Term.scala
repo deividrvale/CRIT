@@ -2,7 +2,7 @@ package equiv.trs
 
 import equiv.ri.ProofState
 import equiv.trs.Term.{App, Position, Substitution, Var}
-import equiv.utils.{MapUtils, PrintUtils}
+import equiv.utils.{MapUtils, PrintUtils, TermUtils}
 
 import scala.annotation.tailrec
 
@@ -77,7 +77,7 @@ trait Term {
 
   /** Check if the current term (t1) is unifiable with the given term (t2), i.e. there exists a substitution γ such that t1γ = t2γ
    * TODO check Martelli-Montanari */
-  def unifiableWith(term: Term): Option[Substitution] = {
+  def unifiableWith(term: Term): Option[Substitution] = { // TODO check correctness
     (this, term) match {
       case (v1@Var(x1, _), v2@Var(x2, _)) => if x1 == x2 then Some(Map()) else Some(Map(v2 -> v1))
       case (a@App(_, _), v@Var(_,_)) => Some(Map(v -> a))
@@ -112,6 +112,24 @@ trait Term {
 
   /** Searches all subterms that are instances of the given term. */
   def findSubTermInstances(other: Term): List[(Term, Position, Substitution)] = findSubTerms(t => t.instanceOf(other))
+
+  /** @return If this is a (variadic) equality, return all variables in the term that are the child of an equality symbol, in a List.
+   * @example [[getEqualityVars]] on term `((x = 5) = 1 + y) = z)` returns `List(z, x)` */
+  def getEqualityVars: List[Term.Var] = {
+    this match {
+      case App(FunctionSymbol(TermUtils.equalityFunctionSymbolName, _, _, _, _, _), List(l, r)) =>
+        (l, r) match {
+          case (v@Var(_, _), App(_, _)) => List(v)
+          case (App(_, _), v@Var(_, _)) => List(v)
+          case _ => l.getEqualityVars ++ r.getEqualityVars
+        }
+      case _ => List()
+    }
+  }
+
+  def maybeFindAssignment(term: Term): Option[Var] = {
+    None
+  }
 
   /** Substitute a subterm with `replacement` at the given `position`.
    * @param position Position of substitution as a list of Ints
