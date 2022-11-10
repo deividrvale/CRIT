@@ -97,15 +97,15 @@ object InputHandler {
   def ruleAcceptor(rule: Rule): Boolean = {
     println("Do you want to add this rule to the hypotheses set? (Y/n)")
     println(rule.toPrintString())
-    loopForCorrectInput(List("y", "", "yes", "no", "n")) match {
+    loopForCorrectLowerCaseInput(List("y", "", "yes", "no", "n")) match {
       case "" | "y" | "yes" => return true
       case "n" | "no" => return false
     }
     false
   }
 
-  def loopForCorrectInput(correctInput: List[String]): String = {
-    loopForInputCondition({s => correctInput.contains(s)})
+  def loopForCorrectLowerCaseInput(correctInput: List[String]): String = {
+    loopForInputCondition({s => correctInput.contains(s.toLowerCase)}).toLowerCase
   }
 
   /** Ask the user for an input line (``readLine()``) until the given condition is satisfied. */
@@ -127,7 +127,7 @@ object InputHandler {
   def selectFromList[T](input: List[T], itemToString: T => String): T = {
     val listWithIndex = withIndex(input)
     listWithIndex.foreach((i, d) => println(s"$i: ${itemToString(d)}"))
-    listWithIndex(loopForCorrectInput(listWithIndex.keys.toList))
+    listWithIndex(loopForCorrectLowerCaseInput(listWithIndex.keys.toList))
   }
 
   def inferenceRuleSelector(inferenceRules: List[String] = this.inferenceRules): String = {
@@ -139,7 +139,7 @@ object InputHandler {
     println("Choose an equation:")
     selectFromList(equations, _.toPrintString())
   }
-  
+
   def ruleSelector(rules: List[Rule]): Rule = {
     println("Choose a rule:")
     selectFromList(rules, _.toPrintString())
@@ -165,7 +165,7 @@ object InputHandler {
       remainingPositions -= selectedPosition
       if remainingPositions.nonEmpty then {
         println("Do you want to select another position? (Y/n)")
-        loopForCorrectInput(List("y", "Y", "", "n", "N")) match {
+        loopForCorrectLowerCaseInput(List("y", "Y", "", "n", "N")) match {
           case "n" | "N" => morePositions = false
           case _ =>
         }
@@ -196,7 +196,7 @@ object InputHandler {
     while moreEquations do {
       equations = equations + equationInputter()
       println("Do you want to add another equation? (Y/n)")
-      loopForCorrectInput(List("y", "Y", "", "n", "N")) match {
+      loopForCorrectLowerCaseInput(List("y", "Y", "", "n", "N")) match {
         case "n" | "N" => moreEquations = false
       }
     }

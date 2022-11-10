@@ -5,8 +5,10 @@ SOLVER internal ;
 SIGNATURE return ;
 
 RULES
+    f(x) -> x [x > 0] ;
+    f(0) -> 0 ;
 
-QUERY equivalence x -><- y [x = 1 /\ y = 1 /\ x = y]
+QUERY equivalence f(x) -><- 0 [x = 0]
 
 END OF FILE
 
