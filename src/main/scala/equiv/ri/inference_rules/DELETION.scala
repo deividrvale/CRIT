@@ -1,7 +1,7 @@
 package equiv.ri.inference_rules
 
 import equiv.ri.ProofState
-import equiv.utils.Z3
+import equiv.utils.{Debug, Z3}
 import equiv.ri.Equation
 import equiv.utils.ListExtension.onNonEmpty
 

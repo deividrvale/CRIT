@@ -1,5 +1,7 @@
 package equiv.utils
 
+import equiv.trs.Term
+
 object MapUtils {
   def union[S,T](map1: Map[S,T], map2: Map[S,T], ignoreConflicts: Boolean = false) : Option[Map[S,T]] = {
     var map = map2

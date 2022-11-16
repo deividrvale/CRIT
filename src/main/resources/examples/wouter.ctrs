@@ -2,13 +2,18 @@ THEORY ints     ;
 LOGIC QF_LIA    ;
 SOLVER internal ;
 
-SIGNATURE return ;
+SIGNATURE add, a ;
 
 RULES
-    f(x) -> x [x > 0] ;
-    f(0) -> 0 ;
+    add(x, 0, z) -> a ;
+    add(x, s(y), 1) -> a ;
+    add(y, x, 3) -> a ;
+    add(x, x, y) -> a ;
+    add(0, 0, 1) -> a ;
+    add(0, 1, 1) -> a ;
+    add(1, 1, 1) -> a ;
 
-QUERY equivalence f(x) -><- 0 [x = 0]
+QUERY equivalence add(x1, y1, y1) -><- a
 
 END OF FILE
 

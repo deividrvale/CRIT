@@ -77,11 +77,13 @@ trait Term {
 
   /** Check if the current term (t1) is unifiable with the given term (t2), i.e. there exists a substitution γ such that t1γ = t2γ
    * TODO check Martelli-Montanari */
-  def unifiableWith(term: Term): Option[Substitution] = { // TODO check correctness
+  def unifiableWith2(term: Term): Option[Substitution] = { // TODO check correctness
     (this, term) match {
       case (v1@Var(x1, _), v2@Var(x2, _)) => if x1 == x2 then Some(Map()) else Some(Map(v2 -> v1))
-      case (a@App(_, _), v@Var(_,_)) => Some(Map(v -> a))
-      case (v@Var(_,_), a@App(_, _)) => if a.vars.contains(v) then None else Some(Map(v -> a))
+      case (a@App(_, _), v@Var(_,_)) => v.unifiableWith(a)
+      case (v@Var(_,_), a@App(_, _)) =>
+        if a.vars.contains(v) then None else
+          Some(Map(v -> a))
       case (App(f1, args1), App(f2, args2)) =>
         if (f1 == f2) {
           (args1 zip args2).map(ts => ts._1.unifiableWith(ts._2)).foldLeft[Option[Substitution]](Some(Map.empty))({
@@ -90,6 +92,36 @@ trait Term {
           })
         } else None
     }
+  }
+
+  /** Based on the Martelli-Montanari unification algorithm.
+   * @return [[None]] if the given [[Term]] is not unifiable with [[this]]. [[Some]]([[Substitution]]) otherwise. */
+  def unifiableWith(term: Term): Option[Substitution] = {
+    var equations = List((this, term))
+    var substitution: Substitution = Map()
+    while equations.nonEmpty do
+      println("Equations: " + equations.mkString(" "))
+      println("Substitution: " ++ substitution.mkString(" "))
+      equations.head match {
+        case (v1@Var(x1, _), v2@Var(x2, _)) =>
+          if x1 != x2 then
+            substitution = substitution.updated(v2, v1)
+        case (a@App(_, _), v@Var(_, _)) =>
+          equations = equations ++ List((v, a))
+        case (v@Var(_, _), a@App(_, _)) =>
+          if a.vars.contains(v) then
+            return None
+          else
+            substitution = TermUtils.replaceVarInSub(v, a, substitution).updated(v, a)
+            equations = TermUtils.replaceVarInTermPairs(v, a, equations)
+        case (App(f1, args1), App(f2, args2)) =>
+          if f1 != f2 then
+            return None
+          else equations = equations ++ (args1 zip args2)
+      }
+      // !! Make sure to add equations at the end of the [[equations]] list !! Since the head will get dropped every iteration.
+      equations = equations.drop(1)
+    Some(substitution)
   }
 
   /** Searches all subterms with the given property.

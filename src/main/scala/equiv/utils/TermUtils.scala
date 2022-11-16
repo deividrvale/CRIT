@@ -1,7 +1,8 @@
 package equiv.utils
 
+import com.sun.org.apache.xpath.internal.operations.Variable
 import equiv.ri.Equation
-import equiv.trs.Term.{App, Position, Var}
+import equiv.trs.Term.{App, Position, Substitution, Var}
 import equiv.trs.*
 
 import scala.annotation.tailrec
@@ -54,4 +55,11 @@ object TermUtils {
     FunctionSymbol(equalityFunctionSymbolName, Typing(List(sort, sort), Sort.Bool), isTheory = true)
   }
 
+  def replaceVarInSub(variable: Term.Var, term: Term, substitution: Substitution): Substitution = {
+    substitution.map((variable2: Var, term2: Term) => (variable2, term2.substituteAll(variable, term)))
+  }
+
+  def replaceVarInTermPairs(variable: Var, term: Term, equations: List[(Term, Term)]): List[(Term, Term)] = {
+    equations.map((t1: Term, t2: Term) => (t1.substituteAll(variable, term), t2.substituteAll(variable, term)))
+  }
 }

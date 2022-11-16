@@ -2,10 +2,10 @@ package equiv
 
 import equiv.ri.inference_rules.{CONSTRUCTOR, DELETION, DISPROVE, EQ_DELETION, EXPANSION, SIMPLIFICATION}
 import equiv.ri.{Equation, ProofState}
-import equiv.trs.Temp.*
+import tests.SampleObjects.*
 import equiv.trs.Term.{App, Position}
 import equiv.utils.TermUtils
-import equiv.trs.Temp.InferenceRuleEquations.*
+import tests.SampleObjects.InferenceRuleEquations.*
 
 object Test {
   def main(args: Array[String]): Unit = {
