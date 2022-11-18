@@ -1,0 +1,20 @@
+THEORY ints     ;
+LOGIC QF_LIA    ;
+SOLVER internal ;
+
+SIGNATURE f, s, g, t, np, sum ;
+
+RULES
+    f(0) -> 0 ;
+    f(s(0)) -> s(0) ;
+    f(s(s(n))) -> f(s(n)) + f(n) ;
+    g(0) -> t(s(0), 0) ;
+    g(s(n)) -> np(g(n)) ;
+    np(t(x,y)) -> t(x + y, x) ;
+    sum(t(x, y)) -> x + y ;
+
+QUERY equivalence g(x) -><- t(f(s(x)),f(x))
+
+END OF FILE
+
+

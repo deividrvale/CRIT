@@ -8,9 +8,9 @@ import equiv.utils.Z3
 object Equiv {
   def main(args: Array[String]): Unit = {
 //    sample()
-    parse("wouter") match {
+    parse("Reddy/fibonacci") match {
       case Some(pfSt) =>
-        debug(pfSt)
+//        debug(pfSt)
         InputHandler.main(pfSt)
       case _ => println("Failed to parse")
     }

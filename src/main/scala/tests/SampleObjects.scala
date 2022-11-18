@@ -68,10 +68,10 @@ object SampleObjects {
     import Values.*
     import equiv.utils.TheorySymbols.*
 
-    val x: Term = varInt("x")
-    val y: Term = varInt("y")
-    val i: Term = varInt("i")
-    val z: Term = varInt("z")
+    val x: Var = varInt("x")
+    val y: Var = varInt("y")
+    val i: Var = varInt("i")
+    val z: Var = varInt("z")
     val sumUp: FunctionSymbol = funcIntInt("sumup", false)
     val sumDown: FunctionSymbol = funcIntInt("sumdown", false)
     val sumRec: FunctionSymbol = funcIntInt("sumrec", false)
@@ -128,7 +128,7 @@ object SampleObjects {
     App(FunctionSymbol.`Int`(value), List())
 
   /** @return An integer variable */
-  def varInt(name: String): Term = Var(name, Sort.Int)
+  def varInt(name: String): Var = Var(name, Sort.Int)
 
   /** A constraint for an integer variable and an integer value. */
   def consVarIntInt(variableName: String, operatorName: String, value: Int): Constraint =

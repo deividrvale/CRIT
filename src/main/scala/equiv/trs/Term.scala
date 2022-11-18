@@ -100,20 +100,16 @@ trait Term {
     var equations = List((this, term))
     var substitution: Substitution = Map()
     while equations.nonEmpty do
-      println("Equations: " + equations.mkString(" "))
-      println("Substitution: " ++ substitution.mkString(" "))
       equations.head match {
-        case (v1@Var(x1, _), v2@Var(x2, _)) =>
-          if x1 != x2 then
-            substitution = substitution.updated(v2, v1)
         case (a@App(_, _), v@Var(_, _)) =>
           equations = equations ++ List((v, a))
-        case (v@Var(_, _), a@App(_, _)) =>
-          if a.vars.contains(v) then
-            return None
-          else
-            substitution = TermUtils.replaceVarInSub(v, a, substitution).updated(v, a)
-            equations = TermUtils.replaceVarInTermPairs(v, a, equations)
+        case (v@Var(_, _), t) =>
+          if v != t then // if we have {x = x} then ignore
+            if t.vars.contains(v) then
+              return None
+            else
+              substitution = TermUtils.replaceVarInSub(v, t, substitution).updated(v, t)
+              equations = TermUtils.replaceVarInTermPairs(v, t, equations)
         case (App(f1, args1), App(f2, args2)) =>
           if f1 != f2 then
             return None

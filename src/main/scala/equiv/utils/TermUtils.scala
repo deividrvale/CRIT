@@ -62,4 +62,20 @@ object TermUtils {
   def replaceVarInTermPairs(variable: Var, term: Term, equations: List[(Term, Term)]): List[(Term, Term)] = {
     equations.map((t1: Term, t2: Term) => (t1.substituteAll(variable, term), t2.substituteAll(variable, term)))
   }
+
+  /** @return If the given substitution is a map from variables to variables,
+   *         return [[Some]]([[Substitution]]) where every element is reversed as long as there are no conflicting variable maps.
+   *         If not, then return [[None]].
+   * @example `maybeReverseMap( { x -> y, z -> y } )` gives [[None]], since the reverse maps `y` to both `x` and `z`.
+   *
+   * `maybeReverseMap( { x -> z } )` gives [[Some]]`({ z -> x })`.
+   *
+   * `maybeReverseMap( { x -> 1 } )` gives [[None]] */
+  def maybeReverseMap(substitution: Substitution): Option[Substitution] = {
+    var reverseSubstitution: Substitution = Map()
+    substitution.foreach((v, t) => t match { case v2@Var(_, _) => reverseSubstitution = reverseSubstitution.updated(v2, v) ; case _ => return None })
+    if reverseSubstitution.size == substitution.size then
+      Some(reverseSubstitution)
+    else None
+  }
 }

@@ -5,7 +5,7 @@ import equiv.ri.ProofState
 import tests.SampleObjects.InferenceRuleEquations.constructorEquation
 
 object EquivTest {
-  def main(args: Array[String]): Unit = {
+  def main(): Unit = {
     import tests.SampleObjects.Sums._
 
     val rules = sumUpRules ++ sumRecRules
@@ -19,7 +19,7 @@ object EquivTest {
       //      rules,
     )
 
-    InputHandler.main(pfSt)
+//    InputHandler.main(pfSt)
   }
 
 }
