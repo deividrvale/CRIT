@@ -75,29 +75,37 @@ trait Term {
     }
   }
 
-  /** Check if the current term (t1) is unifiable with the given term (t2), i.e. there exists a substitution γ such that t1γ = t2γ
-   * TODO check Martelli-Montanari */
-  def unifiableWith2(term: Term): Option[Substitution] = { // TODO check correctness
-    (this, term) match {
-      case (v1@Var(x1, _), v2@Var(x2, _)) => if x1 == x2 then Some(Map()) else Some(Map(v2 -> v1))
-      case (a@App(_, _), v@Var(_,_)) => v.unifiableWith(a)
-      case (v@Var(_,_), a@App(_, _)) =>
-        if a.vars.contains(v) then None else
-          Some(Map(v -> a))
-      case (App(f1, args1), App(f2, args2)) =>
-        if (f1 == f2) {
-          (args1 zip args2).map(ts => ts._1.unifiableWith(ts._2)).foldLeft[Option[Substitution]](Some(Map.empty))({
-            case (Some(map1), Some(map2)) => MapUtils.union(map1, map2)
-            case _ => None
-          })
-        } else None
-    }
+  /** Based on the Matching Algorithm from Terese.
+   * Check if the given term is an instance of [[this]].
+   * @return If this is the case, return a [[Substitution]] such that [[other]] can be obtained from [[this]].
+   * [[None]] otherwise. */
+  def matches(other: Term): Option[Substitution] = {
+    var equations: List[(Term, Term)] = List((this, other))
+    var substitution: Substitution = Map()
+    while equations.nonEmpty do
+      equations.head match {
+        case (App(f1, args1), App(f2, args2)) =>
+          if f1 == f2 then
+            equations = equations ++ (args1 zip args2)
+          else return None
+        case (App(_, _), Var(_, _)) =>
+          return None
+        case (x@Var(_, _), t) =>
+          if substitution.contains(x) then
+            if substitution(x) != t then
+              return None
+          else
+              substitution = substitution.updated(x, t)
+      }
+      equations = equations.drop(1)
+    Some(substitution)
   }
+
 
   /** Based on the Martelli-Montanari unification algorithm.
    * @return [[None]] if the given [[Term]] is not unifiable with [[this]]. [[Some]]([[Substitution]]) otherwise. */
-  def unifiableWith(term: Term): Option[Substitution] = {
-    var equations = List((this, term))
+  def unifiableWith(other: Term): Option[Substitution] = {
+    var equations: List[(Term, Term)] = List((this, other))
     var substitution: Substitution = Map()
     while equations.nonEmpty do
       equations.head match {

@@ -50,11 +50,24 @@
             <artifactId>scala-parser-combinators_3</artifactId>
             <version>2.1.1</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.scalacheck/scalacheck -->
         <dependency>
-            <groupId>org.scalacheck</groupId>
-            <artifactId>scalacheck_2.10</artifactId>
-            <version>1.14.3</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>RELEASE</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/junit/junit -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.1</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.scalatest/scalatest -->
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.13</artifactId>
+            <version>3.2.14</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
