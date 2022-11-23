@@ -51,6 +51,6 @@ object TheorySymbols {
   def funcIntIntBool(name: String, theory: Boolean = true): FunctionSymbol =
     FunctionSymbol(name, Typing(List(Sort.Any, Sort.Any), Sort.Bool), isTheory = theory, infix = defaultInfix)
   def funcIntIntInt(name: String, theory: Boolean = true): FunctionSymbol =
-    FunctionSymbol(name, Typing(List(Sort.Any, Sort.Any), Sort.Any), isTheory = theory, infix = defaultInfix)
+    FunctionSymbol(name, Typing(List(Sort.Any, Sort.Any), Sort.Any), isTheory = theory)
   def valInt(value: Int): App = App(FunctionSymbol.`Int`(value), List())
 }

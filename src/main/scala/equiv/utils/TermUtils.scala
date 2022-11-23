@@ -36,9 +36,9 @@ object TermUtils {
     }
   }
 
-  /** Check if the given string is an [[Int]], i.e. it potentially starts with [[-]] and contains furthermore only digits */
+  /** Check if the given string is an [[Int]], i.e. it potentially starts with [[-]] and contains furthermore 1 or more digits */
   def isInt(string: String): Boolean = {
-    (string.head == '-' || string.head.isDigit) && string.tail.forall(_.isDigit)
+    string.nonEmpty && ((string.head == '-' && string.length > 1) || string.head.isDigit) && string.tail.forall(_.isDigit)
   }
 
   /** If the given [[String]] is an [[Int]], then convert it to a [[FunctionSymbol]] with the corresponding value.
@@ -55,12 +55,42 @@ object TermUtils {
     FunctionSymbol(equalityFunctionSymbolName, Typing(List(sort, sort), Sort.Bool), isTheory = true)
   }
 
-  def replaceVarInSub(variable: Term.Var, term: Term, substitution: Substitution): Substitution = {
-    substitution.map((variable2: Var, term2: Term) => (variable2, term2.substituteAll(variable, term)))
+  /** In the given [[Substitution]], replace every occurrence of [[variable]] by [[term]].
+   * @param variableToBeReplaced The variable to be replaced in the substitutions
+   * @param replacementTerm The term that will replace the variable
+   * @param substitution The substitution where replacement will take place
+   * @return A new [[Substitution]] with every occurrence of [[variable]] replaced by [[term]]. */
+  def replaceVarInSub(variableToBeReplaced: Term.Var, replacementTerm: Term, substitution: Substitution): Substitution = {
+    substitution.map((subVariable: Var, subTerm: Term) => (maybeReplaceVarWithVar(subVariable, variableToBeReplaced, replacementTerm), subTerm.substituteAll(variableToBeReplaced, replacementTerm)))
   }
 
-  def replaceVarInTermPairs(variable: Var, term: Term, equations: List[(Term, Term)]): List[(Term, Term)] = {
-    equations.map((t1: Term, t2: Term) => (t1.substituteAll(variable, term), t2.substituteAll(variable, term)))
+  /** Given a [[replacementTerm]], if this [[Term]] is a [[Var]], look at the [[currentVariable]].
+   * If this is the [[variableToBeReplaced]], then return [[replacementTerm]] as a [[Var]],
+   * otherwise return [[currentVariable]].
+   * @param currentVariable The variable currently looked at that may get replaced.
+   * @param variableToBeReplaced The variable that we want to replace.
+   * @param replacementTerm The term that we want to replace the variable with.
+   * @return [[currentVariable]] if the [[replacementTerm]] is not a [[Var]] or if [[currentVariable]] is not [[variableToBeReplaced]].
+   *         Otherwise return [[replacementTerm]] as a [[Var]].
+  * @example
+   * `maybeReplaceVarWithVar(x, y, f(1)) -> x`
+   *
+   * `maybeReplaceVarWithVar(x, x, f(1)) -> x`
+   *
+   * `maybeReplaceVarWithVar(x, x, y) -> y` */
+  def maybeReplaceVarWithVar(currentVariable: Var, variableToBeReplaced: Var, replacementTerm: Term): Var = {
+    replacementTerm match {
+      case v@Var(_, _) => if currentVariable == variableToBeReplaced then v else currentVariable
+      case _ => currentVariable
+    }
+  }
+
+  /** @param variableToBeReplaced Variable that we want to replace.
+   * @param replacementTerm Term that will replace the variable.
+   * @param termPairs List of pairs of [[Term]]s where we replace occurrences of [[variableToBeReplaced]] with [[replacementTerm]].
+   * @return The list of [[Term]] pairs, where every occurrence of [[variableToBeReplaced]] is replaced by [[replacementTerm]]. */
+  def replaceVarInTermPairs(variableToBeReplaced: Var, replacementTerm: Term, termPairs: List[(Term, Term)]): List[(Term, Term)] = {
+    termPairs.map((t1: Term, t2: Term) => (t1.substituteAll(variableToBeReplaced, replacementTerm), t2.substituteAll(variableToBeReplaced, replacementTerm)))
   }
 
   /** @return If the given substitution is a map from variables to variables,
