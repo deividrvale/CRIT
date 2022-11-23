@@ -1,3 +1,5 @@
+package equiv.sample
+
 import equiv.ri.Equation
 import equiv.trs.Term.{App, Var}
 import equiv.trs.*
@@ -32,6 +34,7 @@ object SampleObjects {
   val termGy: App = App(g, List(y))
 
   def return1(term: Term): App = App(funcIntInt("return1", false), List(term))
+
   def return2(term: Term): App = App(funcIntInt("return2", false), List(term))
 
   val rule1: Rule = Rule(termFx, App(f, List(App(min, List(x, one)))), Set(Constraint(App(gt, List(x, zero)))))

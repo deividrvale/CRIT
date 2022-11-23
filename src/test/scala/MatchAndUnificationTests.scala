@@ -5,7 +5,7 @@ import equiv.trs.Term.Substitution
 class MatchAndUnificationTests {
   @org.junit.Test
   def unificationTest(): Unit = {
-    import SampleObjects.{u, v, x, y, z, f, g, termFx, zero, one, two}
+    import equiv.sample.SampleObjects.{u, v, x, y, z, f, g, termFx, zero, one, two}
 
     checkMultipleUnifiability(
       x,

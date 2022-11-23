@@ -1,6 +1,9 @@
-import equiv.trs.{FunctionSymbol, Sort, Term, Typing}
+package equiv.utils
+
 import equiv.trs.Term.{App, Position, Substitution}
+import equiv.trs.{FunctionSymbol, Sort, Term, Typing}
 import equiv.utils.TermUtils
+import equiv.sample.SampleObjects.{varInt, f, u, termFx, addInt, four, one, zero, two, x, y, z}
 import org.junit.Assert.{assertEquals, assertFalse, assertNotEquals, assertTrue}
 
 //noinspection AccessorLikeMethodIsUnit
@@ -8,6 +11,7 @@ class TermUtilsTest {
 
   @org.junit.Test
   def getFreshVarTest(): Unit = {
+    assertEquals(0, TermUtils.lastVarNameInt)
     for (i <- 0 to 50) do
       assertEquals(s"v$i", TermUtils.getFreshVarName)
     assertEquals(51, TermUtils.lastVarNameInt)
@@ -81,8 +85,6 @@ class TermUtilsTest {
 
   @org.junit.Test
   def replaceVarInSubTest(): Unit = {
-    import SampleObjects.{x, y, f, u, zero, one, two, three, four, termFx, addInt, varInt}
-
     val var1 = varInt("v1")
     val var2 = varInt("v2")
 
@@ -108,7 +110,6 @@ class TermUtilsTest {
 
   @org.junit.Test
   def maybeReplaceVarWithVarTest(): Unit = {
-    import SampleObjects.{x, y, z, one, termFx}
     import TermUtils.maybeReplaceVarWithVar
 
     // Replacement is not done
@@ -125,7 +126,6 @@ class TermUtilsTest {
 
   @org.junit.Test
   def replaceVarInTermPairsTest(): Unit = {
-    import SampleObjects.{x, y, funcIntInt, u, f, zero, one, two}
     assertEquals(List(), TermUtils.replaceVarInTermPairs(x, x, List()))
     assertEquals(List((x, x)), TermUtils.replaceVarInTermPairs(x, x, List((x, x))))
     assertEquals(List((x, x)), TermUtils.replaceVarInTermPairs(y, x, List((x, y))))
