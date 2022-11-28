@@ -13,7 +13,7 @@ RULES
     add(0, 1, 1) -> a ;
     add(1, 1, 1) -> a ;
 
-QUERY equivalence add(x1, y1, y1) -><- a
+QUERY equivalence add(x1, y1, y1) -><- a [x1 = y1 = 0]
 
 END OF FILE
 

@@ -13,6 +13,7 @@ object CALCULATION {
    * @param remainingConstraints The constraints that have yet to be checked for redundancy. Should initially be the complete set of constraints subject to simplification.
    * @param handledConstraints The constraints that are not implied by the other constraints. Should be empty initially.
    * @return A [[Set]] of [[Constraint]]s, where the redundant constraints are removed. */
+  // TODO: optimization possible: remove the most constraints possible. e.g. { x >= 1 /\ x <= 1 /\ x = 1 } -> { x = 1 }, instead of { x >= 1 /\ x <= 1 }
   def removeImpliedConstraints(remainingConstraints: Set[Constraint], handledConstraints: Set[Constraint] = Set()): Set[Constraint] = {
     if remainingConstraints.isEmpty then handledConstraints
     else
@@ -39,40 +40,40 @@ object CALCULATION {
   }
 
   def doSubtermVarReplacementOnEquationPositions(pfSt: ProofState, equation: Equation, positions: List[Position]): ProofState = {
-    var updatedEquation: ConstrainedTerm = equation.toConstrainedTerm
+    var currentEquation: ConstrainedTerm = equation.toConstrainedTerm
     positions.foreach(
       pos =>
-        val subterm: Term = updatedEquation.term.subTermAt(pos) ;
-        tryFindFirstAssignment(updatedEquation, subterm) match {
-          case Some(v@Var(_, _)) => updatedEquation = updatedEquation.substituteAtPos(pos, v)
-          case None =>
-            val freshVar = TermUtils.getFreshVar(subterm.sort)
-            val newConstraint = Constraint(App(TermUtils.getEqualityFunctionSymbol(subterm.sort), List(freshVar, subterm)))
-            updatedEquation = updatedEquation.substituteAtPos(pos, freshVar).addConstraint(newConstraint)
+        val calculation: Term = currentEquation.term.subTermAt(pos) ;
+        getVarsAssignedToTerm(currentEquation.constraints, calculation).toList match {
+          case v@Var(_, _) :: _ => //TODO maybe use other method to choose a variable
+            currentEquation = currentEquation.substituteAtPos(pos, v.asInstanceOf[Term])
+          case List() =>
+            val freshVar = TermUtils.getFreshVar(calculation.sort)
+            val newConstraint = Constraint(App(TermUtils.getEqualityFunctionSymbol, List(freshVar, calculation))) //(calculation.sort)
+            currentEquation = currentEquation.substituteAtPos(pos, freshVar).addConstraint(newConstraint)
         }
     )
-    updatedEquation match {
+    currentEquation match {
       case ConstrainedTerm(App(_, List(l, r)), cons) => pfSt.replaceEquationWith(equation, Equation(l, r, cons))
       case _ => throw Error("Something went wrong")
     }
   }
 
-  def tryFindFirstAssignment(equation: ConstrainedTerm, term: Term): Option[Var] = {
-    equation.constraints.foreach( c =>
-      c.maybeFindAssignment(term) match {
-        case None =>
-        case Some(v) => return Some(v)
-      }
-    )
-    None
+  /**
+   * Find a list of all variables that have given term as assignment.
+   * @param constraints The constraints where we look for occurrences of variable assignments to [[term]].
+   * @param term The term to look for.
+   * @return A list of [[Var]]s that have [[term]] assigned as value.
+   */
+  def getVarsAssignedToTerm(constraints: Set[Constraint], term: Term): Set[Var] = {
+    constraints.flatMap(_.getVarsAssignedToTerm(term))
   }
 
 //  @tailrec
-  def maybeGetFirstVar(constraints: Iterable[Constraint]): Option[Var] = {
-//    val maybeVars: Option[List[Var]] = constraints.headOption.map(constraint => constraint.getEqualityVars)
+//  def maybeGetFirstVar(constraints: Iterable[Constraint]): Option[Var] = {
+//    val maybeVars: Option[Set[Var]] = constraints.headOption.map(constraint => constraint.term.getEqualityVars)
 //    if maybeVars.nonEmpty then maybeVars.getOrElse(None) else maybeGetFirstVar(constraints.drop(1))
-    None
-  }
+//  }
 
   def getSubtermVarReplacementEquations(pfSt: ProofState): List[Equation] = {
     pfSt.equations.filter(getEquationSubtermVarReplacementPositions(_).nonEmpty).toList

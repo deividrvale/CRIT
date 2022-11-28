@@ -8,7 +8,7 @@ import equiv.utils.Z3
 object Equiv {
   def main(args: Array[String]): Unit = {
 //    sample()
-    parse("Reddy/fibonacci") match {
+    parse("wouter") match {
       case Some(pfSt) =>
 //        debug(pfSt)
         InputHandler.main(pfSt)

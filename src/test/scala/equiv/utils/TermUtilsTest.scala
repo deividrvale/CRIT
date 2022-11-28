@@ -3,7 +3,7 @@ package equiv.utils
 import equiv.trs.Term.{App, Position, Substitution}
 import equiv.trs.{FunctionSymbol, Sort, Term, Typing}
 import equiv.utils.TermUtils
-import equiv.sample.SampleObjects.{varInt, f, u, termFx, addInt, four, one, zero, two, x, y, z}
+import equiv.sample.SampleObjects.{addInt, f, four, one, termFx, termFy, two, u, varInt, x, y, z, zero}
 import org.junit.Assert.{assertEquals, assertFalse, assertNotEquals, assertTrue}
 
 //noinspection AccessorLikeMethodIsUnit
@@ -75,7 +75,7 @@ class TermUtilsTest {
   def getEqualityFunctionSymbolTest(): Unit = {
     val sorts = List(Sort.Int, Sort.Bool, Sort.Any)
     for (s <- sorts) do
-      val result = TermUtils.getEqualityFunctionSymbol(s)
+      val result = TermUtils.getEqualityFunctionSymbol //(s)
       assertEquals(TermUtils.equalityFunctionSymbolName, result.name)
       assertEquals(Typing(List(s, s), Sort.Bool), result.typing)
       assertEquals(false, result.isTemporary)
@@ -136,5 +136,17 @@ class TermUtilsTest {
     val longList = (0 to 30).map(_ => (Term.App(f, List(x)), one)).toList
     val expectedLongListResult = (0 to 30).map(_ => (Term.App(f, List(one)), one))
     assertEquals(expectedLongListResult, TermUtils.replaceVarInTermPairs(x, one, longList))
+  }
+
+  @org.junit.Test
+  def filterVarsTest(): Unit = {
+    assertEquals(List(), TermUtils.filterVars(List()))
+    assertEquals(List(x), TermUtils.filterVars(List(x)))
+    assertEquals(List(x), TermUtils.filterVars(List(x, one)))
+    assertEquals(List(), TermUtils.filterVars(List(one)))
+    assertEquals(List(), TermUtils.filterVars(List(termFx)))
+    assertEquals(List(x, x), TermUtils.filterVars(List(x, x)))
+    assertEquals(List(x, y, z, x), TermUtils.filterVars(List(x, y, z, x)))
+    assertEquals(List(x, y, z, x), TermUtils.filterVars(List(x, one, termFx, y, one, zero, termFy, z, two, two, two, x)))
   }
 }

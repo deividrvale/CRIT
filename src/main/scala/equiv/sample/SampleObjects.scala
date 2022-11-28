@@ -6,42 +6,72 @@ import equiv.trs.*
 import equiv.utils.TheorySymbols.*
 
 object SampleObjects {
+  /* VALUES */
   val zero: Term = valInt(0)
   val one: Term = valInt(1)
   val two: Term = valInt(2)
   val three: Term = valInt(3)
   val four: Term = valInt(4)
 
+  /* VARIABLES */
   val x: Var = varInt("x")
   val y: Var = varInt("y")
   val i: Var = varInt("i")
   val z: Var = varInt("z")
 
+  /* FUNCTION SYMBOLS */
   val f: FunctionSymbol = funcIntInt("f", false)
   val g: FunctionSymbol = funcIntInt("g", false)
-
   val returnInt: FunctionSymbol = funcIntInt("return", false)
   val u: FunctionSymbol = funcIntIntIntInt("u", false)
+  val v: FunctionSymbol = funcIntIntInt("v", false)
+  val addInt: FunctionSymbol = funcIntIntInt("add", false).copy(infix = None)
   val sumUp: FunctionSymbol = funcIntInt("sumup", false)
   val sumDown: FunctionSymbol = funcIntInt("sumdown", false)
   val sumRec: FunctionSymbol = funcIntInt("sumrec", false)
-  val v: FunctionSymbol = funcIntIntInt("v", false)
-  val addInt: FunctionSymbol = funcIntIntInt("add", false).copy(infix = None)
+//  val functionSymbolGT: FunctionSymbol = funcIntIntBool(">")
+//  val functionSymbolLT: FunctionSymbol = funcIntIntBool("<")
+//  val functionSymbolGE: FunctionSymbol = funcIntIntBool(">=")
+//  val functionSymbolLE: FunctionSymbol = funcIntIntBool("<=")
 
+  /* TERMS */
   val termFx: App = App(f, List(x))
   val termFy: App = App(f, List(y))
   val termGx: App = App(g, List(x))
   val termGy: App = App(g, List(y))
 
+  /* TERM FUNCTIONS */
   def return1(term: Term): App = App(funcIntInt("return1", false), List(term))
-
   def return2(term: Term): App = App(funcIntInt("return2", false), List(term))
+  def gt_(term: Term, term2: Term): App = App(gt, List(term, term2))
+  def lt_(term: Term, term2: Term): App = App(lt, List(term, term2))
+  def ge_(term: Term, term2: Term): App = App(ge, List(term, term2))
+  def le_(term: Term, term2: Term): App = App(le, List(term, term2))
+  def eq_(term: Term, term2: Term): App = App(eql, List(term, term2))
 
+  /*            RULES                */
   val rule1: Rule = Rule(termFx, App(f, List(App(min, List(x, one)))), Set(Constraint(App(gt, List(x, zero)))))
   val rule2: Rule = Rule(termFx, App(returnInt, List(zero)), Set(Constraint(App(le, List(x, zero)))))
   val rule3: Rule = Rule(termFx, App(f, List(App(min, List(x, one)))), Set(Constraint(App(and, List(App(gt, List(x, zero)), App(not, List(App(eql, List(x, three)))))))))
   val rule4: Rule = Rule(termFx, App(f, List(one)), Set(Constraint(App(eql, List(x, three)))))
 
+  val sumUpRules: Set[Rule] = Set(
+    Rule(App(sumUp, List(x)), App(u, List(x, one, zero)), Set()),
+    Rule(makeAppTer(u, x, i, z), makeAppTer(u, x, makeAppBin(add, i, one), makeAppBin(add, z, i)), Set(makeConsBin(i, le, x))),
+    Rule(makeAppTer(u, x, i, z), makeAppUn(returnInt, z), Set(makeConsBin(i, gt, x)))
+  )
+  val sumRecRules: Set[Rule] = Set(
+    Rule(makeAppUn(sumRec, x), makeAppBin(addInt, x, makeAppUn(sumRec, makeAppBin(min, x, one))), Set(makeConsBin(x, gt, zero))),
+    Rule(makeAppUn(sumRec, x), makeAppUn(returnInt, zero), Set(makeConsBin(x, le, zero))),
+    Rule(makeAppBin(addInt, x, makeAppUn(returnInt, y)), makeAppUn(returnInt, makeAppBin(add, x, y)), Set())
+  )
+  val sumDownRules: Set[Rule] = Set(
+    Rule(makeAppUn(sumDown, x), makeAppBin(v, x, zero), Set()),
+    Rule(makeAppBin(v, x, z), makeAppBin(v, makeAppBin(min, x, one), makeAppBin(add, z, x)), Set(makeConsBin(x, gt, zero))),
+    Rule(makeAppBin(v, x, z), makeAppUn(returnInt, z), Set(makeConsBin(x, le, zero)))
+  )
+
+  /*              EQUATIONS                */
   val constructorEquation: Equation = Equation(
     App(returnInt, List(zero)),
     App(returnInt, List(x)),
@@ -67,22 +97,6 @@ object SampleObjects {
 
   val disProveEq2: Equation = Equation(makeAppUn(returnInt, x), makeAppUn(returnInt, y), Set(Constraint(makeAppUn(not, makeAppBin(eql, x, y)))))
 
-  val sumUpRules: Set[Rule] = Set(
-    Rule(App(sumUp, List(x)), App(u, List(x, one, zero)), Set()),
-    Rule(makeAppTer(u, x, i, z), makeAppTer(u, x, makeAppBin(add, i, one), makeAppBin(add, z, i)), Set(makeConsBin(i, le, x))),
-    Rule(makeAppTer(u, x, i, z), makeAppUn(returnInt, z), Set(makeConsBin(i, gt, x)))
-  )
-  val sumRecRules: Set[Rule] = Set(
-    Rule(makeAppUn(sumRec, x), makeAppBin(addInt, x, makeAppUn(sumRec, makeAppBin(min, x, one))), Set(makeConsBin(x, gt, zero))),
-    Rule(makeAppUn(sumRec, x), makeAppUn(returnInt, zero), Set(makeConsBin(x, le, zero))),
-    Rule(makeAppBin(addInt, x, makeAppUn(returnInt, y)), makeAppUn(returnInt, makeAppBin(add, x, y)), Set())
-  )
-  val sumDownRules: Set[Rule] = Set(
-    Rule(makeAppUn(sumDown, x), makeAppBin(v, x, zero), Set()),
-    Rule(makeAppBin(v, x, z), makeAppBin(v, makeAppBin(min, x, one), makeAppBin(add, z, x)), Set(makeConsBin(x, gt, zero))),
-    Rule(makeAppBin(v, x, z), makeAppUn(returnInt, z), Set(makeConsBin(x, le, zero)))
-  )
-
   val sumUpRecEq: Equation = Equation(makeAppUn(sumUp, x), makeAppUn(sumRec, x), Set())
   val sumUpDownEq: Equation = Equation(makeAppUn(sumUp, x), makeAppUn(sumDown, x), Set())
   val sumDownRecEq: Equation = Equation(makeAppUn(sumDown, x), makeAppUn(sumRec, x), Set())
@@ -94,6 +108,8 @@ object SampleObjects {
   val fRule2: Rule = Rule(makeAppUn(f, two), makeAppUn(returnInt, one), Set())
   val expEq1: Equation = Equation(makeAppUn(f, x), makeAppUn(returnInt, two), Set())
   val expEq2: Equation = Equation(makeAppUn(f, x), makeAppUn(returnInt, makeAppBin(add, one, one)), Set())
+
+  /* Functions for constructing objects */
 
   /** @return A function symbol of type [Int x Int] => Bool */
   def funcIntIntBool(operator: String, isTheory: Boolean = true, isValue: Boolean = false): FunctionSymbol =

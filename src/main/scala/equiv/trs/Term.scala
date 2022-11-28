@@ -103,19 +103,22 @@ trait Term {
 
 
   /** Based on the Martelli-Montanari unification algorithm.
-   * @return [[None]] if the given [[Term]] is not unifiable with [[this]]. [[Some]]([[Substitution]]) otherwise. */
+   * @return [[None]] if the given [[Term]] is not unifiable with [[this]]. Otherwise returns [[Some]]([[Substitution]]) that unifies the two terms. */
   def unifiableWith(other: Term): Option[Substitution] = {
     var equations: List[(Term, Term)] = List((this, other))
     var substitution: Substitution = Map()
     while equations.nonEmpty do
-      equations.head match {
+      // pop the head of the list
+      val head = equations.head
+      equations = equations.drop(1)
+      head match {
         case (a@App(_, _), v@Var(_, _)) =>
-          equations = equations ++ List((v, a))
+          equations = (v, a) :: equations
         case (v@Var(_, _), t) =>
-          if v != t then // if we have {x = x} then ignore
-            if t.vars.contains(v) then
+          if v != t then // if we have {x = x} then ignore (x=x is already removed from the list)
+            if t.vars.contains(v) then // if x ∈ Var(t), then fail
               return None
-            else
+            else // if x not in Var(t)
               substitution = TermUtils.replaceVarInSub(v, t, substitution).updated(v, t)
               equations = TermUtils.replaceVarInTermPairs(v, t, equations)
         case (App(f1, args1), App(f2, args2)) =>
@@ -123,8 +126,6 @@ trait Term {
             return None
           else equations = equations ++ (args1 zip args2)
       }
-      // !! Make sure to add equations at the end of the [[equations]] list !! Since the head will get dropped every iteration.
-      equations = equations.drop(1)
     Some(substitution)
   }
 
@@ -149,22 +150,28 @@ trait Term {
   /** Searches all subterms that are instances of the given term. */
   def findSubTermInstances(other: Term): List[(Term, Position, Substitution)] = findSubTerms(t => t.instanceOf(other))
 
-  /** @return If this is a (variadic) equality, return all variables in the term that are the child of an equality symbol, in a List.
-   * @example [[getEqualityVars]] on term `((x = 5) = 1 + y) = z)` returns `List(z, x)` */
-  def getEqualityVars: List[Term.Var] = {
+  /** @return A set of all variables in the term that are the child of an equality symbol.
+   * @example [[getEqualityVars]] on term `x = 5 = 1 + y = z` returns `Set(z, x)`. */
+    def getEqualityVars: Set[Term.Var] = {
     this match {
-      case App(FunctionSymbol(TermUtils.equalityFunctionSymbolName, _, _, _, _, _), List(l, r)) =>
-        (l, r) match {
-          case (v@Var(_, _), App(_, _)) => List(v)
-          case (App(_, _), v@Var(_, _)) => List(v)
-          case _ => l.getEqualityVars ++ r.getEqualityVars
-        }
-      case _ => List()
+      case App(FunctionSymbol(TermUtils.equalityFunctionSymbolName, _, _, _, _, _), args) => TermUtils.filterVars(args).toSet
+      case _ => Set()
     }
   }
 
-  def maybeFindAssignment(term: Term): Option[Var] = {
-    None
+  /**
+   * If [[this]] is an assignment containing the given term, return a set of all variables (directly) assigned to that term.
+   * @param term The term to look for in the assignment
+   * @return A set of all variables (directly) assigned to [[term]], that are not equal to [[term]].
+   */
+  def getVarsAssignedToTerm(term: Term): Set[Var] = {
+    this match {
+      case App(FunctionSymbol(TermUtils.equalityFunctionSymbolName, _, _, _, _, _), args) =>
+        if args.contains(term) then
+          TermUtils.filterVars(args).filter(_ != term).toSet
+        else Set()
+      case _ => Set()
+    }
   }
 
   /** Substitute a subterm with `replacement` at the given `position`.

@@ -1,11 +1,16 @@
-import org.junit.Assert.{assertEquals, assertNotEquals}
+package equiv.trs
+
 import equiv.trs.Term
 import equiv.trs.Term.Substitution
+import org.junit.Assert.{assertEquals, assertNotEquals}
 
 class MatchAndUnificationTests {
   @org.junit.Test
   def unificationTest(): Unit = {
-    import equiv.sample.SampleObjects.{u, v, x, y, z, f, g, termFx, zero, one, two}
+    import equiv.sample.SampleObjects.*
+
+    assertEquals(Some(Map()), x.unifiableWith(x))
+    assertEquals(Some(Map()), Term.App(u, List(x, x, x)).unifiableWith(Term.App(u, List(x, x, x))))
 
     checkMultipleUnifiability(
       x,
@@ -56,5 +61,7 @@ class MatchAndUnificationTests {
     assertEquals(None, ex_ii2.unifiableWith( ex_ii1 ))
     assertEquals(None, ex_iii1.unifiableWith(ex_iii2))
     assertEquals(None, ex_iii2.unifiableWith(ex_iii1))
+
+    assertEquals(None, t3.unifiableWith(t5))
   }
 }

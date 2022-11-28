@@ -19,7 +19,7 @@ case class Constraint(term: Term) {
   }
 
   /** Try to find the given term in an assignment in the constraint. If there is one, return the first variable that is assigned to it. */
-  def maybeFindAssignment(t: Term): Option[Var] = term.maybeFindAssignment(t)
+  def getVarsAssignedToTerm(t: Term): Set[Var] = term.getVarsAssignedToTerm(t)
 
   override def toString: String = toPrintString(false)
 

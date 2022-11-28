@@ -51,8 +51,8 @@ object TermUtils {
   }
 
   /** Get the symbol "=" used for equality in the theory. */
-  def getEqualityFunctionSymbol(sort: Sort): FunctionSymbol = {
-    FunctionSymbol(equalityFunctionSymbolName, Typing(List(sort, sort), Sort.Bool), isTheory = true)
+  def getEqualityFunctionSymbol: FunctionSymbol = {
+    FunctionSymbol(equalityFunctionSymbolName, Typing(List(Sort.Any, Sort.Any), Sort.Bool, true), isTheory = true)
   }
 
   /** In the given [[Substitution]], replace every occurrence of [[variable]] by [[term]].
@@ -107,5 +107,17 @@ object TermUtils {
     if reverseSubstitution.size == substitution.size then
       Some(reverseSubstitution)
     else None
+  }
+
+  /** @param terms A list of [[Term]]s
+   * @return A list of all elements of [[terms]] that are of type [[Var]]. */
+  def filterVars(terms: List[Term]): List[Var] = {
+    terms match {
+      case List() => List()
+      case t :: tail => t match {
+        case v@Var(_, _) => v :: filterVars(tail)
+        case _ => filterVars(tail)
+      }
+    }
   }
 }
