@@ -8,6 +8,7 @@ import equiv.utils.{TermUtils, Z3}
 import scala.annotation.tailrec
 
 object CALCULATION {
+  // SECTION 1: REMOVING REDUNDANT CONSTRAINTS
   @tailrec
   /** Remove all constraints that are implied by the conjunction of the other constraints.
    * @param remainingConstraints The constraints that have yet to be checked for redundancy. Should initially be the complete set of constraints subject to simplification.
@@ -25,6 +26,9 @@ object CALCULATION {
       else
         removeImpliedConstraints(remainingConstraints2, handledConstraints + currentConstraint)
   }
+
+
+  // SECTION 2: CALCULATION REPLACEMENT WITH FRESH VARIABLES
 
   def trySubtermVarReplacement(pfSt: ProofState, equationSelector: List[Equation] => Equation): Option[ProofState] = {
     getSubtermVarReplacementEquations(pfSt).onNonEmpty(
@@ -44,9 +48,10 @@ object CALCULATION {
     positions.foreach(
       pos =>
         val calculation: Term = currentEquation.term.subTermAt(pos) ;
-        getVarsAssignedToTerm(currentEquation.constraints, calculation).toList match {
+        val possibleVars = getVarsAssignedToTerm(currentEquation.constraints, calculation).toList
+        possibleVars match {
           case v@Var(_, _) :: _ => //TODO maybe use other method to choose a variable
-            currentEquation = currentEquation.substituteAtPos(pos, v.asInstanceOf[Term])
+            currentEquation = currentEquation.substituteAtPos(pos, possibleVars.head)
           case List() =>
             val freshVar = TermUtils.getFreshVar(calculation.sort)
             val newConstraint = Constraint(App(TermUtils.getEqualityFunctionSymbol, List(freshVar, calculation))) //(calculation.sort)
@@ -75,12 +80,15 @@ object CALCULATION {
 //    if maybeVars.nonEmpty then maybeVars.getOrElse(None) else maybeGetFirstVar(constraints.drop(1))
 //  }
 
+  /** Get a [[List]] of [[Equation]]s from the given [[ProofState]] where subterm-variable replacement is possible.
+   * @param pfSt The [[Proofstate]] whose equations we consider.
+   * @return A [[List]] of [[Equation]]s. */
   def getSubtermVarReplacementEquations(pfSt: ProofState): List[Equation] = {
     pfSt.equations.filter(getEquationSubtermVarReplacementPositions(_).nonEmpty).toList
   }
 
   /** Get a list of positions of biggest subterms that are calculations containing variables, but not only variables or only theory symbols.
-   * IMPORTANT: the positions are for the equation interpreted as a single term, with ~~ a fresh symbol as root!! */
+   * IMPORTANT: we interpret the equation as a single term, with ~~ a fresh symbol as root, so take care when using the returned positions!! */
   def getEquationSubtermVarReplacementPositions(equation: Equation): List[Position] = {
     getEquationSubtermVarReplacementPositionsAux(equation.left).map(0::_) ++
       getEquationSubtermVarReplacementPositionsAux(equation.right).map(1::_)
@@ -90,7 +98,7 @@ object CALCULATION {
   def getEquationSubtermVarReplacementPositionsAux(term: Term): List[Position] = {
     term match {
       case Var(_, _) => List()
-      case t@App(_, args) => if t.isCalculationContainingVariables() then
+      case t@App(_, args) => if t.isCalculationContainingVariables then
         List(List())
       else args.zipWithIndex.flatMap((t, i) => getEquationSubtermVarReplacementPositionsAux(t).map(i::_))
     }

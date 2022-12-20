@@ -4,7 +4,8 @@ import equiv.sample.SampleObjects.{eq_, f, four, g, ge_, gt_, le_, lt_, one, thr
 import equiv.ri.CALCULATION.removeImpliedConstraints
 import equiv.trs.Term.App
 import equiv.trs.{Constraint, Term}
-import equiv.utils.TermUtils
+import equiv.utils.{TermUtils, TheorySymbols}
+import equiv.utils.TheorySymbols.add
 import org.junit.Assert.{assertEquals, assertNotEquals, assertTrue}
 
 class CALCULATIONTest {
@@ -47,13 +48,68 @@ class CALCULATIONTest {
   }
 
   @org.junit.Test
-  def findAssignmentsTest() = {
-    def check(constraints: Set[Constraint], term: Term) = CALCULATION.getVarsAssignedToTerm(constraints, term)
+  def getVarsAssignedToTermTest() = {
+    def getVarsAssignedToTerm(constraints: Set[Constraint], term: Term) = CALCULATION.getVarsAssignedToTerm(constraints, term)
     val xIs1 = Constraint(App(TermUtils.getEqualityFunctionSymbol, List(x, one)))
-    assertEquals(Set(), check(Set(), one))
-    assertEquals(Set(x), check(Set(xIs1), one))
-    assertNotEquals(Set(x), check(Set(xIs1), x))
+    val xIs2 = Constraint(App(TermUtils.getEqualityFunctionSymbol, List(x, two)))
+    val xIs1And2 = Constraint(App(TermUtils.getEqualityFunctionSymbol, List(x, one, two)))
+    val xAndyIs1And2 = Constraint(App(TermUtils.getEqualityFunctionSymbol, List(x, one, y, two)))
+    assertEquals(Set(), getVarsAssignedToTerm(Set(), one))
+    assertEquals(Set(x), getVarsAssignedToTerm(Set(xIs1), one))
+    assertNotEquals(Set(x), getVarsAssignedToTerm(Set(xIs1), x))
+    assertEquals(Set(x), getVarsAssignedToTerm(Set(xIs1, xIs2), one))
+    assertEquals(Set(x), getVarsAssignedToTerm(Set(xIs1, xIs2), two))
 
+    assertEquals(Set(x), getVarsAssignedToTerm(Set(xIs1And2), one))
+    assertEquals(Set(x), getVarsAssignedToTerm(Set(xIs1And2), two))
+    assertEquals(Set(x, y), getVarsAssignedToTerm(Set(xAndyIs1And2), one))
+    assertEquals(Set(x, y), getVarsAssignedToTerm(Set(xAndyIs1And2), two))
   }
 
+  @org.junit.Test
+  def getSubtermVarReplacementEquationsTest(): Unit = {
+    val inputExpectedOutputPairs: List[(Set[Equation], Set[Equation])] = getCalcEqs()
+    for (pair <- inputExpectedOutputPairs) do
+      val pfSt = new ProofState(pair._1, Set())
+      val result = CALCULATION.getSubtermVarReplacementEquations(pfSt)
+      assertEquals(pair._2, result.toSet)
+  }
+
+  /** Get a list of pairs where the left element is a set of equations and the right element the maximum subset of the left,
+   * such that every element in right is a */
+  def getCalcEqs() : List[(Set[Equation], Set[Equation])] = {
+    import equiv.sample.SampleObjects.{makeAppBin, makeAppUn}
+    import equiv.utils.TheorySymbols.eql
+
+    def makeCalcEq(left: Term, right: Term) = Equation(left, right, Set())
+    def makeCalcEqCons(left: Term, right: Term, cons: Term) = Equation(left, right, Set(Constraint(cons)))
+
+    val calcReplaceEq1 = makeCalcEq(makeAppUn(f, makeAppBin(add, x, one)), zero)
+    val calcReplaceEq2 = makeCalcEqCons(makeAppUn(f, makeAppBin(add, x, one)), zero, makeAppBin(eql, y, makeAppBin(add, x, one)))
+    val calcReplaceEq3 = makeCalcEqCons(makeAppUn(f, makeAppBin(add, x, one)), zero, makeAppBin(eql, y, makeAppBin(add, one, x)))
+    val calcReplaceEq4 = makeCalcEq(makeAppUn(f, makeAppBin(add, x, one)), makeAppUn(f, makeAppBin(add, x, one)))
+    val calcReplaceEq5 = makeCalcEqCons(makeAppUn(f, makeAppBin(add, x, one)), makeAppUn(f, makeAppBin(add, x, one)), makeAppBin(eql, y, makeAppBin(add, x, one)))
+    val calcReplaceEq6 = makeCalcEqCons(makeAppUn(f, makeAppBin(add, x, one)), makeAppUn(f, makeAppBin(add, x, one)), makeAppBin(eql, y, makeAppBin(add, one, x)))
+
+    val nonCalcReplaceEq1 = makeCalcEq(one, zero)
+    val nonCalcReplaceEq2 = makeCalcEq(makeAppBin(add, one, one), one)
+
+    val calcReplaceEqs = Set(calcReplaceEq1, calcReplaceEq2, calcReplaceEq3, calcReplaceEq4, calcReplaceEq5, calcReplaceEq6)
+    val nonCalcReplaceEqs = Set(nonCalcReplaceEq1, nonCalcReplaceEq2)
+
+    // Make list [ (input 1, expected output 1), ..., (input n, expected output n)  ]
+    List(
+      (Set(), Set()),
+      (Set(calcReplaceEq1), Set(calcReplaceEq1)),
+      (Set(calcReplaceEq2), Set(calcReplaceEq2)),
+      (Set(calcReplaceEq3), Set(calcReplaceEq3)),
+      (Set(calcReplaceEq4), Set(calcReplaceEq4)),
+      (Set(calcReplaceEq5), Set(calcReplaceEq5)),
+      (Set(calcReplaceEq6), Set(calcReplaceEq6)),
+      (Set(nonCalcReplaceEq1), Set()),
+      (Set(nonCalcReplaceEq2), Set()),
+      (Set(calcReplaceEq1, nonCalcReplaceEq1), Set(calcReplaceEq1)),
+      (calcReplaceEqs ++ nonCalcReplaceEqs, calcReplaceEqs)
+    )
+  }
 }

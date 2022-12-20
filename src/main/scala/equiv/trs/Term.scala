@@ -27,12 +27,24 @@ trait Term {
     case App(f, args) => f.isConstructor(definedSymbols) && args.forall(_.isConstructorTerm(definedSymbols))
   }
 
-  /** Check if the given term is a calculation containing variables, so: a term in `Sigma_theory(Var)` that is not ground. */
-  def isCalculationContainingVariables(isRoot: Boolean = true): Boolean = {
+  /** Check if the given term is a calculation containing variables, so: a term in `Sigma_theory(Var) \ Var` that is not ground. */
+  def isCalculationContainingVariables: Boolean = this match {
+    case Var(_, _) => false
+    case _ =>
+      val r = this.isCalculationContainingVariablesAux
+      r._1 && r._2
+  }
+
+  /** Recursively check if the given term contains only theory symbols and at least one variable.
+   * @return A tuple [[(Boolean, Boolean)]],
+   *         where the first argument represents whether all encountered elements are theory symbols or variables,
+   *         and the second argument represents whether there is at least one variable. */
+  private def isCalculationContainingVariablesAux: (Boolean, Boolean) =
     this match {
-      case Var(_, _) => !isRoot
-      case App(f, args) => f.isTheory && (args.nonEmpty || !isRoot) && args.forall(_.isCalculationContainingVariables(false))
-    }
+      case Var(_, _) => (true, true)
+      case App(f, args) =>
+        val bools = args.map(_.isCalculationContainingVariablesAux)
+        (f.isTheory && bools.forall(_._1), bools.exists(_._2))
   }
 
   /** @return A set of variables that occur in the given term */

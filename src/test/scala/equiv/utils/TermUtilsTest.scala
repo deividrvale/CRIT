@@ -3,7 +3,7 @@ package equiv.utils
 import equiv.trs.Term.{App, Position, Substitution}
 import equiv.trs.{FunctionSymbol, Sort, Term, Typing}
 import equiv.utils.TermUtils
-import equiv.sample.SampleObjects.{addInt, f, four, one, termFx, termFy, two, u, varInt, x, y, z, zero}
+import equiv.sample.SampleObjects.{customAddInt, f, four, one, termFx, termFy, two, u, varInt, x, y, z, zero}
 import org.junit.Assert.{assertEquals, assertFalse, assertNotEquals, assertTrue}
 
 //noinspection AccessorLikeMethodIsUnit
@@ -95,7 +95,7 @@ class TermUtilsTest {
       t => Term.App(u, List(var1, t, t)), // u(t, t, t)
       t => Term.App(f, List(Term.App(u, List(t, Term.App(f, List(t)), one)))) // f(u(t, f(t), 1))
     )
-    val replacementTerms = List(zero, two, varInt("w"), termFx, Term.App(addInt, List(one, four)))
+    val replacementTerms = List(zero, two, varInt("w"), termFx, Term.App(customAddInt, List(one, four)))
 
     for (context <- contexts) do
       for (replacement <- replacementTerms) do

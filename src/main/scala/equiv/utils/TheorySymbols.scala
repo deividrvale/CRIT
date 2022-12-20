@@ -22,7 +22,7 @@ object TheorySymbols {
   val ge: FunctionSymbol     = funcIntIntBool(">=")
   val lt: FunctionSymbol     = funcIntIntBool("<")
   val gt: FunctionSymbol     = funcIntIntBool(">")
-  val eql: FunctionSymbol    = funcIntIntBool("=")
+  val eql: FunctionSymbol    = FunctionSymbol(TermUtils.equalityFunctionSymbolName, Typing(List(Sort.Any, Sort.Any), Sort.Bool), isTheory = true, infix = defaultInfix)
 
   /** Map of all [[FunctionSymbol]]s in the theory as values and their names ([[String]]) as keys. */
   val theorySymbols: Map[String, FunctionSymbol] = List(t, f, not, and, or, impl, biImpl, add, mul, div, min, le, ge, lt, gt, eql).map(f => (f.name, f)).toMap
@@ -49,8 +49,8 @@ object TheorySymbols {
   def funcBoolBoolBool(name: String, theory: Boolean = true): FunctionSymbol =
     FunctionSymbol(name, Typing(List(Sort.Bool, Sort.Bool), Sort.Bool), isTheory = theory, infix = defaultInfix)
   def funcIntIntBool(name: String, theory: Boolean = true): FunctionSymbol =
-    FunctionSymbol(name, Typing(List(Sort.Any, Sort.Any), Sort.Bool), isTheory = theory, infix = defaultInfix)
+    FunctionSymbol(name, Typing(List(Sort.Int, Sort.Int), Sort.Bool), isTheory = theory, infix = defaultInfix)
   def funcIntIntInt(name: String, theory: Boolean = true): FunctionSymbol =
-    FunctionSymbol(name, Typing(List(Sort.Any, Sort.Any), Sort.Any), isTheory = theory)
+    FunctionSymbol(name, Typing(List(Sort.Int, Sort.Int), Sort.Int), isTheory = theory)
   def valInt(value: Int): App = App(FunctionSymbol.`Int`(value), List())
 }

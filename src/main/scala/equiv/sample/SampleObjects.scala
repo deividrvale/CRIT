@@ -25,7 +25,7 @@ object SampleObjects {
   val returnInt: FunctionSymbol = funcIntInt("return", false)
   val u: FunctionSymbol = funcIntIntIntInt("u", false)
   val v: FunctionSymbol = funcIntIntInt("v", false)
-  val addInt: FunctionSymbol = funcIntIntInt("add", false).copy(infix = None)
+  val customAddInt: FunctionSymbol = funcIntIntInt("add", false).copy(infix = None)
   val sumUp: FunctionSymbol = funcIntInt("sumup", false)
   val sumDown: FunctionSymbol = funcIntInt("sumdown", false)
   val sumRec: FunctionSymbol = funcIntInt("sumrec", false)
@@ -61,9 +61,9 @@ object SampleObjects {
     Rule(makeAppTer(u, x, i, z), makeAppUn(returnInt, z), Set(makeConsBin(i, gt, x)))
   )
   val sumRecRules: Set[Rule] = Set(
-    Rule(makeAppUn(sumRec, x), makeAppBin(addInt, x, makeAppUn(sumRec, makeAppBin(min, x, one))), Set(makeConsBin(x, gt, zero))),
+    Rule(makeAppUn(sumRec, x), makeAppBin(customAddInt, x, makeAppUn(sumRec, makeAppBin(min, x, one))), Set(makeConsBin(x, gt, zero))),
     Rule(makeAppUn(sumRec, x), makeAppUn(returnInt, zero), Set(makeConsBin(x, le, zero))),
-    Rule(makeAppBin(addInt, x, makeAppUn(returnInt, y)), makeAppUn(returnInt, makeAppBin(add, x, y)), Set())
+    Rule(makeAppBin(customAddInt, x, makeAppUn(returnInt, y)), makeAppUn(returnInt, makeAppBin(add, x, y)), Set())
   )
   val sumDownRules: Set[Rule] = Set(
     Rule(makeAppUn(sumDown, x), makeAppBin(v, x, zero), Set()),
