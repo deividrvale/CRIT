@@ -2,7 +2,7 @@ package equiv.trs
 
 import equiv.ri.ProofState
 import equiv.trs.Term.{App, Position, Substitution, Var}
-import equiv.utils.{MapUtils, PrintUtils, TermUtils}
+import equiv.utils.{MapUtils, PrintUtils, TermUtils, TheorySymbols}
 
 import scala.annotation.tailrec
 
@@ -238,7 +238,7 @@ trait Term {
   }
 
   def toStringApplicative : String = this match {
-    case App(f,args) => if(args.isEmpty) s"${f.name}" else s"(${f.name} ${args.map(_.toStringApplicative).mkString(" ")})"
+    case App(f,args) => if(args.isEmpty) s"${f.name}" else s"(${TheorySymbols.z3Convert(f.name)} ${args.map(_.toStringApplicative).mkString(" ")})"
     case Var(v,_) => v
   }
 

@@ -8,8 +8,8 @@ object TheorySymbols {
   val t: FunctionSymbol      = funcBool("true")
   val f: FunctionSymbol      = funcBool("false")
   val not: FunctionSymbol    = funcBoolBool("not")
-  val and: FunctionSymbol    = funcBoolBoolBool("and")
-  val or: FunctionSymbol     = funcBoolBoolBool("or")
+  val and: FunctionSymbol    = funcBoolBoolBool("/\\")
+  val or: FunctionSymbol     = funcBoolBoolBool("\\/")
   val impl: FunctionSymbol   = funcBoolBoolBool("=>")
   val biImpl: FunctionSymbol = funcBoolBoolBool("<=>")
 
@@ -23,6 +23,16 @@ object TheorySymbols {
   val lt: FunctionSymbol     = funcIntIntBool("<")
   val gt: FunctionSymbol     = funcIntIntBool(">")
   val eql: FunctionSymbol    = FunctionSymbol(TermUtils.equalityFunctionSymbolName, Typing(List(Sort.Any, Sort.Any), Sort.Bool), isTheory = true, infix = defaultInfix)
+
+  // ========== Z3 symbol name conversions ===================
+  /** Convert certain function symbol the corresponding names for z3 */
+  def z3Convert(name: String): String = {
+    name match {
+      case and.name => "and"
+      case or.name => "or"
+      case _ => name
+    }
+  }
 
   /** Map of all [[FunctionSymbol]]s in the theory as values and their names ([[String]]) as keys. */
   val theorySymbols: Map[String, FunctionSymbol] = List(t, f, not, and, or, impl, biImpl, add, mul, div, min, le, ge, lt, gt, eql).map(f => (f.name, f)).toMap

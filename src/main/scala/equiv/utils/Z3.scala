@@ -99,10 +99,10 @@ object Z3 {
 //    Thread.sleep(100000)
 
     // TODO Find a better solution than try-catch
-    try {
+//    try {
       Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator
-    } catch {
-      t => println(s"${PrintUtils.failureColour}Z3 error: ${t}${Console.RESET}") ; Iterator("undetermined")
-    }
+//    } catch {
+//      t => println(s"${PrintUtils.failureColour}Z3 error: ${t}${Console.RESET}") ; Iterator("undetermined")
+//    }
   }
 }
