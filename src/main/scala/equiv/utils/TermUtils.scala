@@ -22,6 +22,13 @@ object TermUtils {
 
   def getFreshVar(sort: Sort): Var = Var(getFreshVarName, sort)
 
+  private def getFreshVarNameWithoutIncreasingCounter: String = {
+    val newName = getFreshVarName
+    lastVarNameInt -= 1
+    newName
+  }
+  def getFreshVarWithoutIncreasingCounter(sort: Sort): Var = Var(getFreshVarNameWithoutIncreasingCounter, sort)
+
   /** Check if the first [[Position]] is on the path from the second [[Position]] to the root, or below the second position.
    *
    * @example `isOnPathOf([0],       [0,...]) = true`

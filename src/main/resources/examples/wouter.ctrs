@@ -2,13 +2,13 @@ THEORY ints     ;
 LOGIC QF_LIA    ;
 SOLVER internal ;
 
-SIGNATURE f, g ;
+SIGNATURE s, add ;
 
 RULES
-    f(x) -> f(x - 1) ;
-    f(0) -> 10 ;
+    add(x, 0) -> x ;
+    add(x, s(y)) -> s(add(x, y)) ;
 
-QUERY equivalence g(y + 1, x + 1, z - 3) -><- 10 [ y = z - 3 ]
+QUERY equivalence add(x, y) -><- add(y, x)
 
 END OF FILE
 

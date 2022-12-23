@@ -8,6 +8,14 @@ case class Constraint(term: Term) {
 
   def applySubstitution(substitution: Substitution): Constraint = this.copy(term = term.applySubstitution(substitution))
 
+  /** Substitute all occurrences of `matchTerm` by `replacementTerm`
+   *
+   * @param matchTerm       Sub-term that will be replaced
+   * @param replacementTerm Term that will replace occurrences of `matchTerm` */
+  def substituteAll(matchTerm: Term, replacementTerm: Term): Constraint = {
+    Constraint(this.term.substituteAll(matchTerm, replacementTerm))
+  }
+
   /** Split a constraint into a set of constraints, on the conjunctions. */
   def split(term2: Term = term): Set[Constraint] = {
     term2 match {

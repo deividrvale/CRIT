@@ -4,6 +4,7 @@ import equiv.ri.Equation
 import equiv.ri.Equation.Side
 import equiv.trs.Term.{App, Substitution}
 import equiv.trs.Term.Var
+import equiv.utils.TermUtils
 
 case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends ConstrainedObject(constraints) {
   assert(left.sort == right.sort)
@@ -13,7 +14,7 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends C
     case _ => assert(false)
   }
 
-  val vars: Set[Var] = left.vars ++ right.vars ++ constraints.flatMap(_.term.vars)
+  val vars: Set[Var] = left.vars ++ right.vars ++ constraintVars
 
   val functionSymbols: Set[FunctionSymbol] = left.functionSymbols ++ right.functionSymbols ++ constraints.flatMap(_.term.functionSymbols)
 
@@ -27,6 +28,28 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends C
 
   def substituteConstraints(substitution: Substitution): Set[Constraint] = {
     constraints.map(_.applySubstitution(substitution))
+  }
+
+  /** Substitute all occurrences of `matchTerm` by `replacementTerm`
+   * @param matchTerm       Sub-term that will be replaced
+   * @param replacementTerm Term that will replace occurrences of `matchTerm`
+   * @return The current rule with all occurrences of [[matchTerm]] replaced by [[replacementTerm]]. */
+  def substituteAll(matchTerm: Term, replacementTerm: Term): Rule = {
+    Rule(this.left.substituteAll(matchTerm, replacementTerm),
+      this.right.substituteAll(matchTerm, replacementTerm),
+      constraints.map(_.substituteAll(matchTerm, replacementTerm)))
+  }
+
+  /** Rename every occurrence of a variable from the given [[List]] into a fresh variable.
+   * @param variables A [[List]] of variables that we wish to rename when encountered in the current term
+   * @return [[this]] [[Term]] with every occurrence of a variable in the given list renamed to a fresh variable. */
+  def renameVarOccurrences(variables: Set[Var]): Rule = {
+    var rule = this
+    for (variable <- variables) do
+      if rule.vars.contains(variable) then
+        val freshVar = TermUtils.getFreshVar(variable.sort)
+        rule = rule.substituteAll(variable, freshVar)
+    rule
   }
 
   /** TODO Check if the addition of `this` rule to the given set of rules is terminating.

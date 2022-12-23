@@ -1,7 +1,7 @@
 package equiv.trs
 
 import equiv.utils.{TermUtils, TheorySymbols}
-import equiv.sample.SampleObjects.{customAddInt, f, one, termFx, two, x, y, z, zero}
+import equiv.sample.SampleObjects.{customAddInt, f, one, termFx, termFy, two, u, x, y, z, zero}
 import equiv.trs.Term.Var
 import org.junit.Assert.{assertEquals, assertFalse, assertTrue}
 
@@ -71,5 +71,20 @@ class TermTest {
     assertFalse(List(false, false, false).exists(identity))
     assertTrue(List(false, true, false).exists(identity))
     assertTrue(List(true, true, true).exists(identity))
+  }
+
+  @org.junit.Test
+  def renameOccurrencesTest(): Unit = {
+    val terms: List[Term] = List(x, y, z, termFx, termFy, Term.App(f, List(x)), Term.App(u, List(x, x, x)), Term.App(u, List(x, y, z)), Term.App(u, List(x, x, y)),
+      Term.App(u, List( Term.App(f, List(Term.App(u, List(x, y, zero)))), x, Term.App(u, List(x, y, one)) )))
+    val variableSets = List(Set(), Set(x), Set(x, y), Set(x, y, z), Set(y, z), Set(x, z))
+    for (term <- terms) do
+      for (variableSet <- variableSets) do
+        val newTerm = term.renameVarOccurrences(variableSet)
+        assertEquals(s"$newTerm does not contain occurrences of $variableSet", Set(), newTerm.vars.intersect(variableSet))
+
+    for (term <- terms) do
+      for (variableSet <- List(Set(), Set(TermUtils.getFreshVar(Sort.Any)), Set(TermUtils.getFreshVar(Sort.Int)), Set(TermUtils.getFreshVar(x.sort)))) do
+        assertEquals(term, term.renameVarOccurrences(variableSet))
   }
 }

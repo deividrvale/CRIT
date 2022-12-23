@@ -213,6 +213,19 @@ trait Term {
     case App(f, args) => App(f, args.map(_.applySubstitution(substitution)))
   }
 
+  /** Rename every occurrence of a variable from the given [[List]] into a fresh variable.
+   * @param variables A [[List]] of variables that we wish to rename when encountered in the current term
+   * @return [[this]] [[Term]] with every occurrence of a variable in the given list renamed to a fresh variable. */
+  def renameVarOccurrences(variables: Set[Var]): Term = {
+    var term = this
+    for (v <- term.vars) do {
+      if variables.contains(v) then
+        val replacementVar = TermUtils.getFreshVar(v.sort)
+        term = term.substituteAll(v, replacementVar)
+    }
+    term
+  }
+
   def rewriteAtPos(position: Position, rule: Rule, substitution: Substitution): Term =
     substituteAtPos(position, rule.right.applySubstitution(substitution))
 
