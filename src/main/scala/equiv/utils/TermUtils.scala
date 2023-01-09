@@ -58,8 +58,8 @@ object TermUtils {
   }
 
   /** Get the symbol "=" used for equality in the theory. */
-  def getEqualityFunctionSymbol: FunctionSymbol = {
-    FunctionSymbol(equalityFunctionSymbolName, Typing(List(Sort.Any, Sort.Any), Sort.Bool, true), isTheory = true)
+  def getEqualityFunctionSymbol(sort: Sort): FunctionSymbol = {
+    FunctionSymbol(equalityFunctionSymbolName, Typing(List(sort, sort), Sort.Bool, true), isTheory = true)
   }
 
   /** In the given [[Substitution]], replace every occurrence of [[variable]] by [[term]].

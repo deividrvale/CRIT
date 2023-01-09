@@ -46,9 +46,12 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends C
   def renameVarOccurrences(variables: Set[Var]): Rule = {
     var rule = this
     for (variable <- variables) do
-      if rule.vars.contains(variable) then
-        val freshVar = TermUtils.getFreshVar(variable.sort)
-        rule = rule.substituteAll(variable, freshVar)
+      var currentVariable = variable
+      var replace = false
+      while rule.vars.contains(currentVariable) do
+        currentVariable = TermUtils.getFreshVar(variable.sort)
+        replace = true
+      if replace then rule = rule.substituteAll(variable, currentVariable)
     rule
   }
 

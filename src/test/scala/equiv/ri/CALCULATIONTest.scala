@@ -3,7 +3,7 @@ package equiv.ri
 import equiv.sample.SampleObjects.{eq_, f, four, g, ge_, gt_, le_, lt_, one, three, two, u, v, x, y, z, zero}
 import equiv.ri.CALCULATION.removeImpliedConstraints
 import equiv.trs.Term.App
-import equiv.trs.{Constraint, Term}
+import equiv.trs.{Constraint, Sort, Term}
 import equiv.utils.{TermUtils, TheorySymbols}
 import equiv.utils.TheorySymbols.add
 import org.junit.Assert.{assertEquals, assertNotEquals, assertTrue}
@@ -50,10 +50,10 @@ class CALCULATIONTest {
   @org.junit.Test
   def getVarsAssignedToTermTest() = {
     def getVarsAssignedToTerm(constraints: Set[Constraint], term: Term) = CALCULATION.getVarsAssignedToTerm(constraints, term)
-    val xIs1 = Constraint(App(TermUtils.getEqualityFunctionSymbol, List(x, one)))
-    val xIs2 = Constraint(App(TermUtils.getEqualityFunctionSymbol, List(x, two)))
-    val xIs1And2 = Constraint(App(TermUtils.getEqualityFunctionSymbol, List(x, one, two)))
-    val xAndyIs1And2 = Constraint(App(TermUtils.getEqualityFunctionSymbol, List(x, one, y, two)))
+    val xIs1 = Constraint(App(TermUtils.getEqualityFunctionSymbol(Sort.Int), List(x, one)))
+    val xIs2 = Constraint(App(TermUtils.getEqualityFunctionSymbol(Sort.Int), List(x, two)))
+    val xIs1And2 = Constraint(App(TermUtils.getEqualityFunctionSymbol(Sort.Int), List(x, one, two)))
+    val xAndyIs1And2 = Constraint(App(TermUtils.getEqualityFunctionSymbol(Sort.Int), List(x, one, y, two)))
     assertEquals(Set(), getVarsAssignedToTerm(Set(), one))
     assertEquals(Set(x), getVarsAssignedToTerm(Set(xIs1), one))
     assertNotEquals(Set(x), getVarsAssignedToTerm(Set(xIs1), x))

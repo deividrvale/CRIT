@@ -75,7 +75,7 @@ class TermUtilsTest {
   def getEqualityFunctionSymbolTest(): Unit = {
     val sorts = List(Sort.Int, Sort.Bool, Sort.Any)
     for (s <- sorts) do
-      val result = TermUtils.getEqualityFunctionSymbol //(s)
+      val result = TermUtils.getEqualityFunctionSymbol(s)
       assertEquals(TermUtils.equalityFunctionSymbolName, result.name)
       assertEquals(Typing(List(s, s), Sort.Bool), result.typing)
       assertEquals(false, result.isTemporary)

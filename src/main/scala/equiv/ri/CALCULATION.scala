@@ -54,7 +54,7 @@ object CALCULATION {
             currentEquation = currentEquation.substituteAtPos(pos, possibleVars.head)
           case List() =>
             val freshVar = TermUtils.getFreshVar(calculation.sort)
-            val newConstraint = Constraint(App(TermUtils.getEqualityFunctionSymbol, List(freshVar, calculation))) //(calculation.sort)
+            val newConstraint = Constraint(App(TermUtils.getEqualityFunctionSymbol(calculation.sort), List(freshVar, calculation)))
             currentEquation = currentEquation.substituteAtPos(pos, freshVar).addConstraint(newConstraint)
         }
     )
