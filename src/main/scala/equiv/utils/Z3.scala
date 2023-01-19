@@ -13,6 +13,8 @@ enum SolverResult:
   case Satisfiable, Unsatisfiable, Undetermined
 
 object Z3 {
+  def supportedSorts : List[Sort] = List(Sort.Int, Sort.Bool)
+
   /** @return [[Some]]([[true]]) if the implication is satisfiable.
    *         [[Some]]([[false]]) if the implication is not satisfiable.
    *         [[None]] if it is unknown. */
@@ -46,7 +48,8 @@ object Z3 {
   def simplifyTerm(formula: Term): Term = {
     val inputFile: File = File.createTempFile("input", ".smt2")
     val q =
-      s"""|${formula.vars.map { v => s"(declare-const $v ${v.sort})" }.mkString("\n")}
+      s"""|${formula.functionSymbols.flatMap(f => f.typing.output :: f.typing.input).map(s => if !supportedSorts.contains(s) then s"(define-sort ${s} () Int)" else "").mkString("", "\n", "\n")}
+          |${formula.vars.map { v => s"(declare-const $v ${v.sort})" }.mkString("\n")}
           |${formula.functionSymbols.map(f => if !f.isTheory then s"(declare-fun $f ${f.typing.input.mkString("(", " ", ")")} ${f.typing.output})" else "").mkString(sep = "\n")}
           |(simplify ${formula.toStringApplicative})
           |""".stripMargin
@@ -54,7 +57,7 @@ object Z3 {
       write(q)
       close()
     }
-    val out: String = Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator.next()
+    val out = Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator.next()
 
     new Z3Parser(out, formula.functionSymbols.map(f => (f.name, f)).toMap, formula.vars.map(v => (v.name, v)).toMap).parseTerm() match {
       case Left(t: Term) => t
