@@ -70,11 +70,11 @@ object InputHandler {
       case EXPANSION.name =>
         EXPANSION.tryEXPANSION(pfSt, equationSelector, sideSelector, positionSelector, ruleAcceptor)
       case GENERALIZATION.name =>
-        GENERALIZATION.tryGENERALIZATION(pfSt, equationSelector, equationInputter())
+//        GENERALIZATION.tryGENERALIZATION(pfSt, equationSelector, equationInputter())
         message = "Equation parsing not implemented yet."
         None
       case POSTULATE.name =>
-        POSTULATE.doPOSTULATE(pfSt, equationsInputter())
+//        POSTULATE.doPOSTULATE(pfSt, equationsInputter())
         message = "Equation parsing not implemented yet."
         None
       case SIMPLIFICATION.name =>

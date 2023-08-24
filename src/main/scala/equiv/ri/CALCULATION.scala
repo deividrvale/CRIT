@@ -9,12 +9,12 @@ import scala.annotation.tailrec
 
 object CALCULATION {
   // SECTION 1: REMOVING REDUNDANT CONSTRAINTS
+  // TODO: optimization possible: remove the most constraints possible. e.g. { x >= 1 /\ x <= 1 /\ x = 1 } -> { x = 1 }, instead of { x >= 1 /\ x <= 1 }
   @tailrec
   /** Remove all constraints that are implied by the conjunction of the other constraints.
    * @param remainingConstraints The constraints that have yet to be checked for redundancy. Should initially be the complete set of constraints subject to simplification.
    * @param handledConstraints The constraints that are not implied by the other constraints. Should be empty initially.
    * @return A [[Set]] of [[Constraint]]s, where the redundant constraints are removed. */
-  // TODO: optimization possible: remove the most constraints possible. e.g. { x >= 1 /\ x <= 1 /\ x = 1 } -> { x = 1 }, instead of { x >= 1 /\ x <= 1 }
   def removeImpliedConstraints(remainingConstraints: Set[Constraint], handledConstraints: Set[Constraint] = Set()): Set[Constraint] = {
     if remainingConstraints.isEmpty then handledConstraints
     else

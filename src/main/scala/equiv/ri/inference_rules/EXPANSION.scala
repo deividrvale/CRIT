@@ -52,7 +52,7 @@ object EXPANSION extends INFERENCE_RULE {
       positions =>
         val newEquations = generateEXPANSIONEquations(pfSt, equation, side, subtermSelector(List(equation.getSide(side)), positions))
         val newPfSt = pfSt.removeEquation(equation).addEquations(newEquations)
-        val rule = equation.getRule(side)
+        val rule = equation.getAsRule(side)
         if ruleAcceptor(rule) then
           Some(newPfSt.addHypothesis(rule))
         else Some(newPfSt)
@@ -64,7 +64,7 @@ object EXPANSION extends INFERENCE_RULE {
     val constrainedTerm = equation.toConstrainedTerm
     val updatedPos = (if side == Side.Left then 0 else 1) :: position
     val applicableRules = pfSt.rules.flatMap(rule =>
-      val renamedRule = rule.renameVarOccurrences(constrainedTerm.term.vars)
+      val renamedRule = rule.renameVarOccurrences(constrainedTerm.vars)
       renamedRule.left.unifiableWith(constrainedTerm.term.subTermAt(updatedPos)).map(sub => (renamedRule, sub)))
     applicableRules.map((rule, sub) => doEXPANSIONRule(constrainedTerm, updatedPos, rule, sub))
   }

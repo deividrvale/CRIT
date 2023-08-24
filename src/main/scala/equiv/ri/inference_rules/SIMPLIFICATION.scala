@@ -101,7 +101,9 @@ object SIMPLIFICATION extends INFERENCE_RULE {
     pfSt.hypotheses.filter(hypothesis => getSIMPLIFICATIONEquationSideRuleRedexPositions(pfSt, equation, side, hypothesis).nonEmpty).toList
   }
 
-  /** @return A [[List]] of [[Position]]s for the given [[Equation]], [[Side]] and [[Rule]] where SIMPLIFICATION can be performed. May be empty. */
+  /** First: look up in [[subtermPositions]] whether we already know at which positions SIMPLIFICATION can be applied with the current pfst, side and rule.
+   * If not, call method [[getSIMPLIFICATIONEquationSideRuleRedexPositionsAux]] to determine these positions. Save the results in the [[subtermPositions]] Map.
+   * @return A [[List]] of [[Position]]s for the given [[Equation]], [[Side]] and [[Rule]] where SIMPLIFICATION can be performed. May be empty. */
   def getSIMPLIFICATIONEquationSideRuleRedexPositions(pfSt: ProofState, equation: Equation, side: Side, rule: Rule): List[Position] = {
     if subtermPositions.contains(equation) then
       if subtermPositions(equation).contains(side) then

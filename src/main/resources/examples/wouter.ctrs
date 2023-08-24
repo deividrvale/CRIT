@@ -2,7 +2,7 @@ THEORY ints     ;
 LOGIC QF_LIA    ;
 SOLVER internal ;
 
-SIGNATURE sumup, sumdown, u, return ;
+SIGNATURE sumup, sumdown, u, return, v ;
 
 RULES
     sumup(x) -> u(x, 1, 0) ;
@@ -12,6 +12,6 @@ RULES
     v(x, z) -> v(x - 1, z + x) [ x > 0 ] ;
     v(x, z) -> return(z) [ x <= 0 ] ;
 
-QUERY equivalence sumup(1) -><- sumdown(x) ;
+QUERY equivalence u(v0, 1, 0) -><- v(v0, 0) [ =(v0, x + 1) ];
 
 END OF FILE
