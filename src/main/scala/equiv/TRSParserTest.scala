@@ -8,6 +8,10 @@ import scala.io.Source
 
 object TRSParserTest {
   def main(args: Array[String]): Unit = {
+
+  }
+
+  def main2(args: Array[String]): Unit = {
     var failures = 0
     val path = getClass.getResource("/examples")
     val folder = new File(path.getPath)

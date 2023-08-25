@@ -13,8 +13,10 @@ class TRSParser(readFile: String => String) extends RegexParsers {
   // a name can consist of anything except some reserved characters '(', ')', ':', ',', ';', '[', ']'
   val name: Parser[String] = not("->") ~> """[^():,;\[\]\s]+""".r
 
+  val equalSign: Parser[String] = "-><-" | "~~"
+
   val query: Parser[QuasiQuery] =
-    (opt("user-") ~> "equivalence" ~> rule("-><-") ^^ { rule => QuasiQueryEquivalence(rule) }) |
+    (opt("user-") ~> "equivalence" ~> rule(equalSign) ^^ { rule => QuasiQueryEquivalence(rule) }) |
     ("""(?s).*""".r ^^ { string => QuasiQueryUnknown(string) })
 
   val unsignedInt: Parser[Int] = """\d+""".r ^^ { _.toInt }
@@ -114,7 +116,7 @@ class TRSParser(readFile: String => String) extends RegexParsers {
   // Rules
   def rules: Parser[Set[QuasiRule]] = rep(rule("->")) ^^ { _.toSet }
 
-  def rule(separator: String): Parser[QuasiRule] =
+  def rule(separator: Parser[String]): Parser[QuasiRule] =
     not(keywords) ~> term ~ (separator ~> term) ~ (opt(constraint) <~ opt(";")) ^^ { case left ~ right ~ constraint => QuasiRule(left, right, constraint) }
 
   // Renamings

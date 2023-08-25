@@ -97,10 +97,10 @@ object CALCULATION {
   /** Get a list of [[Position]]s of subterms we can replace with (fresh) variables. */
   def getEquationSubtermVarReplacementPositionsAux(term: Term): List[Position] = {
     term match {
-      case Var(_, _) => List()
-      case t@App(_, args) => if t.isCalculationContainingVariables then
-        List(List())
-      else args.zipWithIndex.flatMap((t, i) => getEquationSubtermVarReplacementPositionsAux(t).map(i::_))
+      case Var(_, _) => List() // Select no position
+      case t@App(_, args) =>
+        if t.isCalculationContainingVariables then List(List()) // Select current position
+        else args.zipWithIndex.flatMap((t, i) => getEquationSubtermVarReplacementPositionsAux(t).map(i::_)) // Otherwise, try all the args for possible positions
     }
   }
 

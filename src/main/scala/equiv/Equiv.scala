@@ -8,13 +8,13 @@ import equiv.utils.Z3
 object Equiv {
   def main(args: Array[String]): Unit = {
     parse("wouter") match {
-      case Some(pfSt) =>
-        InputHandler.main(pfSt)
+      case Some((system, pfSt)) =>
+        InputHandler.main(system, pfSt)
       case _ => println("Failed to parse")
     }
   }
 
-  def parse(fileName: String): Option[ProofState] = {
+  def parse(fileName: String): Option[(trs.System, ProofState)] = {
     TRSParserTest.parseTRS(s"examples/$fileName.ctrs").foreach(
       system =>
         val equations: Set[Equation] = system.query match {
@@ -22,7 +22,7 @@ object Equiv {
           case _ => Set()
         }
         val pfSt: ProofState = ProofState(equations, system.rules)
-        return Some(pfSt)
+        return Some((system, pfSt))
     )
     None
   }

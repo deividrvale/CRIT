@@ -4,10 +4,12 @@ import equiv.ri.{CALCULATION, Equation, ProofState}
 import equiv.ri.Equation.Side
 import equiv.ri.inference_rules.{COMPLETENESS, CONSTRUCTOR, DELETION, DISPROVE, EQ_DELETION, EXPANSION, GENERALIZATION, POSTULATE, SIMPLIFICATION}
 import equiv.trs.Term.Position
+import equiv.trs.parsing.{QuasiRule, TRSParser}
 import equiv.trs.{Rule, Term}
 import equiv.utils.OptionExtension.printRedOnNone
 import equiv.utils.{PrintUtils, TermUtils, Z3}
 
+import java.io.StringReader
 import scala.collection.immutable.ListMap
 import scala.collection.mutable.ListBuffer
 import scala.io.StdIn.readLine
@@ -34,12 +36,12 @@ object InputHandler {
     CALC_SIMP_NAME,
     CALC_VAR_NAME)
 
-  def main(initialPfSt: ProofState): Unit = {
+  def main(system: trs.System, initialPfSt: ProofState): Unit = {
     var pfSt = initialPfSt
     while pfSt.equations.nonEmpty do
       errorMessage = "Could not find equations subject to this inference rule."
       println(pfSt.toPrintString())
-      val maybePfStMessage = doRIIteration(pfSt)
+      val maybePfStMessage = doRIIteration(system, pfSt)
       maybePfStMessage._1 match {
         case None => println(PrintUtils.failureColourString(errorMessage))
         case Some(newPfSt) => pfSt = newPfSt
@@ -52,7 +54,7 @@ object InputHandler {
    * Let the user choose an inference rule (or Z3 simplification) to apply.
    * @return 1st tuple element: [[Some]]([[ProofState]]) on success and [[None]] on failure.
    * 2nd tuple element: message to print after application. */
-  def doRIIteration(pfSt: ProofState): (Option[ProofState], String) = {
+  def doRIIteration(system: trs.System, pfSt: ProofState): (Option[ProofState], String) = {
     var message = ""
     (inferenceRuleSelector(inferenceRules) match {
       case CONSTRUCTOR.name =>
@@ -70,11 +72,11 @@ object InputHandler {
       case EXPANSION.name =>
         EXPANSION.tryEXPANSION(pfSt, equationSelector, sideSelector, positionSelector, ruleAcceptor)
       case GENERALIZATION.name =>
-//        GENERALIZATION.tryGENERALIZATION(pfSt, equationSelector, equationInputter())
+        GENERALIZATION.tryGENERALIZATION(pfSt, equationSelector, equationInputter(system))
         message = "Equation parsing not implemented yet."
         None
       case POSTULATE.name =>
-//        POSTULATE.doPOSTULATE(pfSt, equationsInputter())
+        POSTULATE.doPOSTULATE(pfSt, equationsInputter(system))
         message = "Equation parsing not implemented yet."
         None
       case SIMPLIFICATION.name =>
@@ -184,17 +186,23 @@ object InputHandler {
     selectFromList(List(Side.Left, Side.Right), side => equation.getSide(side).toPrintString())
   }
 
-  def equationInputter(): Equation = {
+  def equationInputter(system: trs.System): Equation = {
     println("Enter an equation:")
-    val equationString = loopForInputCondition(isEquationString, "Failed to parse equation. Check that the input is formatted correctly. Please try again:\n")
-    parseEquation(equationString)
+    errorMessage = "Failed to parse equation. Please try again:\n"
+    var input = readLine()
+    var maybeEquation = tryParseEquation(system, input)
+    while maybeEquation.isEmpty do
+      print(errorMessage)
+      input = readLine()
+      maybeEquation = tryParseEquation(system, input)
+    maybeEquation.get
   }
 
-  def equationsInputter(): Set[Equation] = {
+  def equationsInputter(system: trs.System): Set[Equation] = {
     var equations: Set[Equation] = Set()
     var moreEquations = true
     while moreEquations do {
-      equations = equations + equationInputter()
+      equations = equations + equationInputter(system)
       println("Do you want to add another equation? (Y/n)")
       loopForCorrectLowerCaseInput(List("y", "Y", "", "n", "N")) match {
         case "n" | "N" => moreEquations = false
@@ -203,14 +211,14 @@ object InputHandler {
     equations
   }
 
-  /** Check if the given string can be parsed into an equation. */
-  def isEquationString(string: String): Boolean = {
-    false
-  }
 
-  /** Parse an equation string to an equation. */
-  def parseEquation(string: String): Equation = {
-    ???
+  /** Try to parse an equation string to an equation. Returns [[None]] if not possible. [[Some]]([[Equation]]) otherwise. */
+  def tryParseEquation(system: trs.System, string: String): Option[Equation] = {
+    val parser = new TRSParser(_ => "")
+    parser.parseAll[QuasiRule](parser.rule(parser.equalSign), string) match {
+      case parser.Success(quasiRule: QuasiRule, _) => Some(quasiRule.toEquation(system.signature.asMap, Map())) // TODO !! DETERMINE VARIABLE SORTS
+      case _ => None
+    }
   }
 
 }
