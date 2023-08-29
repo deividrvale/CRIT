@@ -3,6 +3,7 @@ package equiv.trs.parsing
 import equiv.trs.parsing.QuasiTerm.{App, InfixChain}
 import equiv.trs.*
 import equiv.utils.MapUtils
+import sun.security.pkcs11.P11Util
 
 trait QuasiTerm {
   // collect all infix operators in a QuasiTerm
@@ -18,6 +19,23 @@ trait QuasiTerm {
     this match {
       case App(fun, args) => Set((fun,args.length)) ++ args.flatMap(_.functionSymbols)
       case InfixChain(head, tail) => (head :: tail.map(_._2)).flatMap(_.functionSymbols).toSet
+    }
+  }
+
+  /**
+   * Tries to automatically determine the sorts of the variables.
+   * !! Assumes [[this]] does not contain [[InfixChain]]s. Call method [[infix2app]] before this method if there are still [[InfixChain]]s.
+   * @param signature The signature
+   * @return Variablesorts
+   */
+  def getVariableSorts(signature: Map[String, FunctionSymbol]): Map[String, Sort] = {
+    this match {
+      case App(_, List()) => Map()
+      case App(fun, args) =>
+        args.zipWithIndex.flatMap( (quasiTerm, index) => quasiTerm match {
+          case App(v, List()) => Map((v, signature(fun).typing.input(index) ))
+          case App(_, args) => args.flatMap(_.getVariableSorts(signature))
+        }).toMap
     }
   }
 

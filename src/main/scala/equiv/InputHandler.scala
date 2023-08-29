@@ -73,12 +73,8 @@ object InputHandler {
         EXPANSION.tryEXPANSION(pfSt, equationSelector, sideSelector, positionSelector, ruleAcceptor)
       case GENERALIZATION.name =>
         GENERALIZATION.tryGENERALIZATION(pfSt, equationSelector, equationInputter(system))
-        message = "Equation parsing not implemented yet."
-        None
       case POSTULATE.name =>
-        POSTULATE.doPOSTULATE(pfSt, equationsInputter(system))
-        message = "Equation parsing not implemented yet."
-        None
+        Some(POSTULATE.doPOSTULATE(pfSt, equationsInputter(system)))
       case SIMPLIFICATION.name =>
         SIMPLIFICATION.trySIMPLIFICATION(pfSt, equationSelector, sideSelector, ruleSelector, positionSelector)
       case CALC_SIMP_NAME =>
@@ -216,8 +212,15 @@ object InputHandler {
   def tryParseEquation(system: trs.System, string: String): Option[Equation] = {
     val parser = new TRSParser(_ => "")
     parser.parseAll[QuasiRule](parser.rule(parser.equalSign), string) match {
-      case parser.Success(quasiRule: QuasiRule, _) => Some(quasiRule.toEquation(system.signature.asMap, Map())) // TODO !! DETERMINE VARIABLE SORTS
-      case _ => None
+      case parser.Success(quasiRule: QuasiRule, _) =>
+        val signature = system.signature.asMap
+        val quasiRuleNoInfix@QuasiRule(left, right, constraint) = QuasiRule(quasiRule.left.infix2app(signature), quasiRule.right.infix2app(signature), quasiRule.constraint.map(_.infix2app(signature)))
+        val variableSorts = left.getVariableSorts(signature)
+          ++ right.getVariableSorts(signature)
+          ++ constraint.map(_.getVariableSorts(signature)).getOrElse(Map())
+        Some(quasiRuleNoInfix.toEquation(signature, variableSorts)) // TODO !! DETERMINE VARIABLE SORTS
+      case parser.Failure(msg, _) => println(msg) ; None
+      case parser.Error(msg, _) => println(msg) ; None
     }
   }
 
