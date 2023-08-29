@@ -25,6 +25,7 @@ trait QuasiTerm {
   /**
    * Tries to automatically determine the sorts of the variables.
    * !! Assumes [[this]] does not contain [[InfixChain]]s. Call method [[infix2app]] before this method if there are still [[InfixChain]]s.
+   * !! Assumes also that all functionsymbols in [[this]] are in the given [[signature]].
    * @param signature The signature
    * @return Variablesorts
    */

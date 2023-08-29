@@ -214,6 +214,13 @@ object InputHandler {
     parser.parseAll[QuasiRule](parser.rule(parser.equalSign), string) match {
       case parser.Success(quasiRule: QuasiRule, _) =>
         val signature = system.signature.asMap
+        // check that all parsed function symbols are in the signature
+        // If a symbol has 0 arguments and is not in the signature, we assume it is a variable.
+        val unrecognisedFunctionSymbols = quasiRule.functionSymbols.filter((funcionsymbolName, numberOfArguments) => numberOfArguments > 0 && !signature.keys.toSet.contains(funcionsymbolName))
+        if (unrecognisedFunctionSymbols.nonEmpty) {
+          println(PrintUtils.failureColourString("The following symbols are not in the signature: " + unrecognisedFunctionSymbols.map(_._1).mkString(", ")))
+          return None
+        }
         val quasiRuleNoInfix@QuasiRule(left, right, constraint) = QuasiRule(quasiRule.left.infix2app(signature), quasiRule.right.infix2app(signature), quasiRule.constraint.map(_.infix2app(signature)))
         val variableSorts = left.getVariableSorts(signature)
           ++ right.getVariableSorts(signature)
