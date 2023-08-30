@@ -13,7 +13,7 @@ class TRSParser(readFile: String => String) extends RegexParsers {
   // a name can consist of anything except some reserved characters '(', ')', ':', ',', ';', '[', ']'
   val name: Parser[String] = not("->") ~> """[^():,;\[\]\s]+""".r
 
-  val equalSign: Parser[String] = "-><-" | "~~"
+  val equalSign: Parser[String] = "-><-" | "~~" // TODO second option does not work
 
   val query: Parser[QuasiQuery] =
     (opt("user-") ~> "equivalence" ~> rule(equalSign) ^^ { rule => QuasiQueryEquivalence(rule) }) |

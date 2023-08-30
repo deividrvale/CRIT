@@ -12,7 +12,7 @@ object GENERALIZATION extends INFERENCE_RULE {
 
   def tryGENERALIZATION(pfSt: ProofState, equationSelector: List[Equation] => Equation, newEquation: Equation): Option[ProofState] = {
     val oldEquation = equationSelector(pfSt.equations.toList)
-    if oldEquation.instanceOf(newEquation).nonEmpty then
+    if oldEquation.instanceOf(newEquation).nonEmpty then // TODO
         Some(doGENERALIZATION(pfSt, oldEquation, newEquation))
       else {
         InputHandler.errorMessage = "New equation is not an instance of the selected equation." ; None
