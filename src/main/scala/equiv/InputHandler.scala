@@ -93,8 +93,8 @@ object InputHandler {
   }
 
   def ruleAcceptor(rule: Rule): Boolean = {
-    println("Do you want to add this rule to the hypotheses set? (Y/n)")
     println(rule.toPrintString())
+    print("Do you want to add this rule to the hypotheses set? (Y/n): ")
     loopForCorrectLowerCaseInput(List("y", "", "yes", "no", "n")) match {
       case "" | "y" | "yes" => return true
       case "n" | "no" => return false
@@ -162,7 +162,7 @@ object InputHandler {
       selectedPositions += selectedPosition
       remainingPositions -= selectedPosition
       if remainingPositions.nonEmpty then {
-        println("Do you want to select another position? (Y/n)")
+        print("Do you want to select another position? (Y/n): ")
         loopForCorrectLowerCaseInput(List("y", "Y", "", "n", "N")) match {
           case "n" | "N" => morePositions = false
           case _ =>
@@ -199,7 +199,7 @@ object InputHandler {
     var moreEquations = true
     while moreEquations do {
       equations = equations + equationInputter(system)
-      println("Do you want to add another equation? (Y/n)")
+      print("Do you want to add another equation? (Y/n): ")
       loopForCorrectLowerCaseInput(List("y", "Y", "", "n", "N")) match {
         case "n" | "N" => moreEquations = false
         case _ => moreEquations = true
@@ -218,20 +218,16 @@ object InputHandler {
         val quasiRuleNoInfix@QuasiRule(left, right, constraint) = QuasiRule(quasiRule.left.infix2app(signature), quasiRule.right.infix2app(signature), quasiRule.constraint.map(_.infix2app(signature)))
         deriveTypings(Set(quasiRuleNoInfix), QuasiSignature(system.signature.functions.map(Left(_)))) match {
           case Left(error) => println(PrintUtils.failureColourString(error)) ; None
-          case Right((signature, variableSorts)) =>
-            Some(quasiRuleNoInfix.toEquation(signature.asMap, variableSorts.filter(_._1._1 == quasiRuleNoInfix).map { case ((_, name), sort) => name -> sort }))
+          case Right(variableSorts) =>
+            Some(quasiRuleNoInfix.toEquation(signature, variableSorts.filter(_._1._1 == quasiRuleNoInfix).map { case ((_, name), sort) => name -> sort }))
         }
-//        val variableSorts = left.getVariableSorts(signature)
-//          ++ right.getVariableSorts(signature)
-//          ++ constraint.map(_.getVariableSorts(signature)).getOrElse(Map())
-//        Some(quasiRuleNoInfix.toEquation(signature, variableSorts))
       case parser.Failure(msg, _) => println(msg) ; None
       case parser.Error(msg, _) => println(msg) ; None
     }
   }
 
 
-  def deriveTypings(rules: Set[QuasiRule], signatureOriginal: QuasiSignature): Either[String, (Signature, Map[(QuasiRule, String), Sort])] = {
+  def deriveTypings(rules: Set[QuasiRule], signatureOriginal: QuasiSignature): Either[String, Map[(QuasiRule, String), Sort]] = {
     // a function argument (Some(nr)) or output (None)
     type Port = (Any, Option[Int])
 
@@ -384,12 +380,17 @@ object InputHandler {
 
     maybeSignature match {
       case Left(error) => Left(error)
-      case Right(signature) => Right((signature,
+      case Right(s) =>
+        val signatureDifference = s.functions -- signature.getFunctionSymbols
+        if (signatureDifference.nonEmpty) then
+          Left(s"Unrecognized function symbols: ${signatureDifference.mkString(", ") }")
+        else
+        Right(
         variables.map { case port@((rule, name), _) =>
           val x = port2class(port)
           val y = if (!class2sort.contains(x)) Sort.Any else class2sort(x)
           (rule, name) -> y }.toMap
-      ))
+      )
     }
   }
 
