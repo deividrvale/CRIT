@@ -69,7 +69,7 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
    * @param equation The equation to check for being more general.
    * @return [[Some]]([[Substitution]]) if [[this]] is an instance of [[equation]], [[None]] otherwise. */
   def instanceOf(equation: Equation): Option[Substitution] =
-    this.toConstrainedTerm.term.instanceOf(equation.toConstrainedTerm.term)
+    this.toConstrainedTerm.instanceOf(equation.toConstrainedTerm)
 
   /** Get the equation represented as a constrained term, where the equality symbol (~~) is seen as a fresh function symbol. */
   def toConstrainedTerm: ConstrainedTerm =

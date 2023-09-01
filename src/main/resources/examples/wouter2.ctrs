@@ -1,0 +1,14 @@
+THEORY ints     ;
+LOGIC QF_LIA    ;
+SOLVER internal ;
+
+SIGNATURE f, g ;
+
+RULES
+    f(x) -> g(x + 1) [ x < 10 ] ;
+    f(x) -> g(x) [ x >= 10 ] ;
+    g(x) -> return( 4 ) ;
+
+QUERY equivalence f(3) -><- f(y);
+
+END OF FILE

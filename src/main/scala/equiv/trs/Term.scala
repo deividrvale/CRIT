@@ -75,7 +75,7 @@ trait Term {
   def instanceOf(other: Term) : Option[Substitution] = {
     if(this.sort != other.sort) None else
     (this,other) match {
-      case (_, v@Var(_,_)) => Some(Map(v -> this)) // TODO check there is no other v in the substitution
+      case (_, v@Var(_,_)) => Some(Map(v -> this))
       case (Var(_, _), App(_, _)) => None
       case (App(f1, args1), App(f2, args2)) =>
         if(f1 == f2) {

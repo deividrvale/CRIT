@@ -215,19 +215,20 @@ object InputHandler {
     parser.parseAll[QuasiRule](parser.rule(parser.equalSign), string) match {
       case parser.Success(quasiRule: QuasiRule, _) =>
         val signature = system.signature.asMap
-        val quasiRuleNoInfix@QuasiRule(left, right, constraint) = QuasiRule(quasiRule.left.infix2app(signature), quasiRule.right.infix2app(signature), quasiRule.constraint.map(_.infix2app(signature)))
-        deriveTypings(Set(quasiRuleNoInfix), QuasiSignature(system.signature.functions.map(Left(_)))) match {
+        val quasiRuleNoInfix = QuasiRule(quasiRule.left.infix2app(signature), quasiRule.right.infix2app(signature), quasiRule.constraint.map(_.infix2app(signature)))
+        deriveVariableSorts(Set(quasiRuleNoInfix), QuasiSignature(system.signature.functions.map(Left(_)))) match {
           case Left(error) => println(PrintUtils.failureColourString(error)) ; None
-          case Right(variableSorts) =>
-            Some(quasiRuleNoInfix.toEquation(signature, variableSorts.filter(_._1._1 == quasiRuleNoInfix).map { case ((_, name), sort) => name -> sort }))
+          case Right(variableSorts) => Some(quasiRuleNoInfix.toEquation(signature, variableSorts))
         }
       case parser.Failure(msg, _) => println(msg) ; None
       case parser.Error(msg, _) => println(msg) ; None
     }
   }
 
-
-  def deriveTypings(rules: Set[QuasiRule], signatureOriginal: QuasiSignature): Either[String, Map[(QuasiRule, String), Sort]] = {
+  /** All code below pretty much copied from [[QuasiSignature.deriveTypings]], so not very efficient.
+   * @return [[Left]]([[String]]) if there was a parsing error. The string contains the error message. Make sure to print this.
+   * If there was no error, return a map that maps variable names to their sort. */
+  def deriveVariableSorts(rules: Set[QuasiRule], signatureOriginal: QuasiSignature): Either[String, Map[String, Sort]] = {
     // a function argument (Some(nr)) or output (None)
     type Port = (Any, Option[Int])
 
@@ -386,10 +387,10 @@ object InputHandler {
           Left(s"Unrecognized function symbols: ${signatureDifference.mkString(", ") }")
         else
         Right(
-        variables.map { case port@((rule, name), _) =>
+        variables.map { case port@((_, name), _) =>
           val x = port2class(port)
           val y = if (!class2sort.contains(x)) Sort.Any else class2sort(x)
-          (rule, name) -> y }.toMap
+          name -> y }.toMap
       )
     }
   }

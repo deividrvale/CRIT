@@ -3,11 +3,11 @@ package equiv
 import equiv.ri.{CALCULATION, Equation, ProofState}
 import equiv.trs.QueryEquivalence
 import equiv.trs.parsing.QuasiQueryEquivalence
-import equiv.utils.Z3
+import equiv.utils.{MapUtils, Z3}
 
 object Equiv {
   def main(args: Array[String]): Unit = {
-    parse("wouter") match {
+    parse("wouter2") match {
       case Some((system, pfSt)) =>
         InputHandler.main(system, pfSt)
       case _ => println("Failed to parse")
