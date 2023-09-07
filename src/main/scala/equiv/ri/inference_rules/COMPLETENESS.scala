@@ -16,7 +16,7 @@ object COMPLETENESS extends INFERENCE_RULE {
       println(simplifiedCurrentEquations)
       println()
       println(lastCompleteEquations)
-      if simplifiedCurrentEquations.subsetOf(lastCompleteEquations) // TODO something is not correct here
+      if simplifiedCurrentEquations.subsetOf(lastCompleteEquations)
         then { pfSt.setFlag(true) }
         else { InputHandler.errorMessage = "The current equation set is not a subset of the equation set of the last proofstate with COMPLETE flag." ;
           return None } )
