@@ -6,6 +6,6 @@ object POSTULATE extends INFERENCE_RULE {
   val name = "POSTULATE"
 
   def doPOSTULATE(pfSt: ProofState, equations: Set[Equation]): ProofState = {
-    pfSt.addEquations(equations).setFlag(false)
+    pfSt.setFlag(false).addEquations(equations)
   }
 }

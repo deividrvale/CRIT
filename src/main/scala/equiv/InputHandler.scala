@@ -78,18 +78,10 @@ object InputHandler {
       case SIMPLIFICATION.name =>
         SIMPLIFICATION.trySIMPLIFICATION(pfSt, equationSelector, sideSelector, ruleSelector, positionSelector)
       case CALC_SIMP_NAME =>
-        Some(simplify_calc(pfSt))
+        Some(CALCULATION.SIMPLIFY_CALC(pfSt))
       case CALC_VAR_NAME =>
         CALCULATION.trySubtermVarReplacement(pfSt, equationSelector)
     }, message)
-  }
-
-  def simplify_calc(pfSt: ProofState): ProofState = {
-    var newPfSt = pfSt
-    val newEquations = pfSt.equations.map(_.simplifyCons())
-    if newEquations != pfSt.equations then
-      newPfSt = pfSt.copy(equations = newEquations)
-    newPfSt.replaceAllEquationWith(pfSt.equations.map(Z3.simplifyEquation))
   }
 
   def ruleAcceptor(rule: Rule): Boolean = {

@@ -4,10 +4,26 @@ import equiv.utils.ListExtension.onNonEmpty
 import equiv.trs.Term.{App, Position, Var}
 import equiv.trs.{ConstrainedObject, ConstrainedTerm, Constraint, FunctionSymbol, Term}
 import equiv.utils.{TermUtils, Z3}
-
+import equiv.ri.ProofState
 import scala.annotation.tailrec
 
 object CALCULATION {
+  def SIMPLIFY_CALC(pfSt: ProofState): ProofState = {
+    pfSt.replaceAllEquationWith(simplifyEquations(pfSt.equations))
+  }
+
+  def simplifyEquations(equations: Set[Equation]): Set[Equation] = {
+    equations.map(_.simplifyCons()).map(Z3.simplifyEquation)
+  }
+
+//  def simplify_calc(pfSt: ProofState): ProofState = {
+//    var newPfSt = pfSt
+//    val newEquations = pfSt.equations.map(_.simplifyCons())
+//    if newEquations != pfSt.equations then
+//      newPfSt = pfSt.copy(equations = newEquations)
+//    newPfSt.replaceAllEquationWith(pfSt.equations.map(Z3.simplifyEquation))
+//  }
+
   // SECTION 1: REMOVING REDUNDANT CONSTRAINTS
   // TODO: optimization possible: remove the most constraints possible. e.g. { x >= 1 /\ x <= 1 /\ x = 1 } -> { x = 1 }, instead of { x >= 1 /\ x <= 1 }
   @tailrec

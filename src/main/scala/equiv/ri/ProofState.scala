@@ -39,7 +39,7 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], hypotheses: Se
     * Also change the `COMPLETENESS.lastcompleteProofStateEquations` value to the current proofstate's equations if the flag is changed from true (COMPLETE) to false (INCOMPLETE) */
   def setFlag(newFlag: Boolean): ProofState = {
     if flag && !newFlag then
-      COMPLETENESS.lastCompleteProofStateEquations = Some(equations)
+      COMPLETENESS.lastCompleteProofStateEquations = Some(CALCULATION.simplifyEquations(equations))
     this.copy(flag= newFlag)
   }
 
