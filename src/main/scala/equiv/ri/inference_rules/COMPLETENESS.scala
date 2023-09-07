@@ -13,9 +13,6 @@ object COMPLETENESS extends INFERENCE_RULE {
   def tryCOMPLETENESS(pfSt: ProofState): Option[ProofState] = {
     lastCompleteProofStateEquations.map( lastCompleteEquations =>
       val simplifiedCurrentEquations = CALCULATION.simplifyEquations(pfSt.equations)
-      println(simplifiedCurrentEquations)
-      println()
-      println(lastCompleteEquations)
       if simplifiedCurrentEquations.subsetOf(lastCompleteEquations)
         then { pfSt.setFlag(true) }
         else { InputHandler.errorMessage = "The current equation set is not a subset of the equation set of the last proofstate with COMPLETE flag." ;
