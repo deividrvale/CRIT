@@ -9,6 +9,6 @@ RULES
     f(x) -> g(x) [ x >= 10 ] ;
     g(x) -> return( 4 ) ;
 
-QUERY equivalence f(3) -><- f(y);
+QUERY equivalence f(x) -><- f(y) [ x = y + 1 ];
 
 END OF FILE

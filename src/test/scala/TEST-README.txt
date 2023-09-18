@@ -15,7 +15,10 @@ Thanks to "@futurexskills7726"'s Youtube video.
 
 Conventions:
 ---------------
-Naming:
+File Naming:
 JUnit tests: {File name}Test.scala
 Scalatest tests: {File name}Spec.scala
+
+Function Naming:
+{Original function name}Test
 

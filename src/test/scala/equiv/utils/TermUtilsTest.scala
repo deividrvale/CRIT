@@ -77,7 +77,7 @@ class TermUtilsTest {
     for (s <- sorts) do
       val result = TermUtils.getEqualityFunctionSymbol(s)
       assertEquals(TermUtils.equalityFunctionSymbolName, result.name)
-      assertEquals(Typing(List(s, s), Sort.Bool), result.typing)
+      assertEquals(Typing(List(s, s), Sort.Bool, true), result.typing)
       assertEquals(false, result.isTemporary)
       assertEquals(true, result.isTheory)
       assertEquals(false, result.isValue)

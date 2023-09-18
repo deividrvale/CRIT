@@ -7,7 +7,8 @@ import equiv.utils.{MapUtils, Z3}
 
 object Equiv {
   def main(args: Array[String]): Unit = {
-    parse("wouter2") match {
+    val pathToFile = "wouter2.ctrs"
+    parse(pathToFile) match {
       case Some((system, pfSt)) =>
         InputHandler.main(system, pfSt)
       case _ => println("Failed to parse")
@@ -15,7 +16,7 @@ object Equiv {
   }
 
   def parse(fileName: String): Option[(trs.System, ProofState)] = {
-    TRSParserTest.parseTRS(s"examples/$fileName.ctrs").foreach(
+    TRSParserTest.parseTRS(s"examples/$fileName").foreach(
       system =>
         val equations: Set[Equation] = system.query match {
           case Some(QueryEquivalence(equation)) => Set(equation)

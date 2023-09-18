@@ -72,7 +72,9 @@ object InputHandler {
       case EXPANSION.name =>
         EXPANSION.tryEXPANSION(pfSt, equationSelector, sideSelector, positionSelector, ruleAcceptor)
       case GENERALIZATION.name =>
-        GENERALIZATION.tryGENERALIZATION(pfSt, equationSelector, equationInputter(system))
+        errorMessage = "GENERALIZATION is not implemented"
+        None
+//        GENERALIZATION.tryGENERALIZATION(pfSt, equationSelector, equationInputter(system))
       case POSTULATE.name =>
         Some(POSTULATE.doPOSTULATE(pfSt, equationsInputter(system)))
       case SIMPLIFICATION.name =>
@@ -155,7 +157,7 @@ object InputHandler {
       remainingPositions -= selectedPosition
       if remainingPositions.nonEmpty then {
         print("Do you want to select another position? (Y/n): ")
-        loopForCorrectLowerCaseInput(List("y", "Y", "", "n", "N")) match {
+        loopForCorrectLowerCaseInput(List("y", "yes", "", "n", "no")) match {
           case "n" | "N" => morePositions = false
           case _ =>
         }
@@ -192,7 +194,7 @@ object InputHandler {
     while moreEquations do {
       equations = equations + equationInputter(system)
       print("Do you want to add another equation? (Y/n): ")
-      loopForCorrectLowerCaseInput(List("y", "Y", "", "n", "N")) match {
+      loopForCorrectLowerCaseInput(List("y", "yes", "", "n", "no")) match {
         case "n" | "N" => moreEquations = false
         case _ => moreEquations = true
       }

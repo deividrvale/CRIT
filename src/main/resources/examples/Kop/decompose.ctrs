@@ -9,7 +9,7 @@ RULES
 
 IRREGULAR
 
-QUERY f(4) -><- product(2,2)
+QUERY equivalence f(4) -><- product(2,2) ;
 
 END OF FILE
 

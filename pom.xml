@@ -70,6 +70,17 @@
             <version>3.2.14</version>
             <scope>test</scope>
         </dependency>
+<!--        &lt;!&ndash; https://mvnrepository.com/artifact/org.scala-lang/scala-swing &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.scala-lang</groupId>-->
+<!--            <artifactId>scala-swing</artifactId>-->
+<!--            <version>2.10.7</version>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-swing_3</artifactId>
+            <version>3.0.0</version>
+        </dependency>
     </dependencies>
 
     <build>
