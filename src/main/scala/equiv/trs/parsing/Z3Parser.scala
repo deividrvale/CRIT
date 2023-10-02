@@ -1,5 +1,6 @@
 package equiv.trs.parsing
 
+import com.sun.xml.internal.bind.v2.runtime.reflect.Lister.Pack
 import equiv.trs.Term.{App, Var}
 import equiv.trs.parsing.QuasiTerm.InfixChain
 import equiv.trs.{FunctionSymbol, Sort, Term, Typing}
@@ -9,13 +10,24 @@ import scala.io.Source
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 
-class Z3Parser(termString: String, functionSymbolsMap: Map[String, FunctionSymbol], variablesMap: Map[String, Var]) extends RegexParsers {
+class Z3Parser(functionSymbolsMap: Map[String, FunctionSymbol], variablesMap: Map[String, Var]) extends RegexParsers {
 
-  def parseTerm(): Either[Term, String] = {
+  def parseTerm(termString: String): Either[Term, String] = {
     parseAll[Term](termParser, termString) match {
       case Success(t: Term, _) => Left(t)
       case y => Right(y.toString)
     }
+  }
+
+  def parseTerms(termStrings: Set[String]): Either[Set[Term], String] = {
+    var terms: Set[Term] = Set()
+    termStrings.foreach { termString =>
+      parseAll[Term](termParser, termString) match {
+        case Success(t: Term, _) => terms += t
+        case y => return Right(y.toString)
+      }
+    }
+    Left(terms)
   }
 
   def termParser: Parser[Term] =

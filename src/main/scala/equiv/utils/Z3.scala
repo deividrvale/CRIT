@@ -41,7 +41,12 @@ object Z3 {
   }
 
   def simplifyEquation(equation: Equation): Equation = {
-    Equation(simplifyTerm(equation.left), simplifyTerm(equation.right), Constraint(simplifyTerm(equation.getConstrainsConjunctAsTerm)).split())
+    val newLeft = simplifyTerm(equation.left)
+    val newRight = simplifyTerm(equation.right)
+    val newConstraints = simplifyConstraints(equation.constraints)
+//    println(newConstraints.mkString("     "))
+    Equation(newLeft, newRight, newConstraints)
+//      Constraint( simplifyTerm(equation.getConstrainsConjunctAsTerm)).split())
   }
 
   /** TODO */
@@ -59,9 +64,40 @@ object Z3 {
     }
     val out = Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator.next()
 
-    new Z3Parser(out, formula.functionSymbols.map(f => (f.name, f)).toMap, formula.vars.map(v => (v.name, v)).toMap).parseTerm() match {
+    new Z3Parser(formula.functionSymbols.map(f => (f.name, f)).toMap, formula.vars.map(v => (v.name, v)).toMap).parseTerm(out) match {
       case Left(t: Term) => t
       case Right(s: String) => println(s); formula
+    }
+  }
+
+  def simplifyConstraints(constraints: Set[Constraint]): Set[Constraint] = {
+    val constraintTerms: Set[Term] = constraints.map(_.term)
+    val functionSymbols: Set[FunctionSymbol] = constraintTerms.flatMap(_.functionSymbols)
+    val vars: Set[Term.Var] = constraintTerms.flatMap(_.vars)
+
+    val inputFile: File = File.createTempFile("input", ".smt2")
+    val q =
+      s"""|${functionSymbols.flatMap(f => f.typing.output :: f.typing.input).map(s => if !supportedSorts.contains(s) then s"(define-sort ${s} () Int)" else "").mkString("", "\n", "\n")}
+          |${vars.map { v => s"(declare-const $v ${v.sort})" }.mkString("\n")}
+          |${functionSymbols.map(f => if !f.isTheory then s"(declare-fun $f ${f.typing.input.mkString("(", " ", ")")} ${f.typing.output})" else "").mkString(sep = "\n")}
+          |${constraintTerms.map(t => s"(assert ${t.toStringApplicative})").mkString("\n")}
+          |(apply solver-subsumption)
+          |""".stripMargin
+    new PrintWriter(inputFile) {
+      write(q)
+      close()
+    }
+//    println(q)
+    val outLines1 = Seq("z3", "-smt2", inputFile.getAbsolutePath).!!
+//    println(outLines1)
+    val outLines = outLines1.linesIterator.toList
+    val out = outLines.slice(2, outLines.length - 2).toSet
+//    println("OUTLINES: " + outLines.mkString("\n"))
+//    println("OUT: "+ out)
+
+    new Z3Parser(functionSymbols.map(f => (f.name, f)).toMap, vars.map(v => (v.name, v)).toMap).parseTerms(out) match {
+      case Left(terms: Set[Term]) => println(terms); terms.map(Constraint)
+      case Right(s: String) => println(s); constraints
     }
   }
 

@@ -1,0 +1,16 @@
+THEORY ints     ;
+LOGIC QF_LIA    ;
+SOLVER internal ;
+
+SIGNATURE f, return ;
+
+RULES
+    f(x) -> f(x - 1) [ x > 0 ] ;
+    f(x) -> return(0) [ x <= 0 ] ;
+
+QUERY equivalence f(x) -><- return(y) [ x > 0 /\ x > 1 /\ x > 3 /\ y = 4 /\ y < 6 /\ y > 3 /\ z = 4 /\ v = y - 4 ];
+
+END OF FILE
+
+
+
