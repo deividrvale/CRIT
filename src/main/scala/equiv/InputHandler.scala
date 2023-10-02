@@ -219,9 +219,11 @@ object InputHandler {
     }
   }
 
-  /** All code below pretty much copied from [[QuasiSignature.deriveTypings]], so not very efficient.
+  /** All code below pretty much copied from [[QuasiSignature.deriveTypings]].
+   * Author's note: this function probably belongs in a different class, but I am too lazy to move it.
+   * @author Wouter
    * @return [[Left]]([[String]]) if there was a parsing error. The string contains the error message. Make sure to print this.
-   * If there was no error, return a map that maps variable names to their sort. */
+   * If there was no error, return [[Right]]([[Map]]), where [[Map]] a map that maps variable names to their sort. */
   def deriveVariableSorts(rules: Set[QuasiRule], signatureOriginal: QuasiSignature): Either[String, Map[String, Sort]] = {
     // a function argument (Some(nr)) or output (None)
     type Port = (Any, Option[Int])

@@ -25,7 +25,7 @@ object CALCULATION {
 //  }
 
   // SECTION 1: REMOVING REDUNDANT CONSTRAINTS
-  // TODO: optimization possible: remove the most constraints possible. e.g. { x >= 1 /\ x <= 1 /\ x = 1 } -> { x = 1 }, instead of { x >= 1 /\ x <= 1 }
+  // TODO: optimization possible: remove the most constraints possible. e.g. { x >= 1 /\ x <= 1 /\ x = 1 } should become { x = 1 }, instead of { x >= 1 /\ x <= 1 }
   @tailrec
   /** Remove all constraints that are implied by the conjunction of the other constraints.
    * @param remainingConstraints The constraints that have yet to be checked for redundancy. Should initially be the complete set of constraints subject to simplification.
