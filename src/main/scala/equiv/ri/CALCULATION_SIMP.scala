@@ -71,6 +71,11 @@ object CALCULATION_SIMP extends INFERENCE_RULE {
         }
       } else false
     )
-    equation.removeConstraints(constraintsToRemove)
+    val newEquation = equation.removeConstraints(constraintsToRemove)
+    if (constraintsToRemove.nonEmpty) {
+      removeNonUsedConstraintEquations(newEquation)
+    } else {
+      newEquation
+    }
   }
 }
