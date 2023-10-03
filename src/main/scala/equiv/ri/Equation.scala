@@ -54,6 +54,12 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
   def addConstraints(newConstraints: Set[Constraint]): Equation =
     this.copy(constraints = constraints ++ newConstraints)
 
+  def removeConstraint(constraint: Constraint): Equation =
+    this.copy(constraints = constraints - constraint)
+
+  def removeConstraints(constraintsToRemove: Set[Constraint]): Equation =
+    this.copy(constraints = constraints -- constraintsToRemove)
+
   def withConstraint(newConstraints: Set[Constraint]): Equation =
     this.copy(constraints = newConstraints)
 

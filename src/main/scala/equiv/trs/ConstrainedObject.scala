@@ -1,6 +1,6 @@
 package equiv.trs
 
-import equiv.ri.CALCULATION
+import equiv.ri.CALCULATION_SIMP
 import equiv.utils.{PrintUtils, TermUtils, TheorySymbols, Z3}
 
 import javax.swing.SpringLayout.Constraints
@@ -37,7 +37,7 @@ object ConstrainedObject {
 
 trait ConstrainedObject(constraints: Set[Constraint]) {
   /** Removes all constraints that are implied by another constraint in the set */
-  def simplify(): Set[Constraint] = CALCULATION.removeImpliedConstraints(constraints)
+  def simplify(): Set[Constraint] = CALCULATION_SIMP.removeImpliedConstraints(constraints)
 
   /** Get the variables in all the constraints */
   def constraintVars: Set[Var] = constraints.flatMap(_.term.vars)

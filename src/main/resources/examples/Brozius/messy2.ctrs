@@ -1,0 +1,15 @@
+THEORY ints     ;
+LOGIC QF_LIA    ;
+SOLVER internal ;
+
+SIGNATURE f, return ;
+
+RULES
+    f(x) -> return(x) ;
+
+QUERY equivalence f(x) -><- return(y) [ x1 = x /\ x2 = x1 + 1 /\ x3 = x2 + 1 /\ x4 = x3 + 1 /\ x5 = x4 + 1 ];
+
+END OF FILE
+
+
+

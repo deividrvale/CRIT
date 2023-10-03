@@ -1,7 +1,7 @@
 package equiv.ri
 
 import equiv.sample.SampleObjects.{eq_, f, four, g, ge_, gt_, le_, lt_, one, three, two, u, v, x, y, z, zero}
-import equiv.ri.CALCULATION.removeImpliedConstraints
+import equiv.ri.CALCULATION_SIMP.removeImpliedConstraints
 import equiv.trs.Term.App
 import equiv.trs.{Constraint, Sort, Term}
 import equiv.utils.{TermUtils, TheorySymbols}
@@ -49,7 +49,7 @@ class CALCULATIONTest {
 
   @org.junit.Test
   def getVarsAssignedToTermTest() = {
-    def getVarsAssignedToTerm(constraints: Set[Constraint], term: Term) = CALCULATION.getVarsAssignedToTerm(constraints, term)
+    def getVarsAssignedToTerm(constraints: Set[Constraint], term: Term) = CALCULATION_SIMP.getVarsAssignedToTerm(constraints, term)
     val xIs1 = Constraint(App(TermUtils.getEqualityFunctionSymbol(Sort.Int), List(x, one)))
     val xIs2 = Constraint(App(TermUtils.getEqualityFunctionSymbol(Sort.Int), List(x, two)))
     val xIs1And2 = Constraint(App(TermUtils.getEqualityFunctionSymbol(Sort.Int), List(x, one, two)))
@@ -71,7 +71,7 @@ class CALCULATIONTest {
     val inputExpectedOutputPairs: List[(Set[Equation], Set[Equation])] = getCalcEqs()
     for (pair <- inputExpectedOutputPairs) do
       val pfSt = new ProofState(pair._1, Set())
-      val result = CALCULATION.getSubtermVarReplacementEquations(pfSt)
+      val result = CALCULATION_SIMP.getSubtermVarReplacementEquations(pfSt)
       assertEquals(pair._2, result.toSet)
   }
 

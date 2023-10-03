@@ -44,9 +44,7 @@ object Z3 {
     val newLeft = simplifyTerm(equation.left)
     val newRight = simplifyTerm(equation.right)
     val newConstraints = simplifyConstraints(equation.constraints)
-//    println(newConstraints.mkString("     "))
     Equation(newLeft, newRight, newConstraints)
-//      Constraint( simplifyTerm(equation.getConstrainsConjunctAsTerm)).split())
   }
 
   /** TODO */

@@ -1,13 +1,13 @@
 package equiv
 
-import equiv.ri.{CALCULATION, Equation, ProofState}
+import equiv.ri.{CALCULATION_SIMP, Equation, ProofState}
 import equiv.trs.QueryEquivalence
 import equiv.trs.parsing.QuasiQueryEquivalence
 import equiv.utils.{MapUtils, Z3}
 
 object Equiv {
   def main(args: Array[String]): Unit = {
-    val pathToFile = "Brozius/messy.ctrs"
+    val pathToFile = "Brozius/messy2.ctrs"
     parse(pathToFile) match {
       case Some((system, pfSt)) =>
         InputHandler.main(system, pfSt)

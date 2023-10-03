@@ -24,7 +24,7 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends C
   /** Set of logic variables: variables in the constraint together with ('fresh') variables in the right side that do not occur in the left side. */
   val logicVars: Set[Var] = constraintVars ++ (right.vars -- left.vars)
 
-  def rootFunc: Option[FunctionSymbol] = left.rootFunc
+  def rootFunc: Option[FunctionSymbol] = left.maybeRootFunc
 
   def substituteConstraints(substitution: Substitution): Set[Constraint] = {
     constraints.map(_.applySubstitution(substitution))

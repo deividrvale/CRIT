@@ -9,11 +9,16 @@ import scala.annotation.tailrec
 trait Term {
   def sort: Sort
 
-  def rootFunc: Option[FunctionSymbol]
+  def maybeRootFunc: Option[FunctionSymbol]
 
   def isTheory: Boolean
 
   def isValue: Boolean
+
+  def isVar: Boolean = this match {
+    case Var(_, _) => true
+    case _ => false
+  }
 
   /** Check if this term is basic, i.e. its root is a defined symbol and all its arguments are constructor terms */
   def isBasic(definedSymbols: Set[FunctionSymbol]): Boolean = this match {
@@ -252,7 +257,7 @@ object Term {
   def positionToString(p: Position): String = PrintUtils.positionColour ++ { if p.isEmpty then "root" else p.mkString("[", ":", "]") } ++ Console.RESET
 
   case class Var(name: String, sort: Sort) extends Term {
-    override def rootFunc: Option[FunctionSymbol] = None
+    override def maybeRootFunc: Option[FunctionSymbol] = None
 
     override def isTheory: Boolean = sort.isTheory
 
@@ -278,7 +283,7 @@ object Term {
       s"The term ${fun.toPrintString()}(${args.map(_.toPrintString()).mkString(", ")}) is not well-typed; here $fun."
     )
 
-    override def rootFunc: Option[FunctionSymbol] = Some(fun)
+    override def maybeRootFunc: Option[FunctionSymbol] = Some(fun)
 
     override def isTheory: Boolean = fun.isTheory && args.forall(_.isTheory)
 

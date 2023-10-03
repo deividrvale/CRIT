@@ -1,6 +1,6 @@
 package equiv
 
-import equiv.ri.{CALCULATION, Equation, ProofState}
+import equiv.ri.{CALCULATION_SIMP, CALCULATION_VARREPL, Equation, ProofState}
 import equiv.ri.Equation.Side
 import equiv.ri.inference_rules.{COMPLETENESS, CONSTRUCTOR, DELETION, DISPROVE, EQ_DELETION, EXPANSION, GENERALIZATION, POSTULATE, SIMPLIFICATION}
 import equiv.trs.Term.Position
@@ -18,10 +18,6 @@ import scala.util.control.Breaks.break
 object InputHandler {
   var errorMessage: String = ""
   var endMessage: String = PrintUtils.successColourString("Rewriting induction complete. All equations deleted.")
-  val Z3SimplifyName: String = "Z3 simplify"
-
-  val CALC_SIMP_NAME = "CALCULATION (SIMPLIFICATION)"
-  val CALC_VAR_NAME = "CALCULATION (VARIABLE REPLACEMENT)"
 
   val inferenceRules: List[String] = List(
     COMPLETENESS.name,
@@ -33,8 +29,8 @@ object InputHandler {
     GENERALIZATION.name,
     POSTULATE.name,
     SIMPLIFICATION.name,
-    CALC_SIMP_NAME,
-    CALC_VAR_NAME)
+    CALCULATION_SIMP.name,
+    CALCULATION_VARREPL.name)
 
   def main(system: trs.System, initialPfSt: ProofState): Unit = {
     var pfSt = initialPfSt
@@ -74,15 +70,14 @@ object InputHandler {
       case GENERALIZATION.name =>
         errorMessage = "GENERALIZATION is not implemented"
         None
-//        GENERALIZATION.tryGENERALIZATION(pfSt, equationSelector, equationInputter(system))
       case POSTULATE.name =>
         Some(POSTULATE.doPOSTULATE(pfSt, equationsInputter(system)))
       case SIMPLIFICATION.name =>
         SIMPLIFICATION.trySIMPLIFICATION(pfSt, equationSelector, sideSelector, ruleSelector, positionSelector)
-      case CALC_SIMP_NAME =>
-        Some(CALCULATION.SIMPLIFY_CALC(pfSt))
-      case CALC_VAR_NAME =>
-        CALCULATION.trySubtermVarReplacement(pfSt, equationSelector)
+      case CALCULATION_SIMP.name =>
+        Some(CALCULATION_SIMP.SIMPLIFY_CALC(pfSt))
+      case CALCULATION_VARREPL.name =>
+        CALCULATION_VARREPL.trySubtermVarReplacement(pfSt, equationSelector)
     }, message)
   }
 
