@@ -19,9 +19,9 @@ object CALCULATION_SIMP extends INFERENCE_RULE {
 
   def simplifyEquations(equations: Set[Equation]): Set[Equation] = {
     equations.map(equation =>
-//      Z3.simplifyEquation(
-        removeNonUsedConstraintEquations(equation)
-        //)
+      Z3.simplifyEquation(substituteVarEqualitiesInConstraints(equation))
+//      substituteVarEqualitiesInConstraints(equation)
+//      Z3.simplifyEquation(removeNonUsedConstraintEquations(equation))
     )
     //.map(_.simplifyCons()) //.map(Z3.simplifyEquation)
   }
@@ -52,21 +52,24 @@ object CALCULATION_SIMP extends INFERENCE_RULE {
         removeImpliedConstraints(remainingConstraints2, handledConstraints + currentConstraint)
   }
 
+  /**
+   * Remove all equality-constraints from the given equation that are unnecessary.
+   * In particular, constraints of the form "v = ...", where v is a variable that does not occur anywhere else in the equation.
+   * Keep doing this (using recursion) until there are no more of these constraints.
+ *
+   * @param equation Equation to potentially remove constraints from
+   * @return New equation with unnecessary constraints removed.
+   */
+  @tailrec
   def removeNonUsedConstraintEquations(equation: Equation): Equation = {
     val constraintsToRemove = equation.constraints.filter(constraint =>
       if constraint.term.maybeRootFunc.get.name == TermUtils.equalityFunctionSymbolName then {
         val (left, right) = (constraint.term.subTermAt(List(0)), constraint.term.subTermAt(List(1)))
         /** Return [[True]] if the given variable occurs nowhere else in the equation. */
-        def checkIfEquationDoesntContainsVar(eqVar: Var) = {
-          eqVar match {
-            case Var("w", _) => println(equation.removeConstraint(constraint).vars.mkString(", "))
-            case _ =>
-          }
-          !equation.removeConstraint(constraint).vars.contains(eqVar)
-        }
+        def checkIfEquationDoesntContainVar(eqVar: Var) = !equation.removeConstraint(constraint).vars.contains(eqVar)
         (left, right) match {
-          case (l@Var(_,_), _) => checkIfEquationDoesntContainsVar(l)
-          case (_, r@Var(_, _)) => checkIfEquationDoesntContainsVar(r)
+          case (l@Var(_,_), _) => checkIfEquationDoesntContainVar(l)
+          case (_, r@Var(_, _)) => checkIfEquationDoesntContainVar(r)
           case _ => false
         }
       } else false
@@ -77,5 +80,41 @@ object CALCULATION_SIMP extends INFERENCE_RULE {
     } else {
       newEquation
     }
+  }
+
+  /***
+   * Find constraints of the form "v = ...", where v is a variable that does not occur in the left- or right-side of the equation. Then replace v by ... in all constraints.
+   * @param equation
+   * @return
+   */
+  def substituteVarEqualitiesInConstraints(equation: Equation): Equation = {
+    // Step 1: get all constraints of the form "v = ...", with v not in Var(left) U Var(right)
+    val varEqualityConstraints: Set[Constraint] = equation.constraints.filter(constraint =>
+      if constraint.term.maybeRootFunc.get.name == TermUtils.equalityFunctionSymbolName then {
+        val (left, right) = (constraint.term.subTermAt(List(0)), constraint.term.subTermAt(List(1)))
+        def checkIfEquationLRDoesntContainVar(eqVar: Var) = !(equation.left.vars ++ equation.right.vars).contains(eqVar)
+        (left, right) match {
+          case (l@Var(_, _), _) => checkIfEquationLRDoesntContainVar(l)
+          case (_, r@Var(_, _)) => checkIfEquationLRDoesntContainVar(r)
+          case _ => false
+        }
+      } else false
+    )
+    var varReplacements: Set[(Var, Term)] = varEqualityConstraints.map(constraint =>
+      (constraint.term.subTermAt(List(0)), constraint.term.subTermAt(List(1))) match {
+        case (l@Var(_, _), r) => (l, r)
+        case (l, r@Var(_, _)) => (r, l)
+        case _ => throw Error("Hmm there is no variable, something is wrong in the code.")
+    })
+
+    // Step 2: replace all occurrences of the variables from step 1
+    var constraints = equation.constraints -- varEqualityConstraints
+    while varReplacements.nonEmpty do {
+      val varReplacement@(v, t) = varReplacements.head
+      constraints = constraints.map(c => Constraint(c.term.applySubstitution(Map(v -> t))))
+      varReplacements = (varReplacements - varReplacement).map((vr, term) => (vr, term.applySubstitution(Map(v -> t))))
+    }
+
+    equation.replaceAllConstraints(constraints)
   }
 }
