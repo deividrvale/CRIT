@@ -15,7 +15,7 @@ enum SolverResult:
 
 object Z3test {
   def main(args: Array[String]): Unit = {
-    println(simplifyTerm(SampleObjects.deletionEquation2.constraints.head.term))
+    simplifyTerm(SampleObjects.deletionEquation2.constraints.head.term)
   }
 
   def supportedSorts : List[Sort] = List(Sort.Int, Sort.Bool)
@@ -52,8 +52,19 @@ object Z3test {
       |""".stripMargin
 
     val tactics = List("ctx-solver-simplify", "solver-subsumption")
+    var bla = "(> (+ (-1) (+ x (-1))) 0)"
+    bla = "(> (+ (+ (- x 1) -1) -1) 0)"
+    val q3 =
+      s"""(declare-const x Int)
+         |(assert $bla)
+         |(apply solver-subsumption)""".stripMargin
 
-    val query = q2
+    val q4 =
+      s"""(declare-const x Int)
+          |(simplify (+ (+ x 1) 1))
+          |""".stripMargin
+
+    val query = q4
     new PrintWriter(inputFile) {
       write(query)
       close()
@@ -64,10 +75,10 @@ object Z3test {
 
     val out1: Seq[String] = Seq("z3", "-smt2", inputFile.getAbsolutePath)
     val out: String = out1.!!
-//    val out3: Iterator[String] = out2.linesIterator
-//    val out: String = out3.next()
-    println(out)
+    //    val out3: Iterator[String] = out2.linesIterator
+    //    val out: String = out3.next()
 
+    println(out)
     sample.SampleObjects.termFx
 
 //    new Z3Parser(out, formula.functionSymbols.map(f => (f.name, f)).toMap, formula.vars.map(v => (v.name, v)).toMap).parseTerm() match {

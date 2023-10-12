@@ -41,14 +41,23 @@ object Z3 {
   }
 
   def simplifyEquation(equation: Equation): Equation = {
-    val newLeft = simplifyTerm(equation.left)
-    val newRight = simplifyTerm(equation.right)
-    val newConstraints = simplifyConstraints(equation.constraints)
-    Equation(newLeft, newRight, newConstraints)
+    println(equation.left)
+    println(equation.left.toPrintString())
+
+    val newLeft = Z3_simplify_term(equation.left)
+    val newRight = Z3_simplify_term(equation.right)
+    val simplifiedConstraints0 = equation.constraints
+    val simplifiedConstraints1 = Z3_solver_subsumption_constraints(simplifiedConstraints0)
+    val simplifiedConstraints2: Set[Constraint] = simplifiedConstraints1.map(c => Constraint(Z3_simplify_term(c.term)))
+
+    println(newLeft)
+    println(newLeft.toPrintString())
+
+    Equation(newLeft, newRight, simplifiedConstraints2)
   }
 
   /** TODO */
-  def simplifyTerm(formula: Term): Term = {
+  def Z3_simplify_term(formula: Term): Term = {
     val inputFile: File = File.createTempFile("input", ".smt2")
     val q =
       s"""|${formula.functionSymbols.flatMap(f => f.typing.output :: f.typing.input).map(s => if !supportedSorts.contains(s) then s"(define-sort ${s} () Int)" else "").mkString("", "\n", "\n")}
@@ -68,7 +77,7 @@ object Z3 {
     }
   }
 
-  def simplifyConstraints(constraints: Set[Constraint]): Set[Constraint] = {
+  def Z3_solver_subsumption_constraints(constraints: Set[Constraint]): Set[Constraint] = {
     val constraintTerms: Set[Term] = constraints.map(_.term)
     val functionSymbols: Set[FunctionSymbol] = constraintTerms.flatMap(_.functionSymbols)
     val vars: Set[Term.Var] = constraintTerms.flatMap(_.vars)

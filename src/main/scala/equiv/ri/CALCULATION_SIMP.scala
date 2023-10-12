@@ -20,19 +20,8 @@ object CALCULATION_SIMP extends INFERENCE_RULE {
   def simplifyEquations(equations: Set[Equation]): Set[Equation] = {
     equations.map(equation =>
       Z3.simplifyEquation(substituteVarEqualitiesInConstraints(equation))
-//      substituteVarEqualitiesInConstraints(equation)
-//      Z3.simplifyEquation(removeNonUsedConstraintEquations(equation))
     )
-    //.map(_.simplifyCons()) //.map(Z3.simplifyEquation)
   }
-
-//  def simplify_calc(pfSt: ProofState): ProofState = {
-//    var newPfSt = pfSt
-//    val newEquations = pfSt.equations.map(_.simplifyCons())
-//    if newEquations != pfSt.equations then
-//      newPfSt = pfSt.copy(equations = newEquations)
-//    newPfSt.replaceAllEquationWith(pfSt.equations.map(Z3.simplifyEquation))
-//  }
 
   // TODO: optimization possible: remove the most constraints possible. e.g. { x >= 1 /\ x <= 1 /\ x = 1 } should become { x = 1 }, instead of { x >= 1 /\ x <= 1 }
   @tailrec
@@ -61,6 +50,7 @@ object CALCULATION_SIMP extends INFERENCE_RULE {
    * @return New equation with unnecessary constraints removed.
    */
   @tailrec
+  @deprecated
   def removeNonUsedConstraintEquations(equation: Equation): Equation = {
     val constraintsToRemove = equation.constraints.filter(constraint =>
       if constraint.term.maybeRootFunc.get.name == TermUtils.equalityFunctionSymbolName then {
