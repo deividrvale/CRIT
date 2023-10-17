@@ -7,7 +7,7 @@ import equiv.utils.{MapUtils, Z3}
 
 object Equiv {
   def main(args: Array[String]): Unit = {
-    val pathToFile = "Brozius/simple-divergence.ctrs"
+    val pathToFile = "Brozius/sumupdown.ctrs"
     parse(pathToFile) match {
       case Some((system, pfSt)) =>
         InputHandler.main(system, pfSt)

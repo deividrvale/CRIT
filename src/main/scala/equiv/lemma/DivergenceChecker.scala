@@ -98,10 +98,12 @@ case class SkeletonChecker() extends Checker {
     true
   }
 
-  /** Check if the skeletons of two terms match (i.e. they are equal up to variable names). */
+  /** Check if the skeletons of two terms match (i.e. they are equal up to variable names and values). */
   private def checkTermSkeletons(term1: Term, term2: Term): Boolean = (term1, term2) match {
     case (App(f1, args1), App(f2, args2)) => (f1.isValue && f2.isValue) || (f1 == f2 && args1.zip(args2).map(checkTermSkeletons).forall(_ == true))
     case (Var(_, _), Var(_, _)) => true
+    case (Var(_, _), App(f2, _)) => f2.isValue
+    case (App(f1, _), Var(_, _)) => f1.isValue
     case _ => false
   }
 
@@ -110,12 +112,12 @@ case class SkeletonChecker() extends Checker {
     // for every var, get the value from the constraint and put in array
     def getVarValue(rule: Rule, v: Var): String = {
       val terms: Set[Term] = rule.constraints.flatMap(constraint => constraint.term.getTermsAssignedToVar(v))
-      if terms.isEmpty then "?" else terms.mkString(" && ")
+      if terms.isEmpty then v.toString else terms.mkString(" && ")
     }
 
     rules.map { rule =>
-      val varsInOrder = rule.getRuleLRHSVarsInOrder
-      varsInOrder.map(getVarValue(rule, _)).toArray
+      val varsValsInOrder = rule.getRuleLRHSVarsValsInOrder
+      varsValsInOrder.map { case v@Var(_, _) => getVarValue(rule, v); case x => x.toString }.toArray
     }.toArray
   }
 

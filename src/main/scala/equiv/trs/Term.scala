@@ -207,12 +207,12 @@ trait Term {
   }
 
   /**
-   * Get the variables in the term, in the order of occurrence when reading the term from left to right.
-   * @example `f(x, g(y, x))` gives `[x, y, x]`.
-   * @return A [[List]] of [[Var]]s.
+   * Get the variables and values in the term, in the order of occurrence when reading the term from left to right.
+   * @example `f(x, g(4, x))` gives `[x, 4, x]`.
+   * @return A [[List]] of [[Term]]s.
    */
-  def getVarsInOrder: List[Var] = this match {
-    case App(_, args) => args.flatMap(_.getVarsInOrder)
+  def getVarsValsInOrder: List[Term] = this match {
+    case a@App(_, args) => if a.isValue then List(a) else args.flatMap(_.getVarsValsInOrder)
     case v@Var(_, _) => List(v)
   }
 

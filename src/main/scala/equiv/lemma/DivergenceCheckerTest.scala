@@ -18,6 +18,17 @@ object DivergenceCheckerTest {
   )
 
   val rulesToAdd: mutable.Queue[Rule] = mutable.Queue(
+    ruleSkeleton(getValue(1), getValue(1)),
+    ruleSkeleton(getValue(2), getValue(1)),
+    ruleSkeleton(getValue(2), getValue(1)),
+    ruleSkeleton(getValue(3), getValue(1)),
+    ruleSkeleton(getValue(4), getValue(1)),
+    ruleSkeleton(getVar("x"), getValue(2)),
+    ruleSkeleton(getVar("y"), getValue(2)),
+    ruleSkeleton(getValue(1), getValue(2)),
+  )
+
+  val rulesToAdd1: mutable.Queue[Rule] = mutable.Queue(
     ruleSkeleton(getVar("x"), getVar("x1"), Set(eqConstraint2("x1", "x", 1))),
     ruleSkeleton(getVar("x"), getVar("x1"), Set(eqConstraint2("x1", "x", 1))),
     ruleSkeleton(getVar("x"), getVar("x1"), Set(eqConstraint2("x1", "x", 1))),

@@ -56,12 +56,12 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends C
   }
 
   /**
-   * Get the variables in the LHS and RHS of the rule, in the order of occurrence when reading the rule from left to right.
-   * @example `f(x, y) -> g(z) [ x = 4 + x_1 /\ y = z + 1 ]` gives `[x, y, z]`.
-   * @return A [[List]] of [[Var]]s.
+   * Get the variables and values in the LHS and RHS of the rule, in the order of occurrence when reading the rule from left to right.
+   * @example `f(x, 2) -> g(z) [ x = 4 + x_1 /\ y = z + 1 ]` gives `[x, 2, z]`.
+   * @return A [[List]] of [[Term]]s.
    */
-  def getRuleLRHSVarsInOrder: List[Var] = {
-    this.left.getVarsInOrder ++ this.right.getVarsInOrder
+  def getRuleLRHSVarsValsInOrder: List[Term] = {
+    this.left.getVarsValsInOrder ++ this.right.getVarsValsInOrder
   }
 
   /** TODO Check if the addition of `this` rule to the given set of rules is terminating.
