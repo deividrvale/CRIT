@@ -18,7 +18,7 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends C
 
   val functionSymbols: Set[FunctionSymbol] = left.functionSymbols ++ right.functionSymbols ++ constraints.flatMap(_.term.functionSymbols)
 
-  val getEquation: Equation = Equation(left, right, constraints)
+  val asEquation: Equation = Equation(left, right, constraints)
   val getReverseEquation: Equation = Equation(right, left, constraints)
 
   /** Set of logic variables: variables in the constraint together with ('fresh') variables in the right side that do not occur in the left side. */
@@ -53,6 +53,15 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends C
         replace = true
       if replace then rule = rule.substituteAll(variable, currentVariable)
     rule
+  }
+
+  /**
+   * Get the variables in the LHS and RHS of the rule, in the order of occurrence when reading the rule from left to right.
+   * @example `f(x, y) -> g(z) [ x = 4 + x_1 /\ y = z + 1 ]` gives `[x, y, z]`.
+   * @return A [[List]] of [[Var]]s.
+   */
+  def getRuleLRHSVarsInOrder: List[Var] = {
+    this.left.getVarsInOrder ++ this.right.getVarsInOrder
   }
 
   /** TODO Check if the addition of `this` rule to the given set of rules is terminating.

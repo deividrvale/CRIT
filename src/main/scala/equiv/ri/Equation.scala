@@ -67,7 +67,7 @@ case class Equation(left: Term, right : Term, var constraints : Set[Constraint])
 
   /** @param side The left side of the rule.
    * @return A rewrite rule of the equation, where the orientation is determined by [[side]]. */
-  def getAsRule(side: Side): Rule = {
+  def getAsRule(side: Side = Side.Left): Rule = {
     Rule(this.getSide(side), this.getOppositeSide(side), constraints)
   }
 

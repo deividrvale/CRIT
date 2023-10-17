@@ -14,4 +14,4 @@ END OF FILE
 
 This is a simple example illustrating the use of POSTULATE.
 Using only SIMPLIFICATION and EXPANSION results in a divergence.
-By adding the lemma "f(x) -><- return(0)", this problem can be easily solved.
+By adding the lemma "f(x) -><- return(0)", the case can be easily solved.

@@ -22,7 +22,7 @@ object TheorySymbols {
   val ge: FunctionSymbol     = funcIntIntBool(">=")
   val lt: FunctionSymbol     = funcIntIntBool("<")
   val gt: FunctionSymbol     = funcIntIntBool(">")
-  val eql: FunctionSymbol    = FunctionSymbol(TermUtils.equalityFunctionSymbolName, Typing(List(Sort.Any, Sort.Any), Sort.Bool), isTheory = true, infix = defaultInfix)
+  val eql: FunctionSymbol    = FunctionSymbol(TermUtils.equalityFunctionSymbolName, Typing(List(Sort.Any, Sort.Any), Sort.Bool), isTheory = true, infix = Some(Infix(InfixKind.Chain, 1)))
 
   // ========== Z3 symbol name conversions ===================
   /** Convert certain function symbol the corresponding names for z3 */
@@ -51,7 +51,7 @@ object TheorySymbols {
   def orXY(x: Term, y: Term): App = App(or, List(x, y))
 
   // ================== HELPER FUNCTIONS =============================
-  def defaultInfix: Option[Infix] = Some(Infix(InfixKind.Left, 1)) // For some reason this must be a def, not a val! Otherwise it becomes null
+  def defaultInfix: Option[Infix] = Some(Infix(InfixKind.Chain, 3)) // For some reason this must be a def, not a val! Otherwise it becomes null
   def funcBool(name: String): FunctionSymbol =
     FunctionSymbol(name, Typing(List(), Sort.Bool), isTheory = true, isValue = true)
   def funcBoolBool(name: String): FunctionSymbol =
@@ -61,6 +61,6 @@ object TheorySymbols {
   def funcIntIntBool(name: String, theory: Boolean = true): FunctionSymbol =
     FunctionSymbol(name, Typing(List(Sort.Int, Sort.Int), Sort.Bool), isTheory = theory, infix = defaultInfix)
   def funcIntIntInt(name: String, theory: Boolean = true): FunctionSymbol =
-    FunctionSymbol(name, Typing(List(Sort.Int, Sort.Int), Sort.Int), isTheory = theory)
+    FunctionSymbol(name, Typing(List(Sort.Int, Sort.Int), Sort.Int), isTheory = theory, infix = defaultInfix)
   def valInt(value: Int): App = App(FunctionSymbol.`Int`(value), List())
 }

@@ -191,6 +191,31 @@ trait Term {
     }
   }
 
+  /**
+   * If [[this]] term is an equality (so the root symbol is `=`), then return the terms that are assigned to the given variable.
+   * @param v A variable
+   * @return A set of terms that equal the given variable.
+   */
+  def getTermsAssignedToVar(v: Var): Set[Term] = {
+    this match {
+      case App(FunctionSymbol(TermUtils.equalityFunctionSymbolName, _, _, _, _, _), args) =>
+        if args.contains(v) then
+          args.filter(_ != v).toSet
+        else Set()
+      case _ => Set()
+    }
+  }
+
+  /**
+   * Get the variables in the term, in the order of occurrence when reading the term from left to right.
+   * @example `f(x, g(y, x))` gives `[x, y, x]`.
+   * @return A [[List]] of [[Var]]s.
+   */
+  def getVarsInOrder: List[Var] = this match {
+    case App(_, args) => args.flatMap(_.getVarsInOrder)
+    case v@Var(_, _) => List(v)
+  }
+
   /** Substitute a subterm with `replacement` at the given `position`.
    * @param position Position of substitution as a list of Ints
    * @param replacement Term to substitute */

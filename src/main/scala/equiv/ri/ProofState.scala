@@ -1,8 +1,9 @@
 package equiv.ri
 
+import equiv.lemma.{DivergenceChecker, DivergenceCheckerTest}
 import equiv.ri.Equation
 import equiv.ri.Equation.Side
-import equiv.ri.inference_rules.{EXPANSION, SIMPLIFICATION, DELETION, EQ_DELETION}
+import equiv.ri.inference_rules.{DELETION, EQ_DELETION, EXPANSION, SIMPLIFICATION}
 import equiv.trs.{Constraint, Rule, Term}
 import equiv.trs.Term.Position
 import equiv.trs.FunctionSymbol
@@ -14,7 +15,7 @@ object ProofState {
 
 }
 
-case class ProofState(equations: Set[Equation], rules: Set[Rule], hypotheses: Set[Rule] = Set(), private val flag: Boolean = true) {
+case class ProofState(equations: Set[Equation], rules: Set[Rule], hypotheses: Set[Rule] = Set(), private val flag: Boolean = true, divergenceChecker: DivergenceChecker = DivergenceChecker()) {
   var isFalse = false
 
   /** The set of all function symbols occurring in the proofstate */
@@ -72,8 +73,10 @@ case class ProofState(equations: Set[Equation], rules: Set[Rule], hypotheses: Se
     this.copy(rules = rules + rule)
 
   /** Add the given rule to the `hypotheses` set. */
-  def addHypothesis(rule: Rule): ProofState =
+  def addHypothesis(rule: Rule): ProofState = {
+    divergenceChecker.addRule(CALCULATION_SIMP.simplifyEquation(rule.asEquation).getAsRule())
     this.copy(hypotheses = hypotheses + rule)
+  }
 
   /** If the given parameter is of the form `Some(r)`, then return the current proofstate with the rule `r`, otherwise return the current proofstate. */
   def maybeAddRule(rule: Option[Rule]): ProofState = rule.map(r => return this.addRule(r)).getOrElse(return this)

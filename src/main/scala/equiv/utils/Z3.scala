@@ -41,17 +41,11 @@ object Z3 {
   }
 
   def simplifyEquation(equation: Equation): Equation = {
-    println(equation.left)
-    println(equation.left.toPrintString())
-
     val newLeft = Z3_simplify_term(equation.left)
     val newRight = Z3_simplify_term(equation.right)
     val simplifiedConstraints0 = equation.constraints
     val simplifiedConstraints1 = Z3_solver_subsumption_constraints(simplifiedConstraints0)
     val simplifiedConstraints2: Set[Constraint] = simplifiedConstraints1.map(c => Constraint(Z3_simplify_term(c.term)))
-
-    println(newLeft)
-    println(newLeft.toPrintString())
 
     Equation(newLeft, newRight, simplifiedConstraints2)
   }
@@ -99,7 +93,7 @@ object Z3 {
     val out = outLines.slice(2, outLines.length - 2).toSet
 
     new Z3Parser(functionSymbols.map(f => (f.name, f)).toMap, vars.map(v => (v.name, v)).toMap).parseTerms(out) match {
-      case Left(terms: Set[Term]) => println(terms); terms.map(Constraint)
+      case Left(terms: Set[Term]) => terms.map(Constraint)
       case Right(s: String) => println(s); constraints
     }
   }

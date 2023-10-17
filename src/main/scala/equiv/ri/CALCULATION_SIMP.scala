@@ -23,6 +23,10 @@ object CALCULATION_SIMP extends INFERENCE_RULE {
     )
   }
 
+  def simplifyEquation(equation: Equation): Equation = {
+    Z3.simplifyEquation(substituteVarEqualitiesInConstraints(equation))
+  }
+
   // TODO: optimization possible: remove the most constraints possible. e.g. { x >= 1 /\ x <= 1 /\ x = 1 } should become { x = 1 }, instead of { x >= 1 /\ x <= 1 }
   @tailrec
   /** Remove all constraints that are implied by the conjunction of the other constraints.

@@ -1,0 +1,18 @@
+THEORY ints     ;
+LOGIC QF_LIA    ;
+SOLVER internal ;
+
+SIGNATURE a, b, c, d ;
+
+RULES
+    a -> b ;
+    a -> d ;
+    b -> a ;
+
+
+QUERY equivalence a -><- d ;
+
+END OF FILE
+
+* Note! This system is non-terminating and thus not usable
+It does illustrate the identity divergence checker
