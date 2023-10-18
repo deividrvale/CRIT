@@ -90,7 +90,8 @@ class TRSParser(readFile: String => String) extends RegexParsers {
         }
         inputSorts = inputSorts.map{ s => if(s == Sort("?A")) Sort.Any else s }
         val outputSort = if(output == "?A") Sort.Any else Sort(output)
-        Left(FunctionSymbol(fun, Typing(inputSorts, outputSort, isVariadic = variadic), infix = infixType))
+        val isBooleanValue = fun == "true" || fun == "false"
+        Left(FunctionSymbol(fun, Typing(inputSorts, outputSort, isVariadic = variadic), infix = infixType, isValue = isBooleanValue))
     } )
 
   // Infix definition

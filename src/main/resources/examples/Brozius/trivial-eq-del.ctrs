@@ -1,0 +1,14 @@
+THEORY ints     ;
+LOGIC QF_LIA    ;
+SOLVER internal ;
+
+SIGNATURE g, return ;
+
+RULES
+    g(x) -> return(x) [ x = 2 ] ;
+
+QUERY equivalence g(x) -><- return(y) [ x = y = 2 ] ;
+
+END OF FILE
+
+Trivial example showing the need for the EQ-DELETION rule.

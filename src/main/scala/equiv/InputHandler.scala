@@ -188,10 +188,10 @@ object InputHandler {
     var moreEquations = true
     while moreEquations do {
       equations = equations + equationInputter(system)
-      print("Do you want to add another equation? (Y/n): ")
+      print("Do you want to add another equation? (y/N): ")
       loopForCorrectLowerCaseInput(List("y", "yes", "", "n", "no")) match {
-        case "n" | "N" => moreEquations = false
-        case _ => moreEquations = true
+        case "y" | "yes" => moreEquations = true
+        case _ => moreEquations = false
       }
     }
     equations
