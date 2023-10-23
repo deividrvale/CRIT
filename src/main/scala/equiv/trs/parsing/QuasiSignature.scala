@@ -3,7 +3,20 @@ package equiv.trs.parsing
 import equiv.trs.FunctionSymbol
 
 case class QuasiSignature(functions: Set[Either[FunctionSymbol, String]]) {
-  def union(other: QuasiSignature): QuasiSignature = QuasiSignature(functions ++ other.functions)
+  def union(other: QuasiSignature): QuasiSignature = {
+    val aMap = asMap
+    val bMap = other.asMap
+    val names = aMap.keySet ++ bMap.keySet
+    QuasiSignature(names.map{ name =>
+      (aMap.get(name),bMap.get(name)) match {
+        case (Some(Left(symbol)), _) => Left(symbol)
+        case (_, Some(Left(symbol))) => Left(symbol)
+        case (Some(Right(name)), _) => Right(name)
+        case (_, Some(Right(name))) => Right(name)
+        case (None, None) => throw new RuntimeException("impossible")
+      }
+    })
+  }
   
   def asMap: Map[String, Either[FunctionSymbol, String]] = functions.map { f =>
     (f match

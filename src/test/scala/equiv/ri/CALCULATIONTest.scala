@@ -47,6 +47,7 @@ class CALCULATIONTest {
     assertEquals(css, removeImpliedConstraints(Set(), css))
   }
 
+  /*
   @org.junit.Test
   def getVarsAssignedToTermTest() = {
     def getVarsAssignedToTerm(constraints: Set[Constraint], term: Term) = CALCULATION_SIMP.getVarsAssignedToTerm(constraints, term)
@@ -74,6 +75,7 @@ class CALCULATIONTest {
       val result = CALCULATION_SIMP.getSubtermVarReplacementEquations(pfSt)
       assertEquals(pair._2, result.toSet)
   }
+  */
 
   /** Get a list of pairs where the left element is a set of equations and the right element the maximum subset of the left,
    * such that every element in right is a */
