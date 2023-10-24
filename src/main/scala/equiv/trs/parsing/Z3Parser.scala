@@ -40,7 +40,9 @@ class Z3Parser(functionSymbolsMap: Map[String, FunctionSymbol], variablesMap: Ma
     if variablesMap.contains(name) then variablesMap(name)
     else if functionSymbolsMap.contains(name) then parseVariadic(functionSymbolsMap(name), arguments)
       // Unknown name, so must be a new value Int after simplification
-    else if TheorySymbols.theorySymbols.contains(name) then parseVariadic(TheorySymbols.theorySymbols(name), arguments)
+    else if TheorySymbols.theorySymbols.contains(name) then
+      if name == TermUtils.equalityFunctionSymbolName then parseVariadic(TermUtils.getEqualityFunctionSymbol(arguments.head.sort), arguments)
+      else parseVariadic(TheorySymbols.theorySymbols(name), arguments)
     else TermUtils.maybeGetValue(name).orNull // TODO maybe create exception or handle other values or Option
   }
 

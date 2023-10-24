@@ -1,0 +1,20 @@
+THEORY ints     ;
+LOGIC QF_LIA    ;
+SOLVER internal ;
+
+SIGNATURE f, return ;
+
+RULES
+    even1(x) -> even11(x, 0, true) ;
+    even11(x, i, b) -> even11(x, i + 1, false) [ i < x /\ b = true ] ;
+    even11(x, i, b) -> even11(x, i + 1, true) [ i < x /\ b = false ] ;
+    even11(x, i, b) -> return(b) [ i >= x ] ;
+    even2(x) -> even22(x, true)
+    even22(x, b) -> even22(x - 1, false) [ x > 0 /\ b = true ] ;
+    even22(x, b) -> even22(x - 1, true) [ x > 0 /\ b = false ] ;
+    even22(x, b) -> return(b) [ x <= 0 ] ;
+
+QUERY equivalence even1(x) -><- even2(x) ;
+
+END OF FILE
+

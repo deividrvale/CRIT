@@ -1,0 +1,16 @@
+THEORY ints     ;
+LOGIC QF_LIA    ;
+SOLVER internal ;
+
+SIGNATURE start, u ;
+
+RULES
+    start -> u(false,false,false) ;
+    u(x,y,z) -> u(x,y,true) [ z = false ] ;
+    u(x,y,z) -> u(x,true,false) [ y = false /\ z = true ] ;
+    u(x,y,z) -> u(true,false,false) [ x = false /\ y = true /\ z = true ] ;
+
+QUERY equivalence u(x,y,z) -><- u(true,true,true) ;
+
+END OF FILE
+

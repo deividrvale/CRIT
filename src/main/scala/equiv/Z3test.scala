@@ -64,7 +64,11 @@ object Z3test {
           |(simplify (+ (+ x 1) 1))
           |""".stripMargin
 
-    val query = q4
+    val q5 =
+      s"""(declare-const b Bool)
+         |(simplify true)""".stripMargin
+
+    val query = q5
     new PrintWriter(inputFile) {
       write(query)
       close()

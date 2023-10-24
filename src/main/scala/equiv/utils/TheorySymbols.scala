@@ -45,7 +45,7 @@ object TheorySymbols {
   def notX(x: Term): App = App(not, List(x))
   def implXY(x: Term, y: Term): App = App(impl, List(x, y))
   def biImplXY(x: Term, y: Term): App = App(biImpl, List(x, y))
-  def eqXY(x: Term, y: Term): App = App(eql, List(x, y))
+  def eqXY(x: Term, y: Term): App = App(TermUtils.getEqualityFunctionSymbol(x.sort), List(x, y))
   def notEqXY(x: Term, y: Term): App = notX(eqXY(x,y))
   def andXY(x: Term, y: Term): App = App(and, List(x, y))
   def orXY(x: Term, y: Term): App = App(or, List(x, y))

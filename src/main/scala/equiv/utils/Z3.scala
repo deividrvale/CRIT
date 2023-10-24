@@ -63,7 +63,10 @@ object Z3 {
       write(q)
       close()
     }
-    val out = Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator.next()
+    val out0 = Seq("z3", "-smt2", inputFile.getAbsolutePath)
+    val out1 = out0.!!
+    val out2 = out1.linesIterator
+    val out = out2.next()
 
     new Z3Parser(formula.functionSymbols.map(f => (f.name, f)).toMap, formula.vars.map(v => (v.name, v)).toMap).parseTerm(out) match {
       case Left(t: Term) => t
