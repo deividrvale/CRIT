@@ -18,11 +18,12 @@ case class QuasiRule(left: QuasiTerm, right: QuasiTerm, constraint: Option[Quasi
     QuasiRule(left.infix2app(signature), right.infix2app(signature), constraint.map(_.infix2app(signature)))
   }
 
-  def toRule(signature: Map[String, FunctionSymbol], variableSorts: Map[String, Sort]): Rule = {
+  def toRule(signature: Map[String, FunctionSymbol], variableSorts: Map[String, Sort], ignoreRootFuncAssert: Boolean = false): Rule = {
     Rule(
       left.toTerm(signature, variableSorts),
       right.toTerm(signature, variableSorts),
-      constraint.map(t => Constraint(t.toTerm(signature, variableSorts)).split()).getOrElse(Set())
+      constraint.map(t => Constraint(t.toTerm(signature, variableSorts)).split()).getOrElse(Set()),
+      ignoreRootFuncAssert
     )
   }
 

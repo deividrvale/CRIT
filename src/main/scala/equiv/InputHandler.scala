@@ -206,7 +206,7 @@ object InputHandler {
       case parser.Success(quasiRule: QuasiRule, _) =>
         val quasiRuleApp = quasiRule.infix2app(system.signature.asMap)
         val (signature, variableSorts) = QuasiSystem.deriveTypings(system.signature, QuasiSignature(Set.empty), Set(quasiRuleApp))
-        val rule = quasiRuleApp.toRule(signature.asMap, variableSorts.map{ case ((_,name),sort) => name -> sort })
+        val rule = quasiRuleApp.toRule(signature.asMap, variableSorts.map{ case ((_,name),sort) => name -> sort }, true)
         Some(rule.asEquation)
       case parser.Failure(msg, _) => println(msg) ; None
       case parser.Error(msg, _) => println(msg) ; None

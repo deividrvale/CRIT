@@ -21,7 +21,7 @@ case class FunctionSymbol(name: String, typing: Typing, isTheory: Boolean = fals
           case _ => PrintUtils.nAryFunctionColour 
         }) + s"${toPrintName(name)}" + Console.RESET
       else
-        s"$name: $typing")
+        s"$name")
     + (if printTyping then s" : ${typing.toPrintString()}" else "")
   }
 

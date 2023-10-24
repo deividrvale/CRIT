@@ -7,11 +7,11 @@ import equiv.trs.Term.Var
 import equiv.trs.parsing.QuasiRule
 import equiv.utils.TermUtils
 
-case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends ConstrainedObject(constraints) {
+case class Rule(left: Term, right: Term, constraints: Set[Constraint], ignoreRootFuncAssert: Boolean = false) extends ConstrainedObject(constraints) {
   assert(left.sort == right.sort)
 
   left match {
-    case App(fun, _) => assert(!fun.isTheory)
+    case App(fun, _) => assert(!fun.isTheory || ignoreRootFuncAssert)
     case _ => assert(false)
   }
 
