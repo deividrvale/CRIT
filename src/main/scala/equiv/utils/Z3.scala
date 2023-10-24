@@ -102,9 +102,12 @@ object Z3 {
   }
 
   def solve(formula: Term): SolverResult = {
+    // The logic we use with Z3 (QF_LIA) does not support the use of undefined function symbols.
+    if (formula.functionSymbols.exists(!_.isTheory)) then {
+      return SolverResult.Unsatisfiable
+    }
     val output: Iterator[String] = query(
       s"""${formula.vars.map { v => s"(declare-const $v ${v.sort})" }.mkString("\n")}
-         |${formula.functionSymbols.map(f => if !f.isTheory then s"(declare-fun $f ${f.typing.input.mkString("(", " ", ")")} ${f.typing.output})" else "").mkString(sep = "\n")}
          |
          |(assert
          |   ${formula.toStringApplicative}
@@ -139,7 +142,10 @@ object Z3 {
 
     // TODO Find a better solution than try-catch
 //    try {
-      Seq("z3", "-smt2", inputFile.getAbsolutePath).!!.linesIterator
+      val out1 = Seq("z3", "-smt2", inputFile.getAbsolutePath)
+      val out2 = out1.!!
+      val out3 = out2.linesIterator
+      out3
 //    } catch {
 //      t => println(s"${PrintUtils.failureColour}Z3 error: ${t}${Console.RESET}") ; Iterator("undetermined")
 //    }

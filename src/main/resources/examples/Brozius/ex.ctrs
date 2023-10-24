@@ -7,9 +7,8 @@ SIGNATURE f, g, return ;
 RULES
     f(x) -> f(x + 1) [ x < 5 ] ;
     f(x) -> return(x) [ x = 5 ] ;
-    f(x) -> f(x - 1) [ x > 5 ] ;
 
-QUERY equivalence f(x) -><- return(5) [x > 0];
+QUERY equivalence f(x) -><- return(5) ;
 
 END OF FILE
 

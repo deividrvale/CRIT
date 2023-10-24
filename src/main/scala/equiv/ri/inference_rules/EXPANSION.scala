@@ -52,8 +52,10 @@ object EXPANSION extends INFERENCE_RULE {
       positions =>
         val newEquations = generateEXPANSIONEquations(pfSt, equation, side, subtermSelector(List(equation.getSide(side)), positions))
         val newPfSt = pfSt.removeEquation(equation).addEquations(newEquations)
-        val rule = equation.getAsRule(side)
-        if ruleAcceptor(rule) then
+        val rule = equation.getAsRule(side, true)
+        if rule.left match { case App(fun, _) => fun.isTheory ; case _ => true } then
+          Some(newPfSt)
+        else if ruleAcceptor(rule) then
           Some(newPfSt.addHypothesis(rule))
         else Some(newPfSt)
     )

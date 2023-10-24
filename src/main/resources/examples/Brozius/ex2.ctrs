@@ -1,0 +1,14 @@
+THEORY ints     ;
+LOGIC QF_LIA    ;
+SOLVER internal ;
+
+SIGNATURE f ;
+
+RULES
+    f(x) -> f(f(x - 1)) [ x > 0 ];
+    f(x) -> 0 [ x <= 0 ]
+
+QUERY equivalence f(1) -><- f(f(0));
+
+END OF FILE
+
