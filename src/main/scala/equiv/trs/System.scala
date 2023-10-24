@@ -1,5 +1,7 @@
 package equiv.trs
 
+import equiv.trs.parsing.QuasiSystem
+
 case class System(theory: String, logic: String, solver: String, signature: Signature, rules: Set[Rule], query: Option[Query] = None) {
   val definedSymbols: Set[FunctionSymbol] = rules.flatMap(_.rootFunc)
   

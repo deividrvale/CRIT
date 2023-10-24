@@ -2,6 +2,7 @@ package equiv.trs
 
 import equiv.ri.ProofState
 import equiv.trs.Term.{App, Position, Substitution, Var}
+import equiv.trs.parsing.QuasiTerm
 import equiv.utils.{MapUtils, PrintUtils, TermUtils, TheorySymbols}
 
 import scala.annotation.tailrec

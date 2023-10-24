@@ -4,6 +4,7 @@ import equiv.ri.Equation
 import equiv.ri.Equation.Side
 import equiv.trs.Term.{App, Substitution}
 import equiv.trs.Term.Var
+import equiv.trs.parsing.QuasiRule
 import equiv.utils.TermUtils
 
 case class Rule(left: Term, right: Term, constraints: Set[Constraint]) extends ConstrainedObject(constraints) {

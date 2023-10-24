@@ -5,21 +5,73 @@ import equiv.trs.parsing.QuasiTerm.{App, InfixChain}
 import equiv.trs.{FunctionSymbol, QueryEquivalence, Signature, Sort, System, Typing}
 
 case class QuasiSystem(theory: String, logic: String, solver: String, signatureOriginal: QuasiSignature, rules: Set[QuasiRule], chains: Set[QuasiRule], query: Option[QuasiQuery] = None) {
-  def deriveTypings: (Signature, Map[(QuasiRule, String), Sort]) = {
+  def toSystem: System = {
+    applyChains.toSystemIntroduceSorts
+  }
+
+  private def applyChains: QuasiSystem = {
+    this.copy(rules = rules.map{ rule => applyChains(rule) }, query = query match {
+      case Some(QuasiQueryEquivalence(equation)) => Some(QuasiQueryEquivalence(applyChains(equation)))
+      case other => other
+    })
+  }
+
+  private def applyChains(rule: QuasiRule): QuasiRule = {
+    QuasiRule(applyChains(rule.left, chains), applyChains(rule.right, chains), rule.constraint.map(applyChains(_,chains)))
+  }
+
+  private def applyChains(term: QuasiTerm, chains: Set[QuasiRule]): QuasiTerm = {
+    chains.foldRight(term) { case (chain,t) => applyChain(t,chain) }
+  }
+
+  private def applyChain(term: QuasiTerm, chain: QuasiRule): QuasiTerm = term match {
+    case App(f,args) =>
+      val termArgsRewritten = App(f,args.map(applyChain(_,chain)))
+      termArgsRewritten.instanceOf(chain.left) match {
+        case Some(subsitution) => chain.right.substitute(subsitution)
+        case None => termArgsRewritten
+      }
+  }
+
+  private def toSystemIntroduceSorts: System = {
+    val (signature, variableSortsAllRules) = QuasiSystem.deriveTypings(Signature(Set.empty), signatureOriginal, rules, query)
+    val signatureMap = signature.asMap
+    def variableSorts(rule: QuasiRule) = variableSortsAllRules.filter(_._1._1 == rule).map { case ((_, name), sort) => name -> sort }
+    System(theory, logic, solver, signature, rules = rules.map { rule =>
+      rule.toRule(signatureMap, variableSorts(rule))
+    }, query = query match {
+      case Some(QuasiQueryEquivalence(quasiEquation)) => Some(QueryEquivalence(quasiEquation.toEquation(signatureMap, variableSorts(quasiEquation))))
+      case _ => None
+    })
+  }
+
+  override def toString: String = {
+    s"""SIGNATURE:
+       |  ${signatureOriginal.functions.map(_.toString).toList.sorted.mkString("\n  ")}
+       |
+       |RULES:
+       |  ${rules.mkString("\n  ")}
+       |
+       |QUERY:
+       |  $query
+       |""".stripMargin
+  }
+}
+
+object QuasiSystem {
+  def deriveTypings(baseSignature: Signature, signatureOriginal: QuasiSignature, rules: Set[QuasiRule], query: Option[QuasiQuery] = None): (Signature, Map[(QuasiRule, String), Sort]) = {
     // a function argument (Some(nr)) or output (None)
     type Port = (Any, Option[Int])
 
     val allRules = rules ++ (query match
       case Some(QuasiQueryEquivalence(equation)) => Set(equation)
       case _ => Set()
-    )
+      )
 
     val usedSymbols = allRules.flatMap(_.functionSymbols)
     val intSymbols = usedSymbols.filter(_._2 == 0).filter(_._1.toIntOption.nonEmpty).map(_._1)
-    val intSignature = QuasiSignature(intSymbols.map{ i => Left(FunctionSymbol(i,Typing(List.empty,Sort.Int), isTheory = true, isValue = true)) })
-    val signature = signatureOriginal.union(intSignature)
-
-
+    val intSignature = QuasiSignature(intSymbols.map { i => Left(FunctionSymbol(i, Typing(List.empty, Sort.Int), isTheory = true, isValue = true)) })
+    val signature = baseSignature.toQuasiSignature.union(signatureOriginal.union(intSignature))
 
     val signatureSymbols = signature.asMap
     val signatureSymbolsTyped = signature.leftAsMap
@@ -91,7 +143,9 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
 
           if (symbol2arity.contains(symbol)) {
             if (isSortAny(symbol, None)) argPortsAny.head else (symbol, None)
-          } else portOfVariable(rule, symbol)
+          } else {
+            portOfVariable(rule, symbol)
+          }
       }
     }
 
@@ -128,11 +182,11 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
         }
       }
 
-      if(isSortAny(symbol, None)) Sort.Any else
-      class2sort.get(port2class((symbol, None))) match {
-        case None => class2sort = class2sort.updated(port2class((symbol, None)), default)
-        case _ =>
-      }
+      if (isSortAny(symbol, None)) Sort.Any else
+        class2sort.get(port2class((symbol, None))) match {
+          case None => class2sort = class2sort.updated(port2class((symbol, None)), default)
+          case _ =>
+        }
     }
 
     // typing for each symbol
@@ -156,59 +210,5 @@ case class QuasiSystem(theory: String, logic: String, solver: String, signatureO
       }.toSet),
       variables.map { case port@((rule, name), _) => (rule, name) -> class2sort(port2class(port)) }.toMap
     )
-  }
-
-  /// end of deriveTypings
-
-  def toSystem: System = {
-    applyChains.toSystemIntroduceSorts
-  }
-
-  private def applyChains: QuasiSystem = {
-    this.copy(rules = rules.map{ rule => applyChains(rule) }, query = query match {
-      case Some(QuasiQueryEquivalence(equation)) => Some(QuasiQueryEquivalence(applyChains(equation)))
-      case other => other
-    })
-  }
-
-  private def applyChains(rule: QuasiRule): QuasiRule = {
-    QuasiRule(applyChains(rule.left, chains), applyChains(rule.right, chains), rule.constraint.map(applyChains(_,chains)))
-  }
-
-  private def applyChains(term: QuasiTerm, chains: Set[QuasiRule]): QuasiTerm = {
-    chains.foldRight(term) { case (chain,t) => applyChain(t,chain) }
-  }
-
-  private def applyChain(term: QuasiTerm, chain: QuasiRule): QuasiTerm = term match {
-    case App(f,args) =>
-      val termArgsRewritten = App(f,args.map(applyChain(_,chain)))
-      termArgsRewritten.instanceOf(chain.left) match {
-        case Some(subsitution) => chain.right.substitute(subsitution)
-        case None => termArgsRewritten
-      }
-  }
-
-  private def toSystemIntroduceSorts: System = {
-    val (signature, variableSortsAllRules) = deriveTypings
-    val signatureMap = signature.asMap
-    def variableSorts(rule: QuasiRule) = variableSortsAllRules.filter(_._1._1 == rule).map { case ((_, name), sort) => name -> sort }
-    System(theory, logic, solver, signature, rules = rules.map { rule =>
-      rule.toRule(signatureMap, variableSorts(rule))
-    }, query = query match {
-      case Some(QuasiQueryEquivalence(quasiEquation)) => Some(QueryEquivalence(quasiEquation.toEquation(signatureMap, variableSorts(quasiEquation))))
-      case _ => None
-    })
-  }
-
-  override def toString: String = {
-    s"""SIGNATURE:
-       |  ${signatureOriginal.functions.map(_.toString).toList.sorted.mkString("\n  ")}
-       |
-       |RULES:
-       |  ${rules.mkString("\n  ")}
-       |
-       |QUERY:
-       |  $query
-       |""".stripMargin
   }
 }
