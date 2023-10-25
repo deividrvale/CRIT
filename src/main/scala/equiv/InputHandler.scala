@@ -61,9 +61,12 @@ object InputHandler {
       case DELETION.name =>
         DELETION.tryDELETION(pfSt, equationSelector)
       case DISPROVE.name =>
-        DISPROVE.tryDISPROVE(pfSt).map(_ => {
-          endMessage = PrintUtils.successColourString("DISPROVE. Rewriting Induction terminated.") ; pfSt.removeAllEquations()
-        })
+        if (!pfSt.getFlag) { errorMessage = "ProofState is incomplete."; None } else {
+          DISPROVE.tryDISPROVE(pfSt).map(_ => {
+            endMessage = PrintUtils.successColourString("DISPROVE. Rewriting Induction terminated.")
+            pfSt.removeAllEquations()
+          })
+        }
       case EQ_DELETION.name =>
         EQ_DELETION.tryEQ_DELETION(pfSt, equationSelector, positionsSelector)
       case EXPANSION.name =>

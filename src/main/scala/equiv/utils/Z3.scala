@@ -63,6 +63,7 @@ object Z3 {
       write(q)
       close()
     }
+//    println("Query: \n" + q)
     val out0 = Seq("z3", "-smt2", inputFile.getAbsolutePath)
     val out1 = out0.!!
     val out2 = out1.linesIterator
@@ -108,6 +109,7 @@ object Z3 {
     }
     val output: Iterator[String] = query(
       s"""${formula.vars.map { v => s"(declare-const $v ${v.sort})" }.mkString("\n")}
+         |${formula.functionSymbols.map(f => if !f.isTheory then s"(declare-fun $f ${f.typing.input.mkString("(", " ", ")")} ${f.typing.output})" else "").mkString(sep = "\n")}
          |
          |(assert
          |   ${formula.toStringApplicative}

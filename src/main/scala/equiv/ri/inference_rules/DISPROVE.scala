@@ -13,9 +13,11 @@ object DISPROVE extends INFERENCE_RULE {
 
   /** Try DISPROVE.
    * @param pfSt The current [[ProofState]].
-   * @return [[Some]]([[false]]) if there is an [[Equation]] subject to DISPROVE, [[None]] otherwise. */
+   * @return [[Some]]([[false]]) if there is an [[Equation]] subject to DISPROVE and the pfSt flag is COMPLETE, [[None]] otherwise. */
   def tryDISPROVE(pfSt: ProofState): Option[Boolean] = {
-    getDISPROVEEquations(pfSt).onNonEmpty( _ => Some(false) )
+    if !pfSt.getFlag then None else {
+      getDISPROVEEquations(pfSt).onNonEmpty( _ => Some(false) )
+    }
   }
 
   /** @return A [[List]] of [[Equation]]s to which DISPROVE can be applied. */
