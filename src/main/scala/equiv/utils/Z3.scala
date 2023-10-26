@@ -125,13 +125,13 @@ object Z3 {
     }
   }
 
+  // https://compsys-tools.ens-lyon.fr/z3/index.php
   private def query(query: String, produceModels: Boolean = false, logic: String = "QF_LIA"): Iterator[String] = {
     val inputFile: File = File.createTempFile("input", ".smt2")
 
     new PrintWriter(inputFile) {
       write(
         s"""(set-option :produce-models $produceModels)
-           |(set-logic $logic)
            |
            |$query
            |""".stripMargin)

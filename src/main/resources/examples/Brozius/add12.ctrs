@@ -16,3 +16,7 @@ QUERY equivalence  add1(x,y) -><- add2(x, y) ;
 
 END OF FILE
 
+
+add2(x,y) -><- return(x + y) [ x >= 0 /\ y >= 0];
+add1(x,y) -><- return(x + y) [ x >= 0 /\ y >= 0];
+

@@ -1,0 +1,22 @@
+THEORY ints     ;
+LOGIC QF_LIA    ;
+SOLVER internal ;
+
+SIGNATURE mod1, error, return ;
+
+RULES
+    mod1(x, y) -> error [ y = 0 ]
+    mod1(x, y) -> return(x) [ x - y < 0 ] ;
+    mod1(x, y) -> mod1(x - y, y) [ x - y >= 0 ] ;
+
+QUERY equivalence mod1(x, y) -><- return(0) [ x = y * 4 ] ;
+
+
+
+END OF FILE
+
+mod1(10,4) -><- return(2) ;
+mod1(x, 0) -><- error ;
+mod1(x, y) -><- return(0) [ x = y * 4 ] ;
+mod1(x, y) -><- return(0) [ x = y * 4 /\ y > 0 ] ;
+

@@ -1,0 +1,57 @@
+THEORY ints     ;
+LOGIC QF_LIA    ;
+SOLVER internal ;
+
+SIGNATURE dvds ;
+
+RULES
+    dvds(x, y) -> true [ y - x = 0 ]
+    dvds(x, y) -> false [ y - x < 0 ]
+    dvds(x, y) -> dvds(x, y - x) [ y - x > 0 ]
+
+QUERY equivalence dvds(x, y) -><- true [ x = 2 * y ] ;
+
+END OF FILE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+dvds(x, y) -><- true [ x = 2 * y /\ y > 0 ] ;
+dvds(x, y) -><- true [ y = 2 * x /\ y > 0 ] ;
+
+
+
+
+

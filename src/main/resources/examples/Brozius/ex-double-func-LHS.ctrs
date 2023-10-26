@@ -1,0 +1,16 @@
+THEORY ints     ;
+LOGIC QF_LIA    ;
+SOLVER internal ;
+
+SIGNATURE f, g ;
+
+RULES
+    f(f(x)) -> g(x) ;
+    f(g(x)) -> f(x) ;
+    g(f(x)) -> x ;
+    g(g(x)) -> g(x) ;
+
+QUERY equivalence f(f(g(f(x)))) -><- x;
+
+END OF FILE
+

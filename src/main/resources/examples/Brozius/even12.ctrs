@@ -9,6 +9,7 @@ RULES
     even11(x, i, b) -> even11(x, i + 1, false) [ i < x /\ b = true ] ;
     even11(x, i, b) -> even11(x, i + 1, true) [ i < x /\ b = false ] ;
     even11(x, i, b) -> return(b) [ i >= x ] ;
+
     even2(x) -> even22(x, true)
     even22(x, b) -> even22(x - 1, false) [ x > 0 /\ b = true ] ;
     even22(x, b) -> even22(x - 1, true) [ x > 0 /\ b = false ] ;
@@ -18,3 +19,5 @@ QUERY equivalence even1(x) -><- even2(x) ;
 
 END OF FILE
 
+even2(2 * x) -><- return(true) ;
+even1(2 * x) -><- return(true) ;
