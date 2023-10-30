@@ -1,0 +1,18 @@
+THEORY ints     ;
+LOGIC QF_LIA    ;
+SOLVER internal ;
+
+SIGNATURE gcd, gcd2 ;
+
+RULES
+    gcd(a, b) -> a [b = 0] ;
+    gcd(a, b) -> gcd(b, a mod b) [b > 0] ;
+
+    gcd2(a, b) -> gcd2(b, a) [b > a] ;
+    gcd2(a, b) -> a [a >= b /\ b = 0] ;
+    gcd2(a, b) -> gcd(b, a mod b) [a >= b /\ b > 0] ;
+
+QUERY equivalence gcd(x, y) -><- gcd2(x, y) [ x >= 0 /\ y >= 0 ];
+
+END OF FILE
+

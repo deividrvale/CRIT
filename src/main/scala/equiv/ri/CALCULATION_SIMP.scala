@@ -94,19 +94,31 @@ object CALCULATION_SIMP extends INFERENCE_RULE {
         }
       } else false
     )
-    var varReplacements: Set[(Var, Term)] = varEqualityConstraints.map(constraint =>
+    var varReplacements: Set[(Var, Term, Constraint)] = varEqualityConstraints.map(constraint =>
       (constraint.term.subTermAt(List(0)), constraint.term.subTermAt(List(1))) match {
-        case (l@Var(_, _), r) => (l, r)
-        case (l, r@Var(_, _)) => (r, l)
+        case (l@Var(_, _), r) => (l, r, constraint)
+        case (l, r@Var(_, _)) => (r, l, constraint)
         case _ => throw Error("Hmm there is no variable, something is wrong in the code.")
     })
 
-    // Step 2: replace all occurrences of the variables from step 1
-    var constraints = equation.constraints -- varEqualityConstraints
+    // Step 2: refine the equalities TODO: check correctness
+    // All equalities where a var is equal to a value
+    val valueEqs = varReplacements.filter((_, t, _) => t.isValue)
+    def getVarCount(set: Set[(Var, Term, Constraint)], v: Var): Int = set.toList.map(_._1).count(_ == v)
+    // Filter the var eqs so that we only keep the following var equalities:
+    // 1. equalities where the var only occurs in one equality in the constraint (  )
+    // 2. value-var-equalities where the var does not have another value-var-equality ( e.g. we do NOT keep the equalities in this constraint set: [ v = 1 /\ v = 2 ] )
+    varReplacements = varReplacements.filter((v, t, c) =>
+      getVarCount(varReplacements, v) == 1 ||  // only one equality with v
+        (getVarCount(valueEqs, v) == 1 && valueEqs.contains((v, t, c))) // only one value-equality with v (and this is it)
+    )
+
+    // Step 3: replace all occurrences of the variables from step 1
+    var constraints = equation.constraints -- varReplacements.map(_._3)
     while varReplacements.nonEmpty do {
-      val varReplacement@(v, t) = varReplacements.head
+      val varReplacement@(v, t, _) = varReplacements.head
       constraints = constraints.map(c => Constraint(c.term.applySubstitution(Map(v -> t))))
-      varReplacements = (varReplacements - varReplacement).map((vr, term) => (vr, term.applySubstitution(Map(v -> t))))
+      varReplacements = (varReplacements - varReplacement).map((vr, term, c) => (vr, term.applySubstitution(Map(v -> t)), c))
     }
 
     equation.replaceAllConstraints(constraints)

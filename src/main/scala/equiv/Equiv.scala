@@ -7,7 +7,7 @@ import equiv.utils.{MapUtils, Z3}
 
 object Equiv {
   def main(args: Array[String]): Unit = {
-    val pathToFile = "Brozius/ex2.ctrs"
+    val pathToFile = "Brozius/expansiontest.ctrs"
     parse(pathToFile) match {
       case Some((system, pfSt)) =>
         InputHandler.main(system, pfSt)
