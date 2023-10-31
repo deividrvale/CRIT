@@ -1,5 +1,5 @@
-# LCTRS-RI-Tool
-A tool for automating Rewriting Induction (RI) for Logically Constrained Term Rewriting Systems (LCTRSs).
+# Constrained Rewriting Induction Tool (CRIT)
+A tool for applying Rewriting Induction (RI) for Logically Constrained Term Rewriting Systems (LCTRSs).
 
 Based on the paper "Verifying Procedural Programs via Constrained Rewriting Induction" by Fuhs, Kop and Nishida [[1]](#1) and the Ctrl-tool [[2]](#2).
 
