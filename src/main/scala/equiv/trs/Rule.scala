@@ -12,7 +12,7 @@ case class Rule(left: Term, right: Term, constraints: Set[Constraint], ignoreRoo
 
   left match {
     case App(fun, _) => assert(!fun.isTheory || ignoreRootFuncAssert)
-    case _ => assert(false)
+    case _ => assert(ignoreRootFuncAssert)
   }
 
   val vars: Set[Var] = left.vars ++ right.vars ++ constraintVars
